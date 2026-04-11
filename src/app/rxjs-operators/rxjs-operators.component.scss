@@ -1,27 +1,8 @@
-/* =========================
-   🎨 THEME VARIABLES
-========================= */
+@use '../../styles.scss' as *;
 
-$bg: #f8fafc;
-$card-bg: #ffffff;
-$text-primary: #111827;
-$text-secondary: #6b7280;
-
-$primary: #2563eb;
 $primary-light: #e0edff;
-
 $danger: #dc2626;
 $danger-light: #fee2e2;
-
-$border: #e5e7eb;
-
-$radius: 12px;
-
-$shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
-$shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
-$shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.12);
-
-$transition: all 0.25s ease;
 
 /* ========================= */
 
