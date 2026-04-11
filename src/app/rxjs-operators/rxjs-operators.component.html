@@ -1,0 +1,64 @@
+<div class="container">
+
+    <h1>{{ libraryName }} Operators — Quick Reference</h1>
+
+    <!-- ACTIVE OPERATORS -->
+    <section>
+        <h2>Active Operators</h2>
+
+        <div class="grid-table">
+            <div class="grid-cell" *ngFor="let group of operatorGroups">
+                <div class="cell-header">
+                    {{ group.title }}
+                </div>
+
+                <ul class="cell-body">
+                    <li *ngFor="let operator of group.operators" class="clickable"
+                        [routerLink]="['/operator', operator]">
+                        {{ operator }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMPARISONS & DIFFERENCES -->
+    <section class="comparisons">
+        <h2>Comparisons & Differences — Learn by Comparing</h2>
+
+        <div class="grid-table">
+            <div class="grid-cell" *ngFor="let group of comparisonGuides">
+                <div class="cell-header">
+                    {{ group.title }}
+                </div>
+
+                <ul class="cell-body">
+                    <li *ngFor="let operator of group.operators" class="clickable"
+                        [routerLink]="['/operator', operator]">
+                        {{ operator }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- DEPRECATED OPERATORS -->
+    <section class="deprecated">
+        <h2>Deprecated Operators</h2>
+
+        <div class="grid-table">
+            <div class="grid-cell" *ngFor="let group of deprecatedOperators">
+                <div class="cell-header">
+                    {{ group.title }}
+                </div>
+
+                <ul class="cell-body">
+                    <li *ngFor="let operator of group.operators">
+                        ⚠ {{ operator }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+</div>

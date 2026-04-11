@@ -1,0 +1,181 @@
+/* =========================
+   🎨 THEME VARIABLES
+========================= */
+
+$bg: #f8fafc;
+$card-bg: #ffffff;
+$text-primary: #111827;
+$text-secondary: #6b7280;
+
+$primary: #2563eb;
+$primary-light: #e0edff;
+
+$danger: #dc2626;
+$danger-light: #fee2e2;
+
+$border: #e5e7eb;
+
+$radius: 12px;
+
+$shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.12);
+
+$transition: all 0.25s ease;
+
+/* ========================= */
+
+.container {
+    padding: 24px;
+    background: $bg;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* =========================
+   HEADINGS
+========================= */
+
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: $text-primary;
+}
+
+h2 {
+    margin: 30px 0 14px;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-primary;
+}
+
+/* =========================
+   GRID
+========================= */
+
+.grid-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+/* =========================
+   CARD (CELL)
+========================= */
+
+.grid-cell {
+    background: $card-bg;
+    border-radius: $radius;
+    border: 1px solid $border;
+    box-shadow: $shadow-sm;
+    display: flex;
+    flex-direction: column;
+    max-height: 420px;
+    transition: $transition;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: $shadow-md;
+    }
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.cell-header {
+    background: #f1f5f9;
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 13px;
+    text-align: center;
+    border-bottom: 1px solid $border;
+    color: $text-primary;
+}
+
+/* =========================
+   BODY
+========================= */
+
+.cell-body {
+    padding: 10px 12px;
+    margin: 0;
+    list-style: none;
+    overflow-y: auto;
+}
+
+.cell-body li {
+    font-size: 13px;
+    padding: 4px 2px;
+    color: $text-secondary;
+    transition: $transition;
+    border-radius: 6px;
+
+    &:hover {
+        background: #f3f4f6;
+        padding-left: 6px;
+    }
+}
+
+/* =========================
+   CLICKABLE
+========================= */
+
+.clickable {
+    cursor: pointer;
+    color: $primary;
+    font-weight: 500;
+
+    &:hover {
+        color: darken($primary, 10%);
+        background: $primary-light;
+    }
+}
+
+/* =========================
+   COMPARISON SECTION
+========================= */
+
+.comparisons .grid-cell {
+    border-color: lighten($primary, 25%);
+}
+
+.comparisons .cell-header {
+    background: $primary-light;
+    color: $primary;
+}
+
+/* =========================
+   DEPRECATED
+========================= */
+
+.deprecated .grid-cell {
+    border-color: lighten($danger, 25%);
+}
+
+.deprecated .cell-header {
+    background: $danger-light;
+    color: $danger;
+}
+
+.deprecated li {
+    color: $danger;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+.cell-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cell-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.cell-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

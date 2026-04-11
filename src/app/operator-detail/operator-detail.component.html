@@ -1,0 +1,160 @@
+<div class="operator-container">
+
+    <ng-container *ngIf="operator; else notFound">
+
+        <h1>{{ operator.name }}</h1>
+
+        <!-- DESKTOP THREE COLUMN LAYOUT (NON COMPOSITE) -->
+        <div class="desktop-layout" *ngIf="!isComposite">
+
+            <!-- DESCRIPTION -->
+            <div class="box description-box">
+                <h3>Description</h3>
+                <p class="description">{{ operator.description }}</p>
+            </div>
+
+            <!-- SYNTAX -->
+            <div class="box syntax-box">
+                <h3>Syntax</h3>
+                <pre class="syntax">{{ dynamicSyntax }}</pre>
+            </div>
+
+            <!-- RUN PANEL -->
+            <div class="box run-box">
+
+                <!-- INPUT SECTION -->
+                <h3>Inputs</h3>
+
+                <div class="inputs">
+                    <div class="input-row" *ngFor="let input of visibleInputsCache; let i = index" [class.time-input]="input.label.toLowerCase().includes('interval') ||
+                                   input.label.toLowerCase().includes('time')">
+
+                        <label>{{ input.label }}</label>
+
+                        @if (input.type === 'select') {
+                        <select [name]="'input-' + i" [(ngModel)]="inputValues[i][0]">
+
+                            <option value="" disabled>-- Select --</option>
+
+                            @for (option of input.options; track option) {
+                            <option [value]="option.value ?? option">
+                                {{ option.label ?? option }}
+                            </option>
+                            }
+
+                        </select>
+                        } @else {
+                        <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
+                            [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
+                        }
+
+                    </div>
+                </div>
+
+                <!-- RUN BUTTON -->
+                <button class="run-btn" (click)="run()">▶ Run</button>
+
+                <!-- OUTPUT -->
+                <div class="output" *ngIf="output.length">
+
+                    <h3>Live Output Timeline</h3>
+
+                    <ul>
+                        <li *ngFor="let item of output" [ngClass]="{'output-header': item.value.includes('━')}">
+
+                            <span class="time">{{ item.time }}</span>
+
+                            <span class="index" *ngIf="item.kind === 'value' && !item.value.includes('━')">
+                                #{{ item.index }}
+                            </span>
+
+                            <span class="arrow">→</span>
+
+                            <span class="value">{{ item.value }}</span>
+
+                        </li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- COMPOSITE MODE -->
+        <ng-container *ngIf="isComposite">
+
+            <p class="description">{{ operator.description }}</p>
+
+            <!-- INPUT SECTION -->
+            <h3>Inputs</h3>
+
+            <div class="inputs">
+                <div class="input-row" *ngFor="let input of visibleInputsCache; let i = index" [class.time-input]="input.label.toLowerCase().includes('interval') ||
+                                 input.label.toLowerCase().includes('time')">
+
+                    <label>{{ input.label }}</label>
+
+                    <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
+                        [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
+
+                </div>
+            </div>
+
+            <!-- RUN BUTTON -->
+            <button class="run-btn" (click)="run()">▶ Run</button>
+
+            <!-- OUTPUT -->
+            <div class="output" *ngIf="hasCompositeOutput()">
+
+                <h3>Live Output Timeline</h3>
+
+                <div class="comparison-panels">
+
+                    <div class="comparison-panel" *ngFor="let opName of operatorNames">
+
+                        <div class="panel-header" [routerLink]="['/operator/' + opName]">{{ opName }}</div>
+
+                        <div class="panel-description">
+                            {{ getOperatorDescription(opName) }}
+                        </div>
+
+                        <!-- ✅ Syntax updates ONLY after RUN -->
+                        <pre class="panel-syntax">
+{{ dynamicSyntaxMap[opName] }}
+            </pre>
+
+                        <ul class="panel-output">
+
+                            <li *ngFor="let item of groupedOutput.get(opName) || []"
+                                [ngClass]="{'output-header': item.value.includes('━')}">
+
+                                <span class="time">{{ item.time }}</span>
+
+                                <span class="index" *ngIf="item.kind === 'value' && !item.value.includes('━')">
+                                    #{{ item.index }}
+                                </span>
+
+                                <span class="arrow">→</span>
+
+                                <span class="value">{{ item.value }}</span>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </ng-container>
+
+    </ng-container>
+
+    <ng-template #notFound>
+        <h2>Operator not found</h2>
+    </ng-template>
+
+</div>
