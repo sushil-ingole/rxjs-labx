@@ -60,12 +60,6 @@ but don’t clearly show **how things behave over time**.
 
 ---
 
-## 💡 Philosophy
-
-> If you can **see it**, you can **understand it**.
-
----
-
 ## 🛠️ Tech Stack
 
 * Angular
