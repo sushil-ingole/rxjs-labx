@@ -30,4 +30,8 @@ export class LandingPageComponent {
     'Schedulers',
     'Marble Testing'
   ];
+
+  openGitHub() {
+    window.open('https://github.com/sushil-ingole/rxjs-labx', '_blank');
+  }
 }
