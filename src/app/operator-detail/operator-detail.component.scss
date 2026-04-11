@@ -10,7 +10,7 @@
 /* ========================= */
 
 h1 {
-    font-size: 28px;
+    font-size: $font-3xl;
     font-weight: 700;
     margin-bottom: 18px;
     color: $text-primary;
@@ -18,7 +18,7 @@ h1 {
 }
 
 h3 {
-    font-size: 14px;
+    font-size: $font-md;
     font-weight: 600;
     margin-bottom: 10px;
     color: $text-primary;
@@ -65,7 +65,7 @@ h3 {
     margin: 8px 0 16px;
     color: $text-secondary;
     line-height: 1.6;
-    font-size: 13px;
+    font-size: $font-base;
     white-space: pre-wrap;
     font-family: monospace;
 }
@@ -79,7 +79,7 @@ h3 {
     border: 1px solid $border;
     border-radius: 10px;
     padding: 14px;
-    font-size: 13px;
+    font-size: $font-base;
     line-height: 1.6;
     overflow-x: auto;
     color: $text-primary;
@@ -105,7 +105,7 @@ label {
     width: max-content;
     font-weight: 500;
     color: $text-secondary;
-    font-size: 13px;
+    font-size: $font-base;
     margin-right: 8px;
 }
 
@@ -113,7 +113,7 @@ input,
 select {
     flex: 1;
     padding: 8px 10px;
-    font-size: 13px;
+    font-size: $font-base;
     border-radius: 8px;
     border: 1px solid $border;
     transition: $transition;
@@ -132,7 +132,7 @@ select {
 .run-btn {
     margin-top: 14px;
     padding: 9px 16px;
-    font-size: 13px;
+    font-size: $font-base;
     border-radius: 8px;
     border: none;
     background: $primary;
@@ -195,7 +195,7 @@ select {
     font-family: monospace;
     align-items: center;
     padding: 4px 6px;
-    font-size: 12px;
+    font-size: $font-sm;
 }
 
 .output li.output-header {
@@ -249,7 +249,7 @@ select {
 
 .panel-description {
     padding: 12px;
-    font-size: 12px;
+    font-size: $font-sm;
     color: $text-secondary;
     background: $card-bg;
 
@@ -262,7 +262,7 @@ select {
 .panel-syntax {
     background: $card-bg;
     padding: 10px;
-    font-size: 11px;
+    font-size: $font-xs;
     color: $text-primary;
 
     max-height: 160px;

@@ -18,14 +18,14 @@
     padding: 80px 0 40px;
 
     h1 {
-        font-size: 56px;
+        font-size: $font-hero;
         font-weight: 700;
         letter-spacing: -1px;
     }
 
     .subtitle {
         margin-top: 16px;
-        font-size: 18px;
+        font-size: $font-xl;
         color: $text-secondary;
         max-width: 550px;
         margin-inline: auto;
@@ -45,13 +45,13 @@
     padding: 40px 0;
 
     h2 {
-        font-size: 26px;
+        font-size: $font-2xl;
         font-weight: 600;
     }
 
     p {
         margin-top: 12px;
-        font-size: 15px;
+        font-size: $font-lg;
         color: $text-secondary;
         line-height: 1.5;
     }
@@ -88,7 +88,7 @@
     padding: 20px;
     border-radius: $radius;
     box-shadow: $shadow-sm;
-    font-size: 14px;
+    font-size: $font-md;
     text-align: center;
     transition: $transition;
 
@@ -111,7 +111,7 @@
         color: $primary;
         padding: 6px 12px;
         border-radius: 999px;
-        font-size: 12px;
+        font-size: $font-sm;
     }
 }
 
@@ -121,7 +121,7 @@
     padding: 50px 0;
 
     h2 {
-        font-size: 28px;
+        font-size: $font-3xl;
     }
 }
 
@@ -129,7 +129,7 @@
 .btn {
     padding: 10px 18px;
     border-radius: $radius;
-    font-size: 14px;
+    font-size: $font-md;
     cursor: pointer;
     transition: $transition;
     border: none;
@@ -146,14 +146,14 @@
 
     &.large {
         padding: 12px 24px;
-        font-size: 15px;
+        font-size: $font-lg;
     }
 }
 
 /* ================= UTIL ================= */
 .highlight {
     margin-top: 12px;
-    font-size: 18px;
+    font-size: $font-xl;
     font-weight: 500;
 }
 
@@ -166,5 +166,5 @@ footer {
     text-align: center;
     padding: 30px 0;
     color: $text-muted;
-    font-size: 13px;
+    font-size: $font-base;
 }

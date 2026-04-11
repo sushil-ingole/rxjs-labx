@@ -14,7 +14,7 @@
 ========================= */
 
 h1 {
-    font-size: 28px;
+    font-size: $font-3xl;
     font-weight: 700;
     margin-bottom: 20px;
     color: $text-primary;
@@ -22,7 +22,7 @@ h1 {
 
 h2 {
     margin: 30px 0 14px;
-    font-size: 18px;
+    font-size: $font-xl;
     font-weight: 600;
     color: $text-primary;
 }
@@ -65,7 +65,7 @@ h2 {
     background: $primary;
     padding: 10px 12px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: $font-base;
     text-align: center;
     border-bottom: 1px solid $border;
     color: $text-on-primary;
@@ -83,7 +83,7 @@ h2 {
 }
 
 .cell-body li {
-    font-size: 13px;
+    font-size: $font-base;
     padding: 4px 2px;
     color: $text-secondary;
     transition: $transition;
