@@ -1,0 +1,85 @@
+<div class="landing">
+
+    <div class="container">
+
+        <!-- HERO -->
+        <section class="hero">
+            <h1>RxJS Labx</h1>
+
+            <p class="subtitle">
+                Learn RxJS the way it actually makes sense — by seeing it in action.
+            </p>
+
+            <div class="actions">
+                <button class="btn primary">Explore Playground</button>
+                <button class="btn secondary">GitHub</button>
+            </div>
+        </section>
+
+        <!-- PROBLEM -->
+        <section class="section center narrow">
+            <h2>Why RxJS feels hard</h2>
+            <p>
+                Most tutorials explain concepts but don’t show behavior over time.
+                <br />
+                That’s where confusion starts.
+            </p>
+        </section>
+
+        <!-- SOLUTION -->
+        <section class="section center">
+            <h2>What makes this different</h2>
+
+            <div class="grid three">
+                <div class="card" *ngFor="let item of features">
+                    {{ item }}
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section class="section center">
+            <h2>What you can do</h2>
+
+            <div class="grid two">
+                <div class="card" *ngFor="let item of capabilities">
+                    {{ item }}
+                </div>
+            </div>
+        </section>
+
+        <!-- FUTURE -->
+        <section class="section center narrow">
+            <h2>This is just the beginning</h2>
+
+            <p class="muted">
+                Starting with operators. Expanding to the full RxJS ecosystem.
+            </p>
+
+            <div class="tags">
+                <span *ngFor="let item of futureItems">{{ item }}</span>
+            </div>
+        </section>
+
+        <!-- PHILOSOPHY -->
+        <section class="section center narrow">
+            <h2>Philosophy</h2>
+            <p class="highlight">
+                If you can see it, you can understand it.
+            </p>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta">
+            <h2>Start exploring RxJS</h2>
+            <button class="btn primary large">Open Playground</button>
+        </section>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        Built with Angular & RxJS
+    </footer>
+
+</div>
