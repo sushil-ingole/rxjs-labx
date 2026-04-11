@@ -153,7 +153,7 @@ select {
 }
 
 .run-btn.running {
-    background: #555;
+    background: $disabled;
     cursor: not-allowed;
     transform: scale(0.97);
 }
@@ -165,7 +165,7 @@ select {
 
 @keyframes flashBg {
     0% {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba($text-on-primary, 0.1);
     }
 
     100% {
