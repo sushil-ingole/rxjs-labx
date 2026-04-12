@@ -1,96 +1,235 @@
-import { combineLatest, combineLatestAll, concat, delay, interval, map, Observable, of, switchMap, take, tap, Subscription, zip, zipAll, forkJoin, withLatestFrom, merge, concatAll, concatMap, mergeAll, mergeMap, exhaustMap, exhaustAll, mergeScan, pairwise, race, raceWith, startWith, switchAll, buffer, bufferCount, bufferTime, bufferToggle, bufferWhen, expand, groupBy, scan, window, windowTime, windowToggle, windowWhen, windowCount, audit, auditTime, debounce, debounceTime, distinct, distinctUntilChanged, distinctUntilKeyChanged, elementAt, catchError, filter, find, findIndex, first, ignoreElements, endWith, last, sample, sampleTime, single, skip, skipLast, skipUntil, skipWhile, takeLast, takeUntil, takeWhile, throttle, throttleTime, delayWhen, finalize, repeat, repeatWhen, retry, retryWhen, timeout, timeoutWith, toArray, throwIfEmpty, share, shareReplay, connectable, connect, count, max, min, defaultIfEmpty, reduce, every, isEmpty, sequenceEqual, timeInterval, timestamp } from 'rxjs';
+import {
+  combineLatest,
+  combineLatestAll,
+  concat,
+  delay,
+  interval,
+  map,
+  Observable,
+  of,
+  switchMap,
+  take,
+  tap,
+  Subscription,
+  zip,
+  zipAll,
+  forkJoin,
+  withLatestFrom,
+  merge,
+  concatAll,
+  concatMap,
+  mergeAll,
+  mergeMap,
+  exhaustMap,
+  exhaustAll,
+  mergeScan,
+  pairwise,
+  race,
+  raceWith,
+  startWith,
+  switchAll,
+  buffer,
+  bufferCount,
+  bufferTime,
+  bufferToggle,
+  bufferWhen,
+  expand,
+  groupBy,
+  scan,
+  window,
+  windowTime,
+  windowToggle,
+  windowWhen,
+  windowCount,
+  audit,
+  auditTime,
+  debounce,
+  debounceTime,
+  distinct,
+  distinctUntilChanged,
+  distinctUntilKeyChanged,
+  elementAt,
+  catchError,
+  filter,
+  find,
+  findIndex,
+  first,
+  ignoreElements,
+  endWith,
+  last,
+  sample,
+  sampleTime,
+  single,
+  skip,
+  skipLast,
+  skipUntil,
+  skipWhile,
+  takeLast,
+  takeUntil,
+  takeWhile,
+  throttle,
+  throttleTime,
+  delayWhen,
+  finalize,
+  repeat,
+  repeatWhen,
+  retry,
+  retryWhen,
+  timeout,
+  timeoutWith,
+  toArray,
+  throwIfEmpty,
+  share,
+  shareReplay,
+  connectable,
+  connect,
+  count,
+  max,
+  min,
+  defaultIfEmpty,
+  reduce,
+  every,
+  isEmpty,
+  sequenceEqual,
+  timeInterval,
+  timestamp,
+} from 'rxjs';
 
 export interface OperatorDemo {
-    name: string;
-    category: string;
-    description: string;
-    syntax: string;
+  name: string;
+  category: string;
+  description: string;
+  syntax: string;
 
-    inputs: {
-        label: string;
-        defaultValue: any[];
-        type?: 'number' | 'text' | 'object' | 'radio' | 'select';
-        hide?: boolean;
-        options?: any[];
-    }[];
+  inputs: {
+    label: string;
+    defaultValue: any[];
+    type?: 'number' | 'text' | 'object' | 'radio' | 'select';
+    hide?: boolean;
+    options?: any[];
+  }[];
 
-    run: (inputs: any[][]) => Observable<PlaygroundEvent>;
+  run: (inputs: any[][]) => Observable<PlaygroundEvent>;
 
-    // Related operators for comparison
-    comparisons?: string[];
+  // Related operators for comparison
+  comparisons?: string[];
 }
 
 export type PlaygroundEvent =
-    | string
-    | { type: 'inner'; label: string }
-    | { type: 'value'; value: string }
-    | { type: 'composite-header'; operator: string };
+  | string
+  | { type: 'inner'; label: string }
+  | { type: 'value'; value: string }
+  | { type: 'composite-header'; operator: string };
 
 export type OutputRow =
-    | {
-        kind: 'value';
-        index: number;
-        value: string;
-        time: string;
+  | {
+      kind: 'value';
+      index: number;
+      value: string;
+      time: string;
     }
-    | {
-        kind: 'meta';
-        value: string;
-        time: string;
+  | {
+      kind: 'meta';
+      value: string;
+      time: string;
     };
 
-export const OPERATOR_REGISTRY: Record<string, OperatorDemo> = {
-    combineLatest: {
-        name: 'combineLatest',
-        category: 'Combination',
-        description: `Combines the latest values from multiple observables and emits whenever ANY observable emits (only after all have emitted at least once).
+// Internal type: name is auto-derived from registry key
+type OperatorRegistryEntry = Omit<OperatorDemo, 'name'>;
 
-How the output behaves depends on:
+interface OperatorDescriptionConfig {
+  definition: string;
+  mentalModel: string;
+  stepByStep: string[];
+  timeline?: string;
+  keyDifferences: string[];
+  useCases: string[];
+  gotchas: string[];
+  categoryNote?: string;
+}
 
-• emission timing of each observable
-• when each observable produces its first value
+function createOperatorDescription({
+  definition,
+  mentalModel,
+  stepByStep,
+  timeline,
+  keyDifferences,
+  useCases,
+  gotchas,
+  categoryNote,
+}: OperatorDescriptionConfig): string {
+  const sections: string[] = [
+    definition,
+    '',
+    '🧠 Mental Model:',
+    mentalModel,
+    '',
+    '⚙️ How it works:',
+    ...stepByStep.map((step, i) => `${i + 1}. ${step}`),
+  ];
 
-Example timeline  
-(Observable A Interval = 500ms → [1,2,3])  
-(Observable B Interval = 500ms → [10,20,30])
+  if (timeline) {
+    sections.push('', '⏱️ Timeline:', timeline);
+  }
 
-Observable A emissions
+  sections.push(
+    '',
+    '🔀 Key Differences:',
+    ...keyDifferences.map((diff) => `• ${diff}`),
+    '',
+    '💡 Use Cases:',
+    ...useCases.map((use) => `• ${use}`),
+    '',
+    '⚠️ Gotchas:',
+    ...gotchas.map((g) => `• ${g}`),
+  );
 
-500   1000   1500
- |      |      |
- 1      2      3
+  if (categoryNote) {
+    sections.push('', '📦 Category Insight:', categoryNote);
+  }
 
-Observable B emissions
+  return sections.join('\n');
+}
 
-500   1000   1500
- |      |      |
-10     20     30
+const _REGISTRY: Record<string, OperatorRegistryEntry> = {
+  combineLatest: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Combines latest values from multiple observables, emitting whenever ANY observable emits (after all have emitted at least once).',
+      mentalModel:
+        'A spreadsheet that recalculates whenever any cell changes, always using the latest value from each column.',
+      stepByStep: [
+        'Subscribe to all observables simultaneously',
+        'Wait until each observable has emitted at least once',
+        'Store the latest value from each observable',
+        'Whenever any observable emits, combine with latest values from others',
+        'Emit the combined result as an array',
+      ],
+      timeline: `A:   --1--------2--------3--|
+B:   --10-------20-------30-|
+Out: --[1,10]--[2,10]--[2,20]--[3,20]--[3,30]
+     ↑ Both emitted    ↑ A changed, reuse B's latest`,
+      keyDifferences: [
+        'vs zip → zip pairs values one-to-one by index; combineLatest reuses latest values',
+        'vs forkJoin → forkJoin emits once after all complete; combineLatest emits continuously',
+        'vs withLatestFrom → withLatestFrom emits only when source emits, not on any change',
+      ],
+      useCases: [
+        'Combining multiple form field values in real-time',
+        'Merging UI filters with API data',
+        'Live dashboards with multiple data streams',
+      ],
+      gotchas: [
+        'Does NOT emit until all observables have emitted at least once',
+        'Can emit very frequently if any source emits rapidly',
+        'Keeps latest values in memory for each source',
+      ],
+      categoryNote:
+        'Combination operator → merges multiple streams using latest-value strategy.',
+    }),
 
-combineLatest output
-
-(Waits until BOTH emit at least once)
-
-500ms → [1,10]   ← first combined emission
-
-Then emits whenever ANY observable updates:
-
-1000ms → [2,10]  ← A emitted
-1000ms → [2,20]  ← B emitted
-1500ms → [3,20]  ← A emitted
-1500ms → [3,30]  ← B emitted
-
-Final sequence:
-
-[1,10] → [2,10] → [2,20] → [3,20] → [3,30]
-
-Important idea:
-combineLatest always emits using the MOST RECENT value from each observable.
-
-This means:
-• It waits for all observables to emit at least once
-• After that, any new emission triggers an output
-• It reuses the last known values from other observables`,
-        syntax: `
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -100,90 +239,89 @@ const obs1$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]
 const obs2$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
 
 // Combines latest values whenever EITHER observable emits
-// Pattern: [1,10] → [2,10] → [3,10] → [3,20] → [3,30]
+// Pattern: [1,10] → [2,10] → [2,20] → [3,20] → [3,30]
 combineLatest([obs1$, obs2$])
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
-        comparisons: ['combineLatestAll', 'zip', 'zipAll', 'forkJoin', 'withLatestFrom'],
+    comparisons: [
+      'combineLatestAll',
+      'zip',
+      'zipAll',
+      'forkJoin',
+      'withLatestFrom',
+    ],
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [500] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [500] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return combineLatest([obs1$, obs2$]).pipe(
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      return combineLatest([obs1$, obs2$]).pipe(
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
     },
-    combineLatestAll: {
-        name: 'combineLatestAll',
-        category: 'Combination',
-        description: `Combines the latest values from multiple INNER observables emitted by a source observable.
+  },
+  combineLatestAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by applying combineLatest on all collected inner observables after the source completes.',
+      mentalModel:
+        'Collect all inner channels first, then monitor all of them simultaneously with combineLatest.',
+      stepByStep: [
+        'Subscribe to outer (source) observable',
+        'Collect each inner observable as source emits them',
+        'Wait for the source observable to complete',
+        'Apply combineLatest to all collected inner observables',
+        'Emit combined latest values whenever any inner emits',
+      ],
+      timeline: `Source: --innerA\$----innerB\$--|  (completes after emitting 2 inners)
+After source completes → combineLatest(innerA\$, innerB\$)
+InnerA\$ emits 1,2,3 synchronously (of) → latest stored = 3
+InnerB\$ emits 10,20,30 synchronously (of) → combines with A's latest (3)
+Out:    [3,10] → [3,20] → [3,30]`,
+      keyDifferences: [
+        'vs combineLatest → combineLatest takes a static list; combineLatestAll works with dynamic inner observables',
+        'vs mergeAll → mergeAll emits from each inner independently; combineLatestAll combines latest from all',
+        'vs concatAll → concatAll subscribes to inners sequentially; combineLatestAll subscribes to all after source completes',
+      ],
+      useCases: [
+        'Dynamic number of streams that need latest-value combination',
+        'Reactive forms with dynamically added fields',
+      ],
+      gotchas: [
+        'No output until the outer observable completes',
+        'If outer never completes, no values are ever emitted',
+        'All inner observables must emit at least once before output starts',
+      ],
+      categoryNote:
+        'Combination operator → higher-order variant of combineLatest for dynamic inner streams.',
+    }),
 
-⚠️ Important:
-combineLatestAll works only after the source observable completes.
-It then applies combineLatest on all collected inner observables.
+    comparisons: [
+      'combineLatest',
+      'zipAll',
+      'mergeAll',
+      'concatAll',
+      'switchAll',
+    ],
 
-How the output behaves depends on:
-
-• when inner observables are emitted by the source
-• when the source completes
-• emissions inside each inner observable
-
-Example timeline  
-(Source Interval = 1000ms → emits 2 inner observables)
-
-Source emissions (outer observable)
-
-1000        2000
-  |            |
- innerA$    innerB$
-
-(innerA$ → [1,2,3])  
-(innerB$ → [10,20,30])
-
-⚠️ combineLatestAll waits until source COMPLETES (after 2000ms)
-
-After completion → combineLatest starts on collected inner observables
-
-Inner observable emissions (conceptual)
-
-A: 1   2   3  
-   |   |   |
-
-B: 10  20  30  
-   |   |   |
-
-combineLatest behavior begins
-
-[1,10] → [2,10] → [3,10] → [3,20] → [3,30]
-
-Important idea:
-combineLatestAll first COLLECTS all inner observables, then behaves exactly like combineLatest.
-
-This means:
-• No output until the outer observable completes
-• After that, it combines latest values from all inner observables
-• Emits whenever any inner observable emits (like combineLatest)`,
-        comparisons: ['combineLatest', 'zipAll', 'mergeAll', 'concatAll', 'switchAll'],
-
-        syntax: `
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -198,33 +336,65 @@ interval(1000)
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Interval (ms)', defaultValue: [1000] },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] }
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Interval (ms)', defaultValue: [1000] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, intervalMs, bValues] = inputs;
+    run: (inputs) => {
+      const [aValues, intervalMs, bValues] = inputs;
 
-            const innerA$ = of(...aValues);
-            const innerB$ = of(...bValues);
+      const innerA$ = of(...aValues);
+      const innerB$ = of(...bValues);
 
-            return interval(intervalMs[0]).pipe(
-                take(2),
-                map(i => (i === 0 ? innerA$ : innerB$)),
-                combineLatestAll(),
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      return interval(intervalMs[0]).pipe(
+        take(2),
+        map((i) => (i === 0 ? innerA$ : innerB$)),
+        combineLatestAll(),
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
     },
-    concat: {
-        name: 'concat',
-        category: 'Combination',
-        description: 'Subscribes to observables one after another sequentially. Waits for EACH observable to complete before subscribing to the next. Great for scenarios like: step 1 finish → step 2 → step 3 or: fetch data → save to cache → show results.',
-        comparisons: ['merge', 'switchMap'],
+  },
+  concat: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Subscribes to observables one after another sequentially, starting each only after the previous completes.',
+      mentalModel:
+        'A playlist — next song starts only when the current one finishes.',
+      stepByStep: [
+        'Subscribe to the first observable',
+        'Emit all its values',
+        'Wait for it to complete',
+        'Subscribe to the next observable',
+        'Repeat until all observables are done',
+      ],
+      timeline: `A: --1--2--3--|
+B:              --10--20--30--|
+Out: 1, 2, 3, 10, 20, 30  (sequential, never mixed)`,
+      keyDifferences: [
+        'vs merge → merge subscribes to all concurrently and interleaves; concat is strictly sequential',
+        'vs switchMap → switchMap cancels previous; concat waits for completion',
+        'vs forkJoin → forkJoin runs in parallel and emits last values; concat runs in series',
+      ],
+      useCases: [
+        'Executing sequential HTTP requests (step 1 → step 2 → step 3)',
+        'Ensuring ordered operations like: fetch → cache → display',
+        'Loading resources in a specific order',
+      ],
+      gotchas: [
+        'If any observable never completes, subsequent ones never start',
+        'Order of arguments determines execution order',
+        'Not suitable for parallel operations',
+      ],
+      categoryNote:
+        'Combination operator → sequential concatenation of streams.',
+    }),
 
-        syntax: `
+    comparisons: ['merge', 'switchMap'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const bValues = $INPUT_2_ARRAY;
 
@@ -234,31 +404,62 @@ concat(of(...aValues), of(...bValues))
   .subscribe(value => console.log(value));
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [0], hide: true },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [0], hide: true }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [0], hide: true },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [0], hide: true },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            return concat(
-                of(...aValues),
-                of(...bValues)
-            ).pipe(
-                map(value => String(value))
-            );
-        }
+      return concat(of(...aValues), of(...bValues)).pipe(
+        map((value) => String(value)),
+      );
     },
-    concatAll: {
-        name: 'concatAll',
-        category: 'Combination',
-        description: 'Flattens an observable-of-observables by subscribing to each inner observable sequentially. It waits for the CURRENT inner observable to complete before subscribing to the NEXT one. Useful when observables are created dynamically and order must be preserved.',
-        comparisons: ['mergeAll', 'switchAll', 'concat'],
+  },
+  concatAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by subscribing to each inner observable one at a time, in order.',
+      mentalModel:
+        'A queue — process one task completely before starting the next.',
+      stepByStep: [
+        'Subscribe to the source (outer) observable',
+        'Receive and subscribe to the first inner observable',
+        'Emit all its values',
+        'Wait for it to complete',
+        'Subscribe to the next inner observable',
+        'Repeat until all inners are done',
+      ],
+      timeline: `Source: --innerA\$--innerB\$--|
+innerA\$: --1--2--3--|
+innerB\$:              --10--20--30--|
+Out:     1, 2, 3, 10, 20, 30  (one at a time, in order)`,
+      keyDifferences: [
+        'vs mergeAll → mergeAll subscribes to all inners concurrently; concatAll waits for each to complete',
+        'vs switchAll → switchAll cancels previous inner; concatAll queues them',
+        'vs exhaustAll → exhaustAll ignores new while busy; concatAll queues and processes all',
+      ],
+      useCases: [
+        'Processing tasks in strict sequential order',
+        'Sequential animations that must not overlap',
+        'Ordered API call chains from dynamic sources',
+      ],
+      gotchas: [
+        'If any inner never completes, the queue stalls permanently',
+        'Backpressure risk if inners arrive faster than they complete',
+        'Queued inners accumulate in memory',
+      ],
+      categoryNote:
+        'Combination operator → sequential flattening of higher-order observables.',
+    }),
 
-        syntax: `
+    comparisons: ['mergeAll', 'switchAll', 'concat'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const bValues = $INPUT_2_ARRAY;
 
@@ -273,36 +474,75 @@ of(
 .subscribe(value => console.log(value));
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Inner Observable A Interval (ms)', defaultValue: [0], hide: true },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Inner Observable B Interval (ms)', defaultValue: [0], hide: true }
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      {
+        label: 'Inner Observable A Interval (ms)',
+        defaultValue: [0],
+        hide: true,
+      },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      {
+        label: 'Inner Observable B Interval (ms)',
+        defaultValue: [0],
+        hide: true,
+      },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            return of(
-                of(...aValues),
-                of(...bValues)
-            ).pipe(
-                concatAll(),
-                map(value => String(value))
-            );
-        }
+      return of(of(...aValues), of(...bValues)).pipe(
+        concatAll(),
+        map((value) => String(value)),
+      );
     },
-    concatMap: {
-        name: 'concatMap',
-        category: 'Combination',
-        description: 'Maps each source value to an inner observable and subscribes to them SEQUENTIALLY.',
-        comparisons: ['mergeMap', 'switchMap', 'exhaustMap', 'concatAll'],
+  },
+  concatMap: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Maps each source value to an inner observable and subscribes sequentially, waiting for each to complete before processing the next.',
+      mentalModel:
+        'A factory assembly line — each item must finish processing before the next one enters.',
+      stepByStep: [
+        'Receive value from source',
+        'Map it to an inner observable using the projection function',
+        'Subscribe to the inner observable',
+        'Emit all inner values',
+        'Wait for inner to complete',
+        'Process the next source value',
+      ],
+      timeline: `Source:  --A------B------C--|
+innerA\$: --1--2--|
+innerB\$:          --3--4--|
+innerC\$:                   --5--6--|
+Out:     1, 2, 3, 4, 5, 6  (strictly ordered)`,
+      keyDifferences: [
+        'vs mergeMap → mergeMap runs all inners concurrently; concatMap queues them',
+        'vs switchMap → switchMap cancels previous inner on new source; concatMap waits',
+        'vs exhaustMap → exhaustMap ignores new source values while busy; concatMap queues them',
+      ],
+      useCases: [
+        'Sequential API calls where order matters',
+        'File uploads processed one at a time',
+        'Database operations needing strict ordering',
+      ],
+      gotchas: [
+        'Slow inner observables delay all subsequent ones',
+        'Source values queue up in memory while waiting',
+        'If inner never completes, the stream stalls',
+      ],
+      categoryNote: 'Combination operator → sequential higher-order mapping.',
+    }),
 
-        syntax: `
-const aValues = $INPUT_0_ARRAY;
-const aInterval = $INPUT_1_VALUE;
-const bValues = $INPUT_2_ARRAY;
-const bInterval = $INPUT_3_VALUE;
+    comparisons: ['mergeMap', 'switchMap', 'exhaustMap', 'concatAll'],
+
+    syntax: `
+const sourceValues = $INPUT_0_ARRAY;
+const sourceInterval = $INPUT_1_VALUE;
+const innerValues = $INPUT_2_ARRAY;
+const innerInterval = $INPUT_3_VALUE;
 
 interval(sourceInterval)
   .pipe(
@@ -317,43 +557,71 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Inner Values', defaultValue: [10, 20, 30] },
-            { label: 'Inner Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Inner Values', defaultValue: [10, 20, 30] },
+      { label: 'Inner Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [
-                sourceValues,
-                sourceIntervalArr,
-                innerValues,
-                innerIntervalArr
-            ] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceIntervalArr, innerValues, innerIntervalArr] =
+        inputs;
 
-            const sourceInterval = sourceIntervalArr[0];
-            const innerInterval = innerIntervalArr[0];
+      const sourceInterval = sourceIntervalArr[0];
+      const innerInterval = innerIntervalArr[0];
 
-            return interval(sourceInterval).pipe(
-                take(sourceValues.length),
-                concatMap((_, index) =>
-                    interval(innerInterval).pipe(
-                        take(innerValues.length),
-                        map(i => `inner-${index + 1}: ${innerValues[i]}`)
-                    )
-                ),
-                map(String)
-            );
-        }
+      return interval(sourceInterval).pipe(
+        take(sourceValues.length),
+        concatMap((_, index) =>
+          interval(innerInterval).pipe(
+            take(innerValues.length),
+            map((i) => `inner-${index + 1}: ${innerValues[i]}`),
+          ),
+        ),
+        map(String),
+      );
     },
-    exhaustAll: {
-        name: 'exhaustAll',
-        category: 'Combination',
-        description: 'Flattens an observable-of-observables while ignoring new inner observables until the current one completes.',
-        comparisons: ['exhaustMap', 'mergeAll', 'concatAll'],
+  },
+  exhaustAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable, ignoring new inner observables while the current one is still active.',
+      mentalModel:
+        'A busy door — if someone is inside, no one else can enter until they leave.',
+      stepByStep: [
+        'Subscribe to the source (outer) observable',
+        'Subscribe to the first inner observable',
+        'Emit its values',
+        'Ignore any new inner observables that arrive while the current is active',
+        'When current inner completes, accept the next inner',
+      ],
+      timeline: `Source:  --inner1\$--inner2\$(ignored)--|
+inner1\$: --1--2--3--|
+Out:     1, 2, 3  (inner2\$ was ignored because inner1\$ was still active, source had no more inners)`,
+      keyDifferences: [
+        'vs mergeAll → mergeAll subscribes to all concurrently; exhaustAll ignores new while busy',
+        'vs switchAll → switchAll cancels current for new; exhaustAll keeps current and ignores new',
+        'vs concatAll → concatAll queues all inners; exhaustAll drops ones that arrive while busy',
+      ],
+      useCases: [
+        'Preventing duplicate form submissions',
+        'Ignoring rapid button clicks while processing',
+        'Debounce-like behavior for operations',
+      ],
+      gotchas: [
+        'New inner observables during active subscription are silently dropped',
+        'No queuing — dropped inners are lost forever',
+        'If inner never completes, all subsequent inners are permanently lost',
+      ],
+      categoryNote:
+        'Combination operator → selective flattening that prevents concurrent execution.',
+    }),
 
-        syntax: `
+    comparisons: ['exhaustMap', 'mergeAll', 'concatAll'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -367,39 +635,71 @@ of(inner1$, inner2$)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Inner Observable B Interval (ms)', defaultValue: [100] }
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Inner Observable B Interval (ms)', defaultValue: [100] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const inner1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const inner1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const inner2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const inner2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return of(inner1$, inner2$).pipe(
-                exhaustAll(),
-                map(v => String(v))
-            );
-        }
+      return of(inner1$, inner2$).pipe(
+        exhaustAll(),
+        map((v) => String(v)),
+      );
     },
-    exhaustMap: {
-        name: 'exhaustMap',
-        category: 'Transformation',
-        description: 'Ignores new source emissions while an inner observable is active.',
-        comparisons: ['concatMap', 'mergeMap', 'switchMap', 'exhaustAll'],
+  },
+  exhaustMap: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Maps each source value to an inner observable, ignoring new source values while the current inner is still active.',
+      mentalModel:
+        'A phone call — if you are on a call, incoming calls are ignored until you hang up.',
+      stepByStep: [
+        'Receive value from source',
+        'Map to inner observable and subscribe',
+        'Emit inner values',
+        'Ignore new source values while inner is active',
+        'When inner completes, accept the next source value',
+      ],
+      timeline: `Source:  --1------2(ignored)--3(ignored)--|
+inner-1: --10--20--30--|
+Out:     inner-1: 10, inner-1: 20, inner-1: 30  (2 and 3 ignored because inner-1 was still active)`,
+      keyDifferences: [
+        'vs switchMap → switchMap cancels current for new; exhaustMap keeps current and ignores new',
+        'vs mergeMap → mergeMap runs all concurrently; exhaustMap only allows one at a time',
+        'vs concatMap → concatMap queues all values; exhaustMap drops those arriving while busy',
+      ],
+      useCases: [
+        'Login button click handling (ignore re-clicks while logging in)',
+        'Preventing duplicate API requests',
+        'Form submission protection',
+      ],
+      gotchas: [
+        'New source values during active inner are silently lost',
+        'Not suitable when every value must be processed',
+        'Different from debounce — exhaustMap processes immediately',
+      ],
+      categoryNote:
+        'Combination operator → selective mapping that prevents concurrent execution.',
+    }),
 
-        syntax: `
+    comparisons: ['concatMap', 'mergeMap', 'switchMap', 'exhaustAll'],
+
+    syntax: `
 const sourceValues = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const innerValues = $INPUT_2_ARRAY;
@@ -418,42 +718,70 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [200] },
-            { label: 'Inner Values', defaultValue: [10, 20, 30] },
-            { label: 'Inner Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [200] },
+      { label: 'Inner Values', defaultValue: [10, 20, 30] },
+      { label: 'Inner Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [
-                sourceValues,
-                sourceIntervalArr,
-                innerValues,
-                innerIntervalArr
-            ] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceIntervalArr, innerValues, innerIntervalArr] =
+        inputs;
 
-            const sourceInterval = sourceIntervalArr[0];
-            const innerInterval = innerIntervalArr[0];
+      const sourceInterval = sourceIntervalArr[0];
+      const innerInterval = innerIntervalArr[0];
 
-            return interval(sourceInterval).pipe(
-                take(sourceValues.length),
-                exhaustMap((_, index) =>
-                    interval(innerInterval).pipe(
-                        take(innerValues.length),
-                        map(i => `inner-${index + 1}: ${innerValues[i]}`)
-                    )
-                ),
-                map(String)
-            );
-        }
+      return interval(sourceInterval).pipe(
+        take(sourceValues.length),
+        exhaustMap((_, index) =>
+          interval(innerInterval).pipe(
+            take(innerValues.length),
+            map((i) => `inner-${index + 1}: ${innerValues[i]}`),
+          ),
+        ),
+        map(String),
+      );
     },
-    forkJoin: {
-        name: 'forkJoin',
-        category: 'Combination',
-        description: '⚠️ EMITS ONLY ONCE! Waits for ALL observables to COMPLETE, then emits the LAST value from each. Perfect for: parallel API requests that all need to finish before proceeding. Unlike combineLatest, it never re-emits even if values change.',
-        comparisons: ['combineLatest', 'zip'],
-        syntax: `
+  },
+  forkJoin: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Waits for ALL observables to complete, then emits the LAST value from each as a single combined emission.',
+      mentalModel:
+        'Promise.all() — wait for everything to finish, then give me all the final results.',
+      stepByStep: [
+        'Subscribe to all observables concurrently',
+        'Wait for each one to complete',
+        'Collect the last emitted value from each',
+        'Emit combined array/object of last values',
+        'Complete',
+      ],
+      timeline: `A: --1--2--3--|       (completes at 900ms)
+B: --10--------20--------30--|  (completes at 1500ms)
+Out:                          [3, 30]  (last value from each, after ALL complete)`,
+      keyDifferences: [
+        'vs combineLatest → combineLatest emits continuously on any change; forkJoin emits once at the end',
+        'vs zip → zip pairs by emission index; forkJoin only cares about final values',
+        'vs concat → concat runs sequentially; forkJoin runs in parallel',
+      ],
+      useCases: [
+        'Parallel HTTP requests needing all results before proceeding',
+        'Loading initial app data from multiple APIs simultaneously',
+        'Batch operations that must all succeed',
+      ],
+      gotchas: [
+        'If ANY observable errors, the whole forkJoin errors',
+        'If ANY observable never completes, forkJoin never emits',
+        'Empty observables cause forkJoin to complete immediately with empty result',
+      ],
+      categoryNote:
+        'Combination operator → parallel execution with final-result collection.',
+    }),
+
+    comparisons: ['combineLatest', 'zip'],
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -470,38 +798,67 @@ forkJoin([obs1$, obs2$])
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return forkJoin([obs1$, obs2$]).pipe(
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      return forkJoin([obs1$, obs2$]).pipe(map(([a, b]) => `[${a}, ${b}]`));
     },
-    merge: {
-        name: 'merge',
-        category: 'Combination',
-        description: 'Subscribes to all provided observables IMMEDIATELY and merges their emissions into a single stream. Values can interleave and order is NOT guaranteed. Best for parallel, independent tasks.',
-        comparisons: ['concat', 'mergeAll', 'switchMap'],
+  },
+  merge: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Subscribes to multiple observables concurrently and interleaves their emissions into a single output stream.',
+      mentalModel:
+        'Multiple lanes merging into one highway — all cars arrive as they come, no waiting.',
+      stepByStep: [
+        'Subscribe to all observables at once',
+        'Emit values from any source as they arrive',
+        'Continue until all observables complete',
+        'Complete the output',
+      ],
+      timeline: `A: --1-----2-----3--|
+B: ----10-----20-----30--|
+Out: 1, 10, 2, 20, 3, 30  (interleaved by timing)`,
+      keyDifferences: [
+        'vs concat → concat waits for each to complete before next; merge runs all concurrently',
+        'vs combineLatest → combineLatest combines latest values; merge just interleaves independently',
+        'vs race → race only keeps the first emitter; merge keeps all',
+      ],
+      useCases: [
+        'Merging multiple event streams (clicks, hovers, keyboard)',
+        'Combining multiple WebSocket feeds',
+        'Aggregating responses from multiple sources',
+      ],
+      gotchas: [
+        'Output order depends on timing, not argument order',
+        'If any observable errors, merge errors',
+        'Optional concurrent parameter limits simultaneous subscriptions',
+      ],
+      categoryNote:
+        'Combination operator → concurrent interleaving of multiple streams.',
+    }),
 
-        syntax: `
+    comparisons: ['concat', 'mergeAll', 'switchMap'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -516,38 +873,68 @@ merge(
 .subscribe(value => console.log(value));
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return merge(obs1$, obs2$).pipe(
-                map(value => String(value))
-            );
-        }
+      return merge(obs1$, obs2$).pipe(map((value) => String(value)));
     },
-    mergeAll: {
-        name: 'mergeAll',
-        category: 'Combination',
-        description: 'Flattens an observable-of-observables by subscribing to ALL inner observables immediately. Emissions from inner observables can interleave. Use when order does not matter and maximum concurrency is desired.',
-        comparisons: ['concatAll', 'switchAll', 'merge', 'concatMap'],
+  },
+  mergeAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by subscribing to all inner observables concurrently.',
+      mentalModel:
+        'Opening all packages at once instead of one at a time — everything comes out simultaneously.',
+      stepByStep: [
+        'Subscribe to the source (outer) observable',
+        'As each inner observable arrives, subscribe immediately',
+        'Emit values from all active inners concurrently',
+        'Continue until all inners and source complete',
+      ],
+      timeline: `Source:  --innerA\$----innerB\$--|
+innerA\$: --1----2----3--|
+innerB\$:          --10----20----30--|
+Out:     1, 10, 2, 20, 3, 30  (interleaved, all concurrent)`,
+      keyDifferences: [
+        'vs concatAll → concatAll subscribes one at a time; mergeAll subscribes to all concurrently',
+        'vs switchAll → switchAll cancels previous inner; mergeAll keeps all active',
+        'vs exhaustAll → exhaustAll ignores new while busy; mergeAll accepts everything',
+      ],
+      useCases: [
+        'Handling multiple concurrent API calls',
+        'Processing parallel tasks from dynamic sources',
+        'Merging dynamic event streams',
+      ],
+      gotchas: [
+        'Unlimited concurrency can overwhelm resources',
+        'No ordering guarantee between inner emissions',
+        'Memory grows with many active inner observables',
+      ],
+      categoryNote:
+        'Combination operator → concurrent flattening of higher-order observables.',
+    }),
 
-        syntax: `
+    comparisons: ['concatAll', 'switchAll', 'merge', 'concatMap'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const bValues = $INPUT_2_ARRAY;
 const aInterval = $INPUT_1_VALUE;
@@ -563,38 +950,71 @@ of(
 .subscribe(value => console.log(value));
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Inner Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Inner Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            return of(
-                interval(aInterval[0]).pipe(
-                    take(aValues.length),
-                    map(i => aValues[i])
-                ),
-                interval(bInterval[0]).pipe(
-                    take(bValues.length),
-                    map(i => bValues[i])
-                )
-            ).pipe(
-                mergeAll(),
-                map(value => String(value))
-            );
-        }
+      return of(
+        interval(aInterval[0]).pipe(
+          take(aValues.length),
+          map((i) => aValues[i]),
+        ),
+        interval(bInterval[0]).pipe(
+          take(bValues.length),
+          map((i) => bValues[i]),
+        ),
+      ).pipe(
+        mergeAll(),
+        map((value) => String(value)),
+      );
     },
-    mergeMap: {
-        name: 'mergeMap',
-        category: 'Transformation',
-        description: 'Maps each source value to an inner observable and subscribes to ALL inner observables immediately. Inner observables run in PARALLEL and their emissions may interleave. Order is NOT guaranteed.',
-        comparisons: ['concatMap', 'switchMap', 'exhaustMap', 'mergeAll'],
+  },
+  mergeMap: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Maps each source value to an inner observable and subscribes to all of them concurrently, merging their emissions.',
+      mentalModel:
+        'A team of workers — each incoming task is assigned to a new worker immediately, all work in parallel.',
+      stepByStep: [
+        'Receive value from source',
+        'Map to inner observable using projection function',
+        'Subscribe immediately (no waiting for previous)',
+        'Emit all inner values as they arrive',
+        'Do this for every source value concurrently',
+      ],
+      timeline: `Source:   --1--------2--------3--|       (@200ms)
+inner-1:   --10---20---30--|              (@300ms)
+inner-2:            --10---20---30--|
+inner-3:                     --10---20---30--|
+Out: inner-1:10, inner-2:10, inner-1:20, inner-3:10, ...  (9 values, interleaved)`,
+      keyDifferences: [
+        'vs switchMap → switchMap cancels previous inner on new source; mergeMap keeps all running',
+        'vs concatMap → concatMap queues sequentially; mergeMap runs concurrently',
+        'vs exhaustMap → exhaustMap ignores new while busy; mergeMap processes all',
+      ],
+      useCases: [
+        'Parallel HTTP requests where order does not matter',
+        'Auto-suggest with concurrent searches',
+        'Loading multiple resources simultaneously',
+      ],
+      gotchas: [
+        'Unlimited concurrency by default (can overload server)',
+        'No ordering guarantees on output',
+        'Can cause race conditions in side effects',
+      ],
+      categoryNote: 'Combination operator → concurrent higher-order mapping.',
+    }),
 
-        syntax: `
+    comparisons: ['concatMap', 'switchMap', 'exhaustMap', 'mergeAll'],
+
+    syntax: `
 const sourceValues = $INPUT_0_ARRAY;
 const innerValues = $INPUT_2_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
@@ -614,47 +1034,72 @@ interval(sourceInterval)
   )
   .subscribe(value => console.log(value));
 
-// Output (interleaved):
-// 10, 10, 10, 20, 20, 20, 30, 30, 30 (order may vary)
+// Output (interleaved, order depends on timing):
+// inner-1: 10, inner-2: 10, inner-1: 20, inner-3: 10, ...
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [200] },
-            { label: 'Inner Values', defaultValue: [10, 20, 30] },
-            { label: 'Inner Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [200] },
+      { label: 'Inner Values', defaultValue: [10, 20, 30] },
+      { label: 'Inner Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [
-                sourceValues,
-                sourceIntervalArr,
-                innerValues,
-                innerIntervalArr
-            ] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceIntervalArr, innerValues, innerIntervalArr] =
+        inputs;
 
-            const sourceInterval = sourceIntervalArr[0];
-            const innerInterval = innerIntervalArr[0];
+      const sourceInterval = sourceIntervalArr[0];
+      const innerInterval = innerIntervalArr[0];
 
-            return interval(sourceInterval).pipe(
-                take(sourceValues.length),
-                mergeMap((_, index) =>
-                    interval(innerInterval).pipe(
-                        take(innerValues.length),
-                        map(i => `inner-${index + 1}: ${innerValues[i]}`)
-                    )
-                ),
-                map(String)
-            );
-        }
+      return interval(sourceInterval).pipe(
+        take(sourceValues.length),
+        mergeMap((_, index) =>
+          interval(innerInterval).pipe(
+            take(innerValues.length),
+            map((i) => `inner-${index + 1}: ${innerValues[i]}`),
+          ),
+        ),
+        map(String),
+      );
     },
-    mergeScan: {
-        name: 'mergeScan',
-        category: 'Combination',
-        description: 'Accumulates values asynchronously by merging inner observables.',
-        comparisons: ['scan', 'mergeMap'],
+  },
+  mergeScan: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Applies an accumulator function that returns an observable, merging each result into the accumulated state.',
+      mentalModel:
+        'scan + mergeMap combined — accumulate state where each accumulation step is an async operation.',
+      stepByStep: [
+        'Start with a seed value',
+        'Receive value from source',
+        'Pass current accumulation and value to accumulator function',
+        'Subscribe to the returned observable',
+        'Merge result into the accumulation',
+        'Use updated accumulation for the next value',
+      ],
+      keyDifferences: [
+        'vs scan → scan accumulates synchronously; mergeScan accumulates via observables',
+        'vs mergeMap → mergeMap does not maintain accumulation state; mergeScan does',
+        'vs reduce → reduce emits only final value; mergeScan emits each intermediate step',
+      ],
+      useCases: [
+        'Recursive async state accumulation',
+        'Paginated API loading with accumulated results',
+        'State machines with async transitions',
+      ],
+      gotchas: [
+        'Concurrent inner observables can lead to race conditions in accumulation',
+        'Seed value is required',
+        'Complex to debug due to async accumulation',
+      ],
+      categoryNote: 'Combination operator → async stateful accumulation.',
+    }),
 
-        syntax: `
+    comparisons: ['scan', 'mergeMap'],
+
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 
@@ -667,29 +1112,58 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalMs] = inputs;
+    run: (inputs) => {
+      const [values, intervalMs] = inputs;
 
-            return interval(intervalMs[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                mergeScan((acc, v) => of(acc + v), 0),
-                map(v => String(v))
-            );
-        }
+      return interval(intervalMs[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        mergeScan((acc, v) => of(acc + v), 0),
+        map((v) => String(v)),
+      );
     },
-    pairwise: {
-        name: 'pairwise',
-        category: 'Combination',
-        description: 'Emits the previous and current values together as a pair.',
-        comparisons: ['scan'],
+  },
+  pairwise: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Groups consecutive emissions into pairs, emitting each value alongside its previous value as a two-element array.',
+      mentalModel:
+        'A sliding window of size 2 — always looking at current and previous.',
+      stepByStep: [
+        'Wait for the first value (no emission yet)',
+        'On second value, emit [first, second]',
+        'On third value, emit [second, third]',
+        'Continue pairing each value with the previous one',
+      ],
+      timeline: `Source: --1--2--3--4--|
+Out:       [1,2] [2,3] [3,4]  (overlapping pairs)`,
+      keyDifferences: [
+        'vs bufferCount(2) → bufferCount creates non-overlapping chunks; pairwise creates overlapping pairs',
+        'vs scan → scan accumulates any state; pairwise specifically pairs consecutive values',
+        'vs withLatestFrom → withLatestFrom combines from other streams; pairwise pairs within same stream',
+      ],
+      useCases: [
+        'Calculating deltas between consecutive values',
+        'Mouse movement tracking (previous vs current position)',
+        'Detecting state changes by comparison',
+      ],
+      gotchas: [
+        'First source emission produces no output (needs 2 values to make a pair)',
+        'Source with only 1 emission produces nothing',
+        'Always emits one fewer value than the source',
+      ],
+      categoryNote: 'Combination operator → consecutive value pairing.',
+    }),
 
-        syntax: `
+    comparisons: ['scan'],
+
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -697,27 +1171,59 @@ of(...values)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4] },
-            { label: 'Source Interval (ms)', defaultValue: [0], hide: true }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4] },
+      { label: 'Source Interval (ms)', defaultValue: [0], hide: true },
+    ],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                pairwise(),
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      return of(...values).pipe(
+        pairwise(),
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
     },
-    race: {
-        name: 'race',
-        category: 'Combination',
-        description: 'Subscribes to multiple observables but mirrors only the first one that emits.',
-        comparisons: ['raceWith', 'merge', 'concat'],
+  },
+  race: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Subscribes to all observables and mirrors only the FIRST one to emit, unsubscribing from all others.',
+      mentalModel:
+        'A race — first runner to cross the line wins, everyone else goes home.',
+      stepByStep: [
+        'Subscribe to all observables simultaneously',
+        'Wait for any observable to emit first',
+        'Mirror only that winning observable',
+        'Unsubscribe from all losers',
+        'Continue with the winner until it completes',
+      ],
+      timeline: `A: --1--2--3--|            ← A emits first (300ms), A wins
+B: -------10--20--30--|
+Out: 1, 2, 3              (B is unsubscribed)`,
+      keyDifferences: [
+        'vs merge → merge keeps all streams; race keeps only the fastest',
+        'vs first → first takes one value and completes; race mirrors the entire winning stream',
+        'vs combineLatest → combineLatest combines all; race selects one',
+      ],
+      useCases: [
+        'Fastest API endpoint wins',
+        'Timeout fallback patterns',
+        'Redundant service calls — take the fastest response',
+      ],
+      gotchas: [
+        'If the winner errors after winning, the race errors',
+        'Losers are unsubscribed immediately and permanently',
+        'Only the very first emission determines the winner',
+      ],
+      categoryNote:
+        'Combination operator → competitive selection of the fastest stream.',
+    }),
 
-        syntax: `
+    comparisons: ['raceWith', 'merge', 'concat'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -730,66 +1236,63 @@ race(obs1$, obs2$)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return race(obs1$, obs2$).pipe(
-                map(v => String(v))
-            );
-        }
+      return race(obs1$, obs2$).pipe(map((v) => String(v)));
     },
-    raceWith: {
-        name: 'raceWith',
-        category: 'Combination',
-        description: `Competes with other observables and mirrors the one that emits first.
+  },
+  raceWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Pipeable version of race — races the source observable against other provided observables, keeping whichever emits first.',
+      mentalModel:
+        'Same as race but used as a pipe operator on an existing observable.',
+      stepByStep: [
+        'Subscribe to the source and all provided observables',
+        'First one to emit wins',
+        'Mirror the winner',
+        'Unsubscribe from all losers',
+      ],
+      keyDifferences: [
+        'vs race → race is a creation function; raceWith is a pipeable operator',
+        'vs merge → merge keeps all streams; raceWith picks one winner',
+        'vs timeout → timeout throws an error; raceWith switches to alternate stream',
+      ],
+      useCases: [
+        'Adding a timeout fallback using an alternate stream',
+        'Racing primary vs backup API endpoint',
+        'Responsive fallback patterns in a pipe chain',
+      ],
+      gotchas: [
+        'Same behavior as race — first emission wins the race',
+        'Source observable has no priority advantage',
+        'All subscriptions start simultaneously',
+      ],
+      categoryNote: 'Combination operator → pipeable version of race.',
+    }),
 
-⚠️ Why does raceWith exist when we already have race?
+    comparisons: ['race'],
 
-RxJS provides two API styles:
-
-1️⃣ Creation function
-race(obs1$, obs2$)
-
-2️⃣ Pipeable operator
-obs1$.pipe(raceWith(obs2$))
-
-Both behave the same — the observable that emits first wins.  
-The difference is only **where the operator is used**.
-
-race() is used when creating a new observable from multiple sources.  
-raceWith() is used inside an existing pipe chain.
-
-Example:
-
-race(obs1$, obs2$)
-
-vs
-
-obs1$.pipe(raceWith(obs2$))
-
-This design keeps RxJS operators consistent with others like:
-merge / mergeWith
-concat / concatWith`,
-        comparisons: ['race'],
-
-        syntax: `
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -805,39 +1308,68 @@ obs1$
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return obs1$.pipe(
-                raceWith(obs2$),
-                map(v => String(v))
-            );
-        }
+      return obs1$.pipe(
+        raceWith(obs2$),
+        map((v) => String(v)),
+      );
     },
-    startWith: {
-        name: 'startWith',
-        category: 'Combination',
-        description: 'Emits the specified values before the source observable starts emitting.',
-        comparisons: ['concat'],
+  },
+  startWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Emits specified values synchronously before the source observable begins emitting.',
+      mentalModel:
+        'Adding a preface to a book — guaranteed initial content before the main story.',
+      stepByStep: [
+        'Emit all provided values synchronously',
+        'Then subscribe to the source observable',
+        'Emit source values as they arrive normally',
+      ],
+      timeline: `startWith(0):
+Source: -----1--2--3--|
+Out:    0----1--2--3--|  (0 emitted synchronously at subscription)`,
+      keyDifferences: [
+        'vs endWith → endWith appends values at the end after completion; startWith prepends',
+        'vs defaultIfEmpty → defaultIfEmpty only emits if source is empty; startWith always prepends',
+        'vs of + concat → functionally equivalent but startWith is more concise',
+      ],
+      useCases: [
+        'Providing initial state for UI before async data arrives',
+        'Default loading state before API response',
+        'Setting initial form values',
+      ],
+      gotchas: [
+        'Values are emitted synchronously before source subscription',
+        'Multiple values are emitted in the order provided',
+        'Does not delay or affect the source subscription',
+      ],
+      categoryNote: 'Combination operator → synchronous value prepending.',
+    }),
 
-        syntax: `
+    comparisons: ['concat'],
+
+    syntax: `
 const startValues = $INPUT_0_ARRAY;
 const sourceValues = $INPUT_2_ARRAY;
 
@@ -848,29 +1380,61 @@ of(...sourceValues)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Start Values', defaultValue: [0] },
-            { label: 'Start Interval (ms)', defaultValue: [0], hide: true },
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [0], hide: true }
-        ],
+    inputs: [
+      { label: 'Start Values', defaultValue: [0] },
+      { label: 'Start Interval (ms)', defaultValue: [0], hide: true },
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [0], hide: true },
+    ],
 
-        run: (inputs) => {
-            const [startValues, , sourceValues] = inputs;
+    run: (inputs) => {
+      const [startValues, , sourceValues] = inputs;
 
-            return of(...sourceValues).pipe(
-                startWith(...startValues),
-                map(v => String(v))
-            );
-        }
+      return of(...sourceValues).pipe(
+        startWith(...startValues),
+        map((v) => String(v)),
+      );
     },
-    switchAll: {
-        name: 'switchAll',
-        category: 'Combination',
-        description: 'Flattens an observable-of-observables by switching to the latest inner observable.',
-        comparisons: ['switchMap', 'mergeAll', 'concatAll'],
+  },
+  switchAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by subscribing to only the most recent inner observable, canceling the previous one.',
+      mentalModel:
+        'A TV remote — always watching the latest channel, switching abandons the previous one.',
+      stepByStep: [
+        'Subscribe to the source of inner observables',
+        'When a new inner arrives, subscribe to it',
+        'If another inner arrives, unsubscribe from the current one',
+        'Switch to the new inner observable',
+        'Emit only from the currently active inner',
+      ],
+      timeline: `Source:  --innerA\$-----------innerB\$--|
+innerA\$: --1--2--3--|                  (completes before B arrives)
+innerB\$:                     --10--20--30--|
+Out:     1, 2, 3, 10, 20, 30  (A completed before B, so no cancellation with these defaults)`,
+      keyDifferences: [
+        'vs mergeAll → mergeAll keeps all inners running; switchAll cancels previous',
+        'vs concatAll → concatAll queues inners; switchAll replaces them',
+        'vs exhaustAll → exhaustAll ignores new while busy; switchAll cancels current for new',
+      ],
+      useCases: [
+        'Showing only latest search results',
+        'Tab switching where only the active tab matters',
+        'Auto-canceling previous async operation',
+      ],
+      gotchas: [
+        'Previous inner is unsubscribed immediately on switch',
+        'Values from previous inner after switch are lost',
+        'Fast source emissions cause rapid subscribe/unsubscribe cycles',
+      ],
+      categoryNote: 'Combination operator → latest-wins flattening strategy.',
+    }),
 
-        syntax: `
+    comparisons: ['switchMap', 'mergeAll', 'concatAll'],
+
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -888,41 +1452,74 @@ interval(1000)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Inner Observable B Interval (ms)', defaultValue: [200] }
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Inner Observable B Interval (ms)', defaultValue: [200] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const inner1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const inner1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const inner2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const inner2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return interval(1000).pipe(
-                take(2),
-                map(i => i === 0 ? inner1$ : inner2$),
-                switchAll(),
-                map(v => String(v))
-            );
-        }
+      return interval(1000).pipe(
+        take(2),
+        map((i) => (i === 0 ? inner1$ : inner2$)),
+        switchAll(),
+        map((v) => String(v)),
+      );
     },
-    switchMap: {
-        name: 'switchMap',
-        category: 'Transformation',
-        description: 'Maps each source value to an inner observable and CANCELS the previous one.',
-        comparisons: ['mergeMap', 'concatMap', 'exhaustMap', 'switchAll'],
+  },
+  switchMap: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Maps each source value to an inner observable, subscribing to only the latest and canceling previous inner subscriptions.',
+      mentalModel:
+        'A search box — each new keystroke cancels the previous search and starts a new one.',
+      stepByStep: [
+        'Receive value from source',
+        'Map to inner observable using projection function',
+        'Unsubscribe from the previous inner observable',
+        'Subscribe to the new inner observable',
+        'Emit its values until next source emission triggers a switch',
+      ],
+      timeline: `Source:  --A------B------C--|
+innerA\$: --1--X(cancelled)
+innerB\$:          --3--X(cancelled)
+innerC\$:                  --5--6--|
+Out:     1, 3, 5, 6  (only latest inner survives)`,
+      keyDifferences: [
+        'vs mergeMap → mergeMap keeps all inners running concurrently; switchMap cancels previous',
+        'vs concatMap → concatMap queues all values; switchMap only keeps the latest',
+        'vs exhaustMap → exhaustMap ignores new while busy; switchMap cancels current for new',
+      ],
+      useCases: [
+        'Type-ahead search (cancel previous request on new input)',
+        'Route parameter changes triggering API calls',
+        'Auto-canceling previous HTTP requests',
+      ],
+      gotchas: [
+        'Previous inner observable is immediately canceled',
+        'Work already done by the previous inner is discarded',
+        'Not suitable when every request must complete',
+      ],
+      categoryNote: 'Combination operator → latest-wins higher-order mapping.',
+    }),
 
-        syntax: `
+    comparisons: ['mergeMap', 'concatMap', 'exhaustMap', 'switchAll'],
+
+    syntax: `
 const sourceValues = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const innerValues = $INPUT_2_ARRAY;
@@ -941,42 +1538,70 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [200] },
-            { label: 'Inner Values', defaultValue: [10, 20, 30] },
-            { label: 'Inner Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [200] },
+      { label: 'Inner Values', defaultValue: [10, 20, 30] },
+      { label: 'Inner Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [
-                sourceValues,
-                sourceIntervalArr,
-                innerValues,
-                innerIntervalArr
-            ] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceIntervalArr, innerValues, innerIntervalArr] =
+        inputs;
 
-            const sourceInterval = sourceIntervalArr[0];
-            const innerInterval = innerIntervalArr[0];
+      const sourceInterval = sourceIntervalArr[0];
+      const innerInterval = innerIntervalArr[0];
 
-            return interval(sourceInterval).pipe(
-                take(sourceValues.length),
-                switchMap((_, index) =>
-                    interval(innerInterval).pipe(
-                        take(innerValues.length),
-                        map(i => `inner-${index + 1}: ${innerValues[i]}`)
-                    )
-                ),
-                map(String)
-            );
-        }
+      return interval(sourceInterval).pipe(
+        take(sourceValues.length),
+        switchMap((_, index) =>
+          interval(innerInterval).pipe(
+            take(innerValues.length),
+            map((i) => `inner-${index + 1}: ${innerValues[i]}`),
+          ),
+        ),
+        map(String),
+      );
     },
-    withLatestFrom: {
-        name: 'withLatestFrom',
-        category: 'Combination',
-        description: 'Emits ONLY when the SOURCE observable emits, but always includes the latest values from other observables. ⚠️ Key difference from combineLatest: It doesn\'t emit when other observables emit - ONLY when SOURCE emits. Unlike zip, it doesn\'t wait for both to emit together.',
-        comparisons: ['combineLatest', 'zip'],
-        syntax: `
+  },
+  withLatestFrom: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Combines the source emission with the latest values from other observables, emitting ONLY when the source emits.',
+      mentalModel:
+        'A snapshot camera — takes a photo of other streams only when the shutter (source) triggers.',
+      stepByStep: [
+        'Subscribe to source and all other observables',
+        'Wait for all others to have emitted at least once',
+        'When source emits, combine with latest values from others',
+        'Emit the combined result',
+      ],
+      timeline: `Source: --1--------2--------3--|     (@500ms intervals)
+Other:  --100----200----300--|          (@400ms intervals, emits faster)
+Out:      [1,100]  [2,200]  [3,300]
+          ↑ Source drives timing, Other's latest value is sampled`,
+      keyDifferences: [
+        'vs combineLatest → combineLatest emits on ANY change; withLatestFrom only on source',
+        'vs forkJoin → forkJoin waits for completion; withLatestFrom emits continuously',
+        'vs zip → zip pairs by index; withLatestFrom samples latest from others',
+      ],
+      useCases: [
+        'Button click combined with current form values',
+        'Form submission enriched with latest validation state',
+        'Action events combined with latest app state',
+      ],
+      gotchas: [
+        'Source emissions BEFORE others have emitted are silently lost',
+        'Only source timing drives output emission',
+        'Other observables are sampled, not subscribed fresh each time',
+      ],
+      categoryNote:
+        'Combination operator → source-driven sampling of other streams.',
+    }),
+
+    comparisons: ['combineLatest', 'zip'],
+    syntax: `
 const sourceValues = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const otherValues = $INPUT_2_ARRAY;
@@ -1001,38 +1626,69 @@ source$.pipe(
 // - Emission frequency follows source, not other
 `.trim(),
 
-        inputs: [
-            { label: 'Source Observable', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [500] },
-            { label: 'Other Observable', defaultValue: [100, 200, 300] },
-            { label: 'Other Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Observable', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+      { label: 'Other Observable', defaultValue: [100, 200, 300] },
+      { label: 'Other Interval (ms)', defaultValue: [400] },
+    ],
 
-        run: (inputs) => {
-            const [sourceValues, sourceInterval, otherValues, otherInterval] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceInterval, otherValues, otherInterval] = inputs;
 
-            const source$ = interval(sourceInterval[0]).pipe(
-                take(sourceValues.length),
-                map(i => sourceValues[i])
-            );
+      const source$ = interval(sourceInterval[0]).pipe(
+        take(sourceValues.length),
+        map((i) => sourceValues[i]),
+      );
 
-            const other$ = interval(otherInterval[0]).pipe(
-                take(otherValues.length),
-                map(i => otherValues[i])
-            );
+      const other$ = interval(otherInterval[0]).pipe(
+        take(otherValues.length),
+        map((i) => otherValues[i]),
+      );
 
-            return source$.pipe(
-                withLatestFrom(other$),
-                map(([s, o]) => `[${s}, ${o}]`)
-            );
-        }
+      return source$.pipe(
+        withLatestFrom(other$),
+        map(([s, o]) => `[${s}, ${o}]`),
+      );
     },
-    zip: {
-        name: 'zip',
-        category: 'Combination',
-        description: 'Takes multiple observables as direct arguments and combines values. Waits for each observable to emit before combining. ⚠️ The key insight: zip emits at the pace of the SLOWEST observable. Notice obs2$ (500ms) is slower than obs1$ (300ms), so zip waits for obs2$ every time.',
-        comparisons: ['zipAll', 'combineLatest', 'combineLatestAll', 'forkJoin'],
-        syntax: `
+  },
+  zip: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Combines values from multiple observables by matching them positionally (1st with 1st, 2nd with 2nd, etc.).',
+      mentalModel: 'A zipper — teeth must match up one-to-one from both sides.',
+      stepByStep: [
+        'Subscribe to all observables',
+        'Wait for each to emit its Nth value',
+        'Pair the Nth values from all sources',
+        'Emit the combined tuple',
+        'Wait for all to emit the (N+1)th value and repeat',
+      ],
+      timeline: `A: --1--------2--------3--|
+B: ----10----------20---------|
+Out:  [1,10]      [2,20]       [3,???] ← waits for B
+     ↑ Paired by position, pace limited by slowest`,
+      keyDifferences: [
+        'vs combineLatest → combineLatest reuses latest values; zip requires fresh values from each',
+        'vs forkJoin → forkJoin only takes final values; zip pairs every emission by index',
+        'vs merge → merge interleaves without pairing; zip always pairs',
+      ],
+      useCases: [
+        'Pairing request with its corresponding response',
+        'Combining correlated data streams by position',
+        'Synchronizing parallel data sources one-to-one',
+      ],
+      gotchas: [
+        'Fastest observable waits for the slowest (pace limited)',
+        'Buffered values from fast observables grow in memory',
+        'If any observable never emits again, zip stalls',
+      ],
+      categoryNote: 'Combination operator → positional pairing of streams.',
+    }),
+
+    comparisons: ['zipAll', 'combineLatest', 'combineLatestAll', 'forkJoin'],
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -1047,37 +1703,62 @@ zip(obs1$, obs2$)
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
 
-        inputs: [
-            { label: 'Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Observable A Interval (ms)', defaultValue: [300] },
-            { label: 'Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Observable B Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Observable B Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            const obs1$ = interval(aInterval[0]).pipe(
-                take(aValues.length),
-                map(i => aValues[i])
-            );
+      const obs1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
 
-            const obs2$ = interval(bInterval[0]).pipe(
-                take(bValues.length),
-                map(i => bValues[i])
-            );
+      const obs2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
 
-            return zip(obs1$, obs2$).pipe(
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      return zip(obs1$, obs2$).pipe(map(([a, b]) => `[${a}, ${b}]`));
     },
-    zipAll: {
-        name: 'zipAll',
-        category: 'Combination',
-        description: 'Works with observables-of-observables. Use when you have a source that emits observables dynamically (unknown count at compile time). ⚠️ Key difference from zip: The observables themselves are emitted over time (1500ms intervals), whereas zip expects observables upfront. This shows a realistic scenario: async tasks are created dynamically.',
-        comparisons: ['zip', 'combineLatestAll', 'mergeAll'],
-        syntax: `
+  },
+  zipAll: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by applying zip to all collected inner observables after the source completes.',
+      mentalModel:
+        'Collect all inner channels, then pair their emissions by position like zip.',
+      stepByStep: [
+        'Subscribe to the source (outer) observable',
+        'Collect all inner observables as they arrive',
+        'Wait for the source to complete',
+        'Apply zip to all collected inner observables',
+        'Emit positionally paired values',
+      ],
+      keyDifferences: [
+        'vs zip → zip takes a static list; zipAll works with dynamic inner observables',
+        'vs combineLatestAll → combineLatestAll uses latest values; zipAll pairs by position',
+        'vs mergeAll → mergeAll interleaves without pairing; zipAll pairs by index',
+      ],
+      useCases: [
+        'Dynamic parallel operations needing positional pairing',
+        'Coordinating a dynamic number of observables by emission index',
+      ],
+      gotchas: [
+        'No output until the source observable completes',
+        'Pace limited by the slowest inner observable',
+        'All inners must emit the same count for complete pairing',
+      ],
+      categoryNote: 'Combination operator → higher-order variant of zip.',
+    }),
+
+    comparisons: ['zip', 'combineLatestAll', 'mergeAll'],
+    syntax: `
 const aValues = $INPUT_0_ARRAY;
 const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
@@ -1103,38 +1784,68 @@ taskStream$
   .subscribe(([val1, val2]) => console.log(val1, val2));
 `.trim(),
 
-        inputs: [
-            { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
-            { label: 'Inner Observable A Interval (ms)', defaultValue: [1500] },
-            { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
-            { label: 'Inner Observable B Interval (ms)', defaultValue: [300] },
-        ],
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Inner Observable A Interval (ms)', defaultValue: [1500] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Inner Observable B Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [aValues, aInterval, bValues, bInterval] = inputs;
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
 
-            // Emit observables at intervals (simulating dynamic task creation)
-            return interval(aInterval[0]).pipe(
-                take(2),
-                map(i =>
-                    interval(bInterval[0]).pipe(
-                        take(i === 0 ? aValues.length : bValues.length),
-                        map(j => i === 0 ? aValues[j] : bValues[j])
-                    )
-                ),
-                zipAll(),
-                map(([a, b]) => `[${a}, ${b}]`)
-            );
-        }
+      // Emit observables at intervals (simulating dynamic task creation)
+      return interval(aInterval[0]).pipe(
+        take(2),
+        map((i) =>
+          interval(bInterval[0]).pipe(
+            take(i === 0 ? aValues.length : bValues.length),
+            map((j) => (i === 0 ? aValues[j] : bValues[j])),
+          ),
+        ),
+        zipAll(),
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
     },
-    buffer: {
-        name: 'buffer',
-        category: 'Transformation',
-        description: 'Collects values emitted by the source until another observable emits, then emits them as an array.',
+  },
+  buffer: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Collects source values into an array, emitting the buffered array each time a closing notifier observable emits.',
+      mentalModel:
+        'A bucket that collects drops — dumps its contents when someone kicks it.',
+      stepByStep: [
+        'Subscribe to the source and the closing notifier',
+        'Collect source values into an internal buffer',
+        'When the notifier emits, emit the buffer as an array',
+        'Start a new empty buffer',
+        'Repeat until source completes',
+      ],
+      timeline: `Source:   --1--2--3--4--5--6--|
+Notifier: --------X--------X--|
+Out:      [1,2,3]     [4,5,6]`,
+      keyDifferences: [
+        'vs bufferCount → bufferCount closes by count; buffer closes by signal',
+        'vs bufferTime → bufferTime closes by fixed time; buffer by observable signal',
+        'vs window → window emits observables instead of arrays; buffer emits arrays',
+      ],
+      useCases: [
+        'Batching events for bulk processing',
+        'Collecting clicks between intervals',
+        'Grouping log entries for batch sending',
+      ],
+      gotchas: [
+        'Empty arrays are emitted if notifier fires with no collected values',
+        'If notifier never emits, values accumulate in memory indefinitely',
+        'Buffer resets completely after each emission',
+      ],
+      categoryNote: 'Transformation operator → signal-based value batching.',
+    }),
 
-        comparisons: ['bufferCount', 'bufferTime', 'bufferWhen'],
+    comparisons: ['bufferCount', 'bufferTime', 'bufferWhen'],
 
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const bufferCloseInterval = $INPUT_2_VALUE;
@@ -1152,35 +1863,66 @@ source$
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Buffer Close Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Buffer Close Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, closeInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, closeInterval] = inputs;
 
-            const source$ = interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i])
-            );
+      const source$ = interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+      );
 
-            const closing$ = interval(closeInterval[0]);
+      const closing$ = interval(closeInterval[0]);
 
-            return source$.pipe(
-                buffer(closing$),
-                map(v => `[${v.join(', ')}]`)
-            );
-        }
+      return source$.pipe(
+        buffer(closing$),
+        map((v) => `[${v.join(', ')}]`),
+      );
     },
-    bufferCount: {
-        name: 'bufferCount',
-        category: 'Transformation',
-        description: 'Collects values in fixed-size arrays before emitting them.',
-        comparisons: ['buffer', 'bufferTime'],
+  },
+  bufferCount: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Collects source values into an array of a specified size, emitting the array when it reaches capacity.',
+      mentalModel:
+        'An egg carton — once all slots are filled, close it and start a new one.',
+      stepByStep: [
+        'Start collecting values into a buffer',
+        'Count each incoming value',
+        'When count reaches the specified size, emit the buffer array',
+        'Reset counter and start a new buffer',
+        'Repeat until source completes',
+      ],
+      timeline: `Source: --1--2--3--4--5--6--|
+bufferCount(2):
+Out:    [1,2]  [3,4]  [5,6]`,
+      keyDifferences: [
+        'vs buffer → buffer closes by signal; bufferCount closes by count',
+        'vs bufferTime → bufferTime closes by time; bufferCount by item count',
+        'vs windowCount → windowCount emits observables instead of arrays',
+      ],
+      useCases: [
+        'Batch processing N items at a time',
+        'Pagination of streaming data',
+        'Chunking large data streams',
+      ],
+      gotchas: [
+        'Last buffer may be incomplete if source completes mid-batch',
+        'Optional startEvery parameter creates overlapping buffers',
+        'bufferCount(1) wraps each value in a single-element array',
+      ],
+      categoryNote: 'Transformation operator → count-based value batching.',
+    }),
 
-        syntax: `
+    comparisons: ['buffer', 'bufferTime'],
+
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -1191,60 +1933,58 @@ bufferCount(count)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
-            { label: 'Buffer Size', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
+      { label: 'Buffer Size', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, count] = inputs;
+    run: (inputs) => {
+      const [values, count] = inputs;
 
-            return of(...values).pipe(
-                bufferCount(count[0]),
-                map(v => `[${v.join(', ')}]`)
-            );
-        }
+      return of(...values).pipe(
+        bufferCount(count[0]),
+        map((v) => `[${v.join(', ')}]`),
+      );
     },
-    bufferTime: {
-        name: 'bufferTime',
-        category: 'Transformation',
-        description: `Collects values emitted during a fixed time window and emits them together as an array.
+  },
+  bufferTime: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Collects source values into arrays during fixed time windows, emitting each array when the window closes.',
+      mentalModel:
+        'A train that departs every N milliseconds, carrying whatever passengers boarded.',
+      stepByStep: [
+        'Start a time window',
+        'Collect all values emitted during the window',
+        'When time elapses, emit the collected values as an array',
+        'Start a new window immediately',
+        'Repeat until source completes',
+      ],
+      timeline: `Source: --1--2-----3--4--5--------|
+bufferTime(500ms):
+Out:    [1,2]    [3,4,5]     []   (empty if no values in window)`,
+      keyDifferences: [
+        'vs bufferCount → bufferCount closes by item count; bufferTime by time',
+        'vs buffer → buffer closes by observable signal; bufferTime by fixed interval',
+        'vs windowTime → windowTime emits observables; bufferTime emits arrays',
+      ],
+      useCases: [
+        'Batching real-time events for periodic UI updates',
+        'Rate-limiting event processing',
+        'Aggregating sensor data at fixed intervals',
+      ],
+      gotchas: [
+        'Empty arrays are emitted if no values arrive during a window',
+        'Window size is fixed regardless of emission rate',
+        'Optional creation interval parameter creates overlapping windows',
+      ],
+      categoryNote: 'Transformation operator → time-based value batching.',
+    }),
 
-How the output behaves depends on the relationship between:
+    comparisons: ['buffer', 'bufferCount'],
 
-• source emission interval
-• bufferTime duration
-
-Example timeline (Source Interval = 300ms, Buffer Time = 600ms)
-
-Source emissions
-
-300   600   900   1200   1500
- |     |     |      |      |
- 1     2     3      4      5
-
-Buffer windows
-
-0---------600
-          600---------1200
-                      1200---------1800
-
-Values collected in each window
-
-[1]
-[2,3,4]
-[5]
-
-Important idea:
-bufferTime closes buffers based purely on time, not on the number of values.
-
-This means buffers can contain:
-• many values
-• few values
-• sometimes even be empty.`,
-        comparisons: ['buffer', 'bufferCount'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const intervalMs = $INPUT_1_VALUE;
 const bufferMs = $INPUT_2_VALUE;
@@ -1258,62 +1998,63 @@ bufferTime(bufferMs)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Buffer Time (ms)', defaultValue: [600] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Buffer Time (ms)', defaultValue: [600] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalMs, bufferMs] = inputs;
+    run: (inputs) => {
+      const [values, intervalMs, bufferMs] = inputs;
 
-            return interval(intervalMs[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                bufferTime(bufferMs[0]),
-                map(v => `[${v.join(', ')}]`)
-            );
-        }
+      return interval(intervalMs[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        bufferTime(bufferMs[0]),
+        map((v) => `[${v.join(', ')}]`),
+      );
     },
-    bufferToggle: {
-        name: 'bufferToggle',
-        category: 'Transformation',
-        description: `Creates buffers that open and close based on two separate observables.
+  },
+  bufferToggle: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Collects values into buffers that open when an opening signal emits and close when a corresponding closing signal emits.',
+      mentalModel:
+        'A recording button — press to start recording, press stop to get the clip.',
+      stepByStep: [
+        'Wait for the opening observable to emit',
+        'Start a new buffer and begin collecting source values',
+        'Create a closing observable for this buffer',
+        'When the closing observable emits, emit the buffer as an array',
+        'Multiple buffers can be active simultaneously',
+      ],
+      timeline: `Source: --1--2--3--4--5--6--7--|
+Open:   -----O-----------O----|
+Close:       ---C         ---C
+Out:         [2,3]        [6,7]`,
+      keyDifferences: [
+        'vs buffer → buffer has a single closing signal; bufferToggle has open/close pairs',
+        'vs bufferWhen → bufferWhen creates sequential non-overlapping buffers; bufferToggle can overlap',
+        'vs bufferTime → bufferTime uses fixed windows; bufferToggle uses dynamic open/close signals',
+      ],
+      useCases: [
+        'Recording user activity between interaction start and end',
+        'Collecting data during active sessions only',
+        'Toggle-based event capture',
+      ],
+      gotchas: [
+        'Multiple buffers can be active simultaneously (overlapping)',
+        'A new closing observable is created for each opening',
+        'Opening and closing are independent signals',
+      ],
+      categoryNote:
+        'Transformation operator → toggle-controlled value batching.',
+    }),
 
-• When the "opening observable" emits → a new buffer starts collecting values.
-• The closing selector creates another observable that decides when that buffer closes.
+    comparisons: ['buffer', 'bufferWhen'],
 
-Important idea:
-Each time an opening event occurs, a new buffer starts collecting values.
-That buffer closes when the closing observable emits.
-
-Example timeline (with default inputs):
-
-Source emits every 300ms
-
-300   600   900   1200   1500   1800
- |     |     |      |      |      |
- 1     2     3      4      5      6
-
-Buffer opens at 1000ms
-Buffer closes 500ms later
-
-          open
-           ↓
-300   600   900   1000   1200   1500
- |     |     |      |      |      |
- 1     2     3      |      4      5
-                    |------buffer------|
-                           close
-
-Result:
-[4,5]
-
-This operator is useful when buffers need to start and stop dynamically based on events.`,
-
-        comparisons: ['buffer', 'bufferWhen'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const openInterval = $INPUT_2_VALUE;
@@ -1340,66 +2081,64 @@ source$
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Buffer Open Interval (ms)', defaultValue: [1000] },
-            { label: 'Buffer Close Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Buffer Open Interval (ms)', defaultValue: [1000] },
+      { label: 'Buffer Close Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, openInterval, closeInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, openInterval, closeInterval] = inputs;
 
-            const source$ = interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i])
-            );
+      const source$ = interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+      );
 
-            const openings$ = interval(openInterval[0]);
+      const openings$ = interval(openInterval[0]);
 
-            return source$.pipe(
-                bufferToggle(openings$, () => interval(closeInterval[0])),
-                map(v => `[${v.join(', ')}]`)
-            );
-        }
+      return source$.pipe(
+        bufferToggle(openings$, () => interval(closeInterval[0])),
+        map((v) => `[${v.join(', ')}]`),
+      );
     },
-    bufferWhen: {
-        name: 'bufferWhen',
-        category: 'Transformation',
-        description: `Collects values into a buffer and closes the buffer when a dynamically created closing observable emits.
+  },
+  bufferWhen: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Collects values into a buffer, closing and emitting when a dynamically created closing observable emits, then immediately opens a new buffer.',
+      mentalModel:
+        'An hourglass — when sand runs out, flip it and start collecting again.',
+      stepByStep: [
+        'Call closing selector to get a closing observable',
+        'Start collecting source values into a buffer',
+        'When the closing observable emits, emit the buffer as an array',
+        'Call closing selector again for the next closing signal',
+        'Start a new buffer immediately and repeat',
+      ],
+      keyDifferences: [
+        'vs buffer → buffer uses a single external notifier; bufferWhen creates a new closer each time',
+        'vs bufferToggle → bufferToggle has separate open/close signals and can overlap; bufferWhen is sequential',
+        'vs bufferTime → bufferTime has fixed timing; bufferWhen has dynamic closing logic',
+      ],
+      useCases: [
+        'Dynamic batch sizes based on conditions',
+        'Adaptive buffering based on system load',
+        'Custom throttling strategies',
+      ],
+      gotchas: [
+        'Closing selector is called immediately to start the first buffer',
+        'If closing observable never emits, values accumulate forever',
+        'New buffer starts immediately after previous one closes (no gap)',
+      ],
+      categoryNote: 'Transformation operator → dynamic sequential buffering.',
+    }),
 
-How it works:
+    comparisons: ['buffer', 'bufferToggle'],
 
-• A new buffer starts immediately.
-• The closingSelector function returns an observable.
-• When that observable emits → the current buffer closes and its values are emitted.
-• After closing, a new buffer automatically starts.
-
-Important idea:
-bufferWhen controls *when buffers close*, not when they open.
-
-Example timeline (Source Interval = 300ms, Buffer Close Interval = 1000ms)
-
-Source emissions
-
-300   600   900   1200  1500
- |     |     |     |     |
- 1     2     3     4     5
-
-Buffer lifecycle
-
-0-----------1000
-1000-----------2000
-
-Values collected
-
-[1,2,3]
-[4,5]
-
-bufferWhen is useful when you want buffers to close based on events such as timers, clicks, or other observable signals.`,
-        comparisons: ['buffer', 'bufferToggle'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const closeInterval = $INPUT_2_VALUE;
@@ -1413,63 +2152,63 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Buffer Close Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Buffer Close Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, closeInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, closeInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                bufferWhen(() => interval(closeInterval[0])),
-                map(v => `[${v.join(', ')}]`)
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        bufferWhen(() => interval(closeInterval[0])),
+        map((v) => `[${v.join(', ')}]`),
+      );
     },
-    expand: {
-        name: 'expand',
-        category: 'Transformation',
+  },
+  expand: {
+    category: 'Transformation',
 
-        description: `Recursively projects each emitted value into a new observable.
+    description: createOperatorDescription({
+      definition:
+        'Recursively projects each emitted value into a new observable, emitting results and feeding them back as input.',
+      mentalModel:
+        'A tree growing branches — each branch can grow more branches, expanding outward recursively.',
+      stepByStep: [
+        'Receive a value',
+        'Project it into an inner observable via the projection function',
+        'Emit inner observable values to output',
+        'Feed each result back into the projection function',
+        'Continue recursively until an inner returns EMPTY',
+      ],
+      timeline: `Source:  1
+expand(v => of(v + 2)), take(5):
+1 → of(3) → 3 → of(5) → 5 → of(7) → 7 → of(9) → 9  (take(5) stops)
+Out:     1, 3, 5, 7, 9`,
+      keyDifferences: [
+        'vs mergeMap → mergeMap processes each value once; expand feeds results back recursively',
+        'vs scan → scan accumulates synchronously; expand expands asynchronously via observables',
+        'vs repeat → repeat re-subscribes to source; expand feeds output back as input',
+      ],
+      useCases: [
+        'Recursive API pagination (follow next-page links)',
+        'Tree traversal and graph walking',
+        'Exponential backoff retry patterns',
+      ],
+      gotchas: [
+        'Must have a termination condition (return EMPTY) or it runs forever',
+        'Concurrent inner observables can grow exponentially',
+        'Default concurrency is unlimited',
+      ],
+      categoryNote: 'Transformation operator → recursive async expansion.',
+    }),
 
-expand works by feeding every emitted value back into the projection function.
+    comparisons: ['mergeMap'],
 
-Example rule
-
-value → value + 2
-
-Expansion process
-
-Start value
-1
-
-Projection generates next values
-
-1 → 3
-3 → 5
-5 → 7
-
-Because each emitted value is processed again, the stream keeps expanding.
-
-Result (with take)
-
-1, 3, 5, 7, 9
-
-Common real-world uses
-
-• Fetch paginated API data (load page → load next page)
-• Traverse hierarchical structures like folder trees
-• Repeat asynchronous tasks until a condition is met
-
-expand continues indefinitely unless limited with operators like take() or takeWhile().`,
-
-        comparisons: ['mergeMap'],
-
-        syntax: `
+    syntax: `
 const start = $INPUT_0_VALUE;
 const increment = $INPUT_1_VALUE;
 const takeCount = $INPUT_2_VALUE;
@@ -1482,63 +2221,57 @@ of(start)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Start Value', defaultValue: [1] },
-            { label: 'Increment By', defaultValue: [2] },
-            { label: 'Take Count', defaultValue: [5] }
-        ],
+    inputs: [
+      { label: 'Start Value', defaultValue: [1] },
+      { label: 'Increment By', defaultValue: [2] },
+      { label: 'Take Count', defaultValue: [5] },
+    ],
 
-        run: (inputs) => {
-            const [start, increment, takeCount] = inputs;
+    run: (inputs) => {
+      const [start, increment, takeCount] = inputs;
 
-            return of(start[0]).pipe(
-                expand(v => of(v + increment[0])),
-                take(takeCount[0]),
-                map(v => String(v))
-            );
-        }
+      return of(start[0]).pipe(
+        expand((v) => of(v + increment[0])),
+        take(takeCount[0]),
+        map((v) => String(v)),
+      );
     },
-    groupBy: {
-        name: 'groupBy',
-        category: 'Transformation',
-        description: `Splits a single observable into multiple grouped observables based on a key.
+  },
+  groupBy: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Splits a source observable into multiple grouped observables, each emitting values that share the same computed key.',
+      mentalModel:
+        'A mail sorter — each letter goes into a different slot based on its destination.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Compute its group key using the key selector function',
+        'If key is new, create a new GroupedObservable and emit it',
+        'Route the value to the matching GroupedObservable',
+        'Downstream can subscribe to each group independently',
+      ],
+      keyDifferences: [
+        'vs filter → filter selects values by condition; groupBy categorizes ALL values into separate streams',
+        'vs partition → partition creates exactly 2 groups (true/false); groupBy creates any number',
+        'vs window → window splits by time/count/signal; groupBy splits by computed key',
+      ],
+      useCases: [
+        'Categorizing events by type or severity',
+        'Processing orders grouped by customer',
+        'Routing messages to different handlers by topic',
+      ],
+      gotchas: [
+        'Each unique key creates a new observable that stays in memory',
+        'Unsubscribed groups still accumulate values unless a duration selector is used',
+        'Inner grouped observables must be subscribed to or values are lost',
+      ],
+      categoryNote: 'Transformation operator → key-based stream splitting.',
+    }),
 
-groupBy works like the SQL "GROUP BY" operation but for streams.
+    comparisons: ['scan'],
 
-Each emitted value is assigned to a group using a key selector function.
-Values with the same key are emitted through the same grouped observable.
-
-Important idea:
-Instead of transforming values, groupBy splits one stream into many smaller streams.
-
-Example
-
-Source values
-
-1, 2, 3, 4, 5
-
-Grouping rule
-
-value % 2 === 0 ? 'even' : 'odd'
-
-Groups created
-
-odd  → 1, 3, 5  
-even → 2, 4
-
-Each group is a separate observable that emits values belonging to that key.
-
-Common real-world uses
-
-• Processing logs grouped by log level (INFO, ERROR, WARN)
-• Handling chat messages grouped by room or user
-• Processing orders grouped by customer
-• Analyzing IoT sensor data grouped by device ID
-
-groupBy is useful when different categories of events need to be processed independently.`,
-        comparisons: ['scan'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -1550,28 +2283,51 @@ group.subscribe(v => console.log(group.key, v));
 });
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                groupBy(v => v % 2 === 0 ? 'even' : 'odd'),
-                mergeMap(group => group.pipe(
-                    map(v => group.key + ": " + v)
-                ))
-            );
-        }
+      return of(...values).pipe(
+        groupBy((v) => (v % 2 === 0 ? 'even' : 'odd')),
+        mergeMap((group) => group.pipe(map((v) => group.key + ': ' + v))),
+      );
     },
-    map: {
-        name: 'map',
-        category: 'Transformation',
-        description: 'Transforms each value emitted by the source observable into a new value. Unlike concatMap / mergeMap / switchMap, map does NOT create inner observables — it performs a simple synchronous transformation.',
-        comparisons: ['concatMap', 'mergeMap', 'switchMap', 'exhaustMap'],
+  },
+  map: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Transforms each emitted value by applying a projection function, emitting the transformed result.',
+      mentalModel:
+        'A factory conveyor belt — each item passes through a machine that transforms it.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Apply the projection function to the value',
+        'Emit the transformed result',
+        'Repeat for each value',
+      ],
+      keyDifferences: [
+        'vs tap → tap observes without transforming; map transforms and emits new values',
+        'vs switchMap/mergeMap/concatMap → higher-order maps return observables; map returns plain values',
+        'vs scan → scan accumulates state across emissions; map is stateless',
+      ],
+      useCases: [
+        'Extracting fields from API responses (res => res.data)',
+        'Converting data formats',
+        'Computing derived values',
+      ],
+      gotchas: [
+        'Projection function should be pure for predictability',
+        'Does NOT flatten — returning an observable wraps it (use mergeMap instead)',
+        'Executes for every emission (no filtering)',
+      ],
+      categoryNote: 'Transformation operator → stateless value projection.',
+    }),
 
-        syntax: `
+    comparisons: ['concatMap', 'mergeMap', 'switchMap', 'exhaustMap'],
+
+    syntax: `
 const sourceValues = $INPUT_0_ARRAY;
 const mapValues = $INPUT_2_ARRAY;
 
@@ -1587,57 +2343,60 @@ of(...sourceValues)
 // 10 → 20 → 30
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [0], hide: true },
-            { label: 'Mapped Values', defaultValue: [10, 20, 30] },
-            { label: 'Inner Interval (ms)', defaultValue: [0], hide: true }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [0], hide: true },
+      { label: 'Mapped Values', defaultValue: [10, 20, 30] },
+      { label: 'Inner Interval (ms)', defaultValue: [0], hide: true },
+    ],
 
-        run: (inputs) => {
-            const [sourceValues, sourceInterval, mapValues] = inputs;
+    run: (inputs) => {
+      const [sourceValues, sourceInterval, mapValues] = inputs;
 
-            return of(...sourceValues).pipe(
-                map((_, index) =>
-                    mapValues[index % mapValues.length]
-                ),
-                map(value => String(value))
-            );
-        }
+      return of(...sourceValues).pipe(
+        map((_, index) => mapValues[index % mapValues.length]),
+        map((value) => String(value)),
+      );
     },
-    scan: {
-        name: 'scan',
-        category: 'Transformation',
-        description: `Accumulates values over time and emits each intermediate result.
+  },
+  scan: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Applies an accumulator function over each emitted value and emits every intermediate accumulated result.',
+      mentalModel:
+        'A running total — each new value updates the accumulated result, and you see every update.',
+      stepByStep: [
+        'Initialize with the seed value (if provided)',
+        'Receive a value from the source',
+        'Apply the accumulator function: accumulator(currentAccumulation, value)',
+        'Emit the new accumulated result',
+        'Use it as the starting point for the next value',
+      ],
+      timeline: `Source: --1--2--3--4--|
+scan((acc, v) => acc + v, 0):
+Out:    --1--3--6--10-|  (running sum)`,
+      keyDifferences: [
+        'vs reduce → reduce emits only the final result after completion; scan emits every step',
+        'vs mergeScan → mergeScan returns observables from accumulator; scan is synchronous',
+        'vs map → map is stateless; scan maintains state across emissions',
+      ],
+      useCases: [
+        'Running totals and counters',
+        'State management in reactive streams',
+        'Accumulating event history',
+      ],
+      gotchas: [
+        'Emits for every source value (unlike reduce which emits once)',
+        'Seed value determines the initial state and output type',
+        'Without a seed, the first value is used as the initial accumulator and emitted directly (not passed through the accumulator function)',
+      ],
+      categoryNote: 'Transformation operator → stateful running accumulation.',
+    }),
 
-scan works like a running total. Every new value is combined with the previous
-accumulated result to produce the next value.
+    comparisons: ['reduce'],
 
-Example
-
-Source values
-1, 2, 3, 4
-
-Running accumulation
-1
-1 + 2 = 3
-3 + 3 = 6
-6 + 4 = 10
-
-Emitted values
-1, 3, 6, 10
-
-Important difference from mergeScan
-
-scan → accumulator returns a value
-mergeScan → accumulator returns an observable
-
-scan is used for synchronous state accumulation,
-while mergeScan is used when the accumulation involves asynchronous work
-(like HTTP requests or delayed operations).`,
-        comparisons: ['reduce'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -1647,54 +2406,52 @@ scan((acc, v) => acc + v, 0)
 .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                scan((acc, v) => acc + v, 0),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        scan((acc, v) => acc + v, 0),
+        map((v) => String(v)),
+      );
     },
-    window: {
-        name: 'window',
-        category: 'Transformation',
-        description: `Splits the source stream into multiple smaller observables called windows.
+  },
+  window: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Splits the source into nested observables (windows), opening a new window each time a notifier emits.',
+      mentalModel:
+        'Cutting a ribbon at marked points — each piece becomes its own separate stream.',
+      stepByStep: [
+        'Subscribe to the source and the notifier',
+        'Create the first window observable',
+        'Emit source values into the current window',
+        'When notifier emits, complete the current window and open a new one',
+        'Repeat until source completes',
+      ],
+      keyDifferences: [
+        'vs buffer → buffer emits arrays; window emits observables (more flexible)',
+        'vs windowCount → windowCount splits by count; window splits by signal',
+        'vs windowTime → windowTime splits by time interval; window by arbitrary signal',
+      ],
+      useCases: [
+        'Processing events in chunks as sub-streams',
+        'Time-sensitive batching with per-window operators',
+        'Complex event processing needing per-chunk logic',
+      ],
+      gotchas: [
+        'Each window is an observable that must be subscribed to',
+        'Unsubscribed windows lose their values',
+        'More complex than buffer but more flexible (can apply operators per window)',
+      ],
+      categoryNote: 'Transformation operator → signal-based stream windowing.',
+    }),
 
-Each window collects values for a period of time and emits them as a separate observable.
+    comparisons: ['buffer'],
 
-Important idea:
-window does NOT emit arrays like buffer.
-Instead, it emits new observables that contain the grouped values.
-
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Windows created every 1000ms
-
-Window 1 (0–1000ms) → 1, 2, 3  
-Window 2 (1000–2000ms) → 4, 5
-
-Each window is its own observable stream.
-
-Difference from buffer
-
-buffer → emits arrays
-[1,2,3]
-
-window → emits observables
-window1$: 1,2,3
-
-window is useful when each group of events needs to be processed as a separate stream.`,
-        comparisons: ['buffer'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const windowInterval = $INPUT_2_VALUE;
@@ -1708,64 +2465,58 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Window Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Window Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, windowInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, windowInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                window(interval(windowInterval[0])),
-                mergeMap((win$, i) =>
-                    win$.pipe(
-                        map(v => `Window ${i + 1}: ${v}`)
-                    )
-                )
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        window(interval(windowInterval[0])),
+        mergeMap((win$, i) => win$.pipe(map((v) => `Window ${i + 1}: ${v}`))),
+      );
     },
-    windowCount: {
-        name: 'windowCount',
-        category: 'Transformation',
-        description: `Splits the source stream into windows containing a fixed number of values.
+  },
+  windowCount: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Splits the source into nested observables (windows), each containing a fixed number of values.',
+      mentalModel:
+        'Dealing cards — every N cards form a new hand, each hand is processed independently.',
+      stepByStep: [
+        'Create the first window observable',
+        'Emit values into it, counting each one',
+        'When count reaches N, complete the window',
+        'Open a new window for the next batch',
+        'Repeat until source completes',
+      ],
+      keyDifferences: [
+        'vs bufferCount → bufferCount emits arrays; windowCount emits observables',
+        'vs window → window splits by external signal; windowCount by fixed count',
+        'vs take → take limits total count; windowCount creates fixed-size chunks',
+      ],
+      useCases: [
+        'Streaming data processing in fixed-size chunks',
+        'Rolling analytics per N items',
+        'Chunked processing with per-chunk operators',
+      ],
+      gotchas: [
+        'Last window may have fewer values if source completes mid-chunk',
+        'Optional startEvery parameter creates overlapping windows',
+        'Each window is a separate observable needing subscription',
+      ],
+      categoryNote: 'Transformation operator → count-based stream windowing.',
+    }),
 
-Each window collects a specified number of emitted values from the source
-and then completes. A new window immediately starts collecting the next values.
+    comparisons: ['bufferCount'],
 
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Window size
-2
-
-Windows created
-
-Window 1 → 1, 2  
-Window 2 → 3, 4  
-Window 3 → 5
-
-Each window is emitted as its own observable stream.
-
-Difference from bufferCount
-
-bufferCount → emits arrays
-[1,2]
-
-windowCount → emits observables
-window1$: 1,2
-
-windowCount is useful when events need to be processed in groups of
-a fixed size as independent streams.`,
-        comparisons: ['bufferCount'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -1776,68 +2527,55 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Window Size', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Window Size', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, count] = inputs;
+    run: (inputs) => {
+      const [values, count] = inputs;
 
-            return of(...values).pipe(
-                windowCount(count[0]),
-                mergeMap((win$, i) =>
-                    win$.pipe(
-                        map(v => `Window ${i + 1}: ${v}`)
-                    )
-                )
-            );
-        }
+      return of(...values).pipe(
+        windowCount(count[0]),
+        mergeMap((win$, i) => win$.pipe(map((v) => `Window ${i + 1}: ${v}`))),
+      );
     },
-    windowTime: {
-        name: 'windowTime',
-        category: 'Transformation',
-        description: `Splits the source stream into multiple time-based windows.
+  },
+  windowTime: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Splits the source into nested observables (windows) that open and close at fixed time intervals.',
+      mentalModel:
+        'Shift changes at a factory — every N minutes a new shift takes over.',
+      stepByStep: [
+        'Open the first window observable',
+        'Emit source values into it',
+        'When the time interval elapses, complete the window',
+        'Open a new window immediately',
+        'Repeat until source completes',
+      ],
+      keyDifferences: [
+        'vs bufferTime → bufferTime emits arrays; windowTime emits observables',
+        'vs windowCount → windowCount splits by count; windowTime by time',
+        'vs window → window splits by external signal; windowTime by fixed interval',
+      ],
+      useCases: [
+        'Real-time analytics per time period',
+        'Streaming dashboards with time-based windows',
+        'Monitoring rate of events per time interval',
+      ],
+      gotchas: [
+        'Empty windows are emitted if no values arrive during the interval',
+        'Timing is wall-clock based, independent of emission rate',
+        'Each observable window needs to be subscribed to',
+      ],
+      categoryNote: 'Transformation operator → time-based stream windowing.',
+    }),
 
-Each window collects values emitted during a fixed time duration and emits them
-as a separate observable.
+    comparisons: ['bufferTime'],
 
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Window duration
-1000ms
-
-Windows created
-
-Window 1 (0–1000ms) → 1, 2, 3  
-Window 2 (1000–2000ms) → 4, 5
-
-Each window is its own observable stream.
-
-Difference from similar operators
-
-window → windows are controlled by another observable
-Example: window(click$) or window(interval(1000))
-
-windowTime → windows are controlled by time
-Example: windowTime(1000)
-
-bufferTime → similar to windowTime but emits arrays instead of observables
-
-bufferTime output
-[1,2,3]
-
-windowTime output
-window1$: 1,2,3
-
-windowTime is useful when events need to be processed in fixed time intervals
-like clicks per second, logs per minute, or sensor readings per time window.`,
-        comparisons: ['bufferTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const windowTimeMs = $INPUT_2_VALUE;
@@ -1851,70 +2589,60 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Window Time (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Window Time (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, windowTimeMs] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, windowTimeMs] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                windowTime(windowTimeMs[0]),
-                mergeMap((win$, i) =>
-                    win$.pipe(map(v => `Window ${i + 1}: ${v}`))
-                )
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        windowTime(windowTimeMs[0]),
+        mergeMap((win$, i) => win$.pipe(map((v) => `Window ${i + 1}: ${v}`))),
+      );
     },
-    windowToggle: {
-        name: 'windowToggle',
-        category: 'Transformation',
-        description: `Creates windows that open and close based on signals from other observables.
+  },
+  windowToggle: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Creates nested observable windows that open on one signal and close on another, allowing overlapping windows.',
+      mentalModel:
+        'Multiple recording sessions that can overlap — each starts and stops independently.',
+      stepByStep: [
+        'Wait for the opening signal to emit',
+        'Create a new window observable',
+        'Emit source values into it',
+        'Create a closing observable specific to this window',
+        'When closing emits, complete the window',
+        'Multiple windows can be open simultaneously',
+      ],
+      keyDifferences: [
+        'vs bufferToggle → bufferToggle emits arrays; windowToggle emits observables',
+        'vs windowWhen → windowWhen creates sequential non-overlapping windows; windowToggle can overlap',
+        'vs window → window uses a single notifier; windowToggle has open/close pairs',
+      ],
+      useCases: [
+        'Complex event capture with overlapping time ranges',
+        'Multi-session recording and processing',
+        'Parallel windowed analysis',
+      ],
+      gotchas: [
+        'Multiple windows can be active simultaneously',
+        'Each opening creates its own independent closing signal',
+        'Overlapping windows can emit the same source value to multiple windows',
+      ],
+      categoryNote:
+        'Transformation operator → toggle-controlled stream windowing.',
+    }),
 
-When the "opening observable" emits, a new window starts collecting values
-from the source stream.
+    comparisons: ['bufferToggle'],
 
-Each window remains open until the "closing observable" emits, after which
-the window completes and a new one can open later.
-
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5, 6
-
-Window opens every 1000ms  
-Each window stays open for 500ms
-
-Timeline
-
-1000ms → window opens  
-1500ms → window closes
-
-Values emitted during this period
-
-Window 1 → 4, 5
-
-Each window is emitted as its own observable stream.
-
-Difference from bufferToggle
-
-bufferToggle → emits arrays of collected values
-Example output
-[2,3]
-
-windowToggle → emits observables containing the values
-Example output
-window1$: 2,3
-
-windowToggle is useful when each collected group of events needs to be
-processed as its own stream rather than as a simple array.`,
-        comparisons: ['bufferToggle'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const openInterval = $INPUT_2_VALUE;
@@ -1929,61 +2657,62 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Window Open Interval (ms)', defaultValue: [1000] },
-            { label: 'Window Close Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Window Open Interval (ms)', defaultValue: [1000] },
+      { label: 'Window Close Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, openInterval, closeInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, openInterval, closeInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                windowToggle(interval(openInterval[0]), () => interval(closeInterval[0])),
-                mergeMap((win$, i) =>
-                    win$.pipe(map(v => `Window ${i + 1}: ${v}`))
-                )
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        windowToggle(interval(openInterval[0]), () =>
+          interval(closeInterval[0]),
+        ),
+        mergeMap((win$, i) => win$.pipe(map((v) => `Window ${i + 1}: ${v}`))),
+      );
     },
-    windowWhen: {
-        name: 'windowWhen',
-        category: 'Transformation',
-        description: `Splits the source stream into sequential windows that close
-whenever the closing observable emits.
+  },
+  windowWhen: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Splits the source into sequential nested observable windows, each closing when a dynamically created closing observable emits.',
+      mentalModel:
+        'Chapters of a book — each chapter ends when the author decides, the next starts immediately.',
+      stepByStep: [
+        'Call the closing selector function to get a closing observable',
+        'Create a new window observable',
+        'Emit source values into it',
+        'When closing observable emits, complete the window',
+        'Call the closing selector again and open a new window immediately',
+      ],
+      keyDifferences: [
+        'vs bufferWhen → bufferWhen emits arrays; windowWhen emits observables',
+        'vs windowToggle → windowToggle allows overlapping; windowWhen is strictly sequential',
+        'vs window → window uses a single external notifier; windowWhen creates a new closer per window',
+      ],
+      useCases: [
+        'Adaptive windowing based on dynamic conditions',
+        'Dynamic event segmentation',
+        'Custom streaming batch logic with per-window closing criteria',
+      ],
+      gotchas: [
+        'Closing selector is called immediately to create the first window',
+        'Strictly sequential — no overlapping windows',
+        'Each window is an observable that must be subscribed to',
+      ],
+      categoryNote:
+        'Transformation operator → dynamic sequential stream windowing.',
+    }),
 
-A new window starts immediately after the previous one closes.
+    comparisons: ['bufferWhen'],
 
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Closing signal every 1000ms
-
-Timeline
-
-Window 1 (0–1000ms) → 1, 2, 3  
-Window 2 (1000–2000ms) → 4, 5
-
-Each window is emitted as its own observable stream.
-
-Difference from bufferWhen
-
-bufferWhen → emits arrays
-[1,2,3]
-
-windowWhen → emits observables
-window1$: 1,2,3
-
-windowWhen is useful when each group of events needs to be processed
-as its own stream instead of being collected into arrays.`,
-        comparisons: ['bufferWhen'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const closeInterval = $INPUT_2_VALUE;
@@ -1997,71 +2726,64 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Window Close Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Window Close Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, closeInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, closeInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                windowWhen(() => interval(closeInterval[0])),
-                mergeMap((win$, i) =>
-                    win$.pipe(map(v => `Window ${i + 1}: ${v}`))
-                )
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        windowWhen(() => interval(closeInterval[0])),
+        mergeMap((win$, i) => win$.pipe(map((v) => `Window ${i + 1}: ${v}`))),
+      );
     },
-    audit: {
-        name: 'audit',
-        category: 'Filtering',
-        description: `Ignores source values for a duration, then emits the most recent value
-when the duration observable completes.
+  },
+  audit: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Ignores source values for a duration determined by another observable, then emits the most recent value when the duration completes.',
+      mentalModel:
+        'A bouncer who lets you peek after a cooldown — shows you only the latest person in line.',
+      stepByStep: [
+        'Receive a source value (triggers the duration)',
+        'Start the duration observable',
+        'Ignore all subsequent source values during the duration',
+        'When the duration completes, emit the most recent source value',
+        'Wait for the next source value to start a new cycle',
+      ],
+      timeline: `Source: --1--2--3--------4--5--|
+audit(durationOf(300ms)):
+         ↓ start          ↓ start
+         |--300ms--|      |--300ms--|
+Out:              3               5  (latest when duration ends)`,
+      keyDifferences: [
+        'vs throttle → throttle emits the FIRST value of each cycle; audit emits the LAST',
+        'vs debounce → debounce resets on every new value; audit does NOT reset',
+        'vs sample → sample is driven by an external signal; audit is triggered by source values',
+      ],
+      useCases: [
+        'Rate-limiting with latest-value preference',
+        'Scroll position sampling',
+        'Real-time data where only the latest matters',
+      ],
+      gotchas: [
+        'First value triggers the duration but may not be the one emitted',
+        'Duration is per-cycle, not continuous',
+        'No emission if source completes during an active duration',
+      ],
+      categoryNote:
+        'Filtering operator → duration-based latest-value sampling.',
+    }),
 
-When the source emits a value, audit starts a duration timer.
-While the timer is running, all incoming values are ignored.
-When the timer ends, the latest value received during that time is emitted.
+    comparisons: ['auditTime', 'throttleTime', 'debounceTime'],
 
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Audit duration
-1000ms
-
-Timeline
-
-300ms → 1 arrives → start audit timer
-
-Values during the next 1000ms
-2, 3, 4
-
-1300ms → emit latest value → 4
-
-Next cycle
-
-1200ms → 4 arrives → start new timer
-Values during the next 1000ms
-5
-
-Emit latest value → 5
-
-Output
-4, 5
-
-Difference from similar operators
-
-debounceTime → waits for silence before emitting  
-throttleTime → emits first value and ignores the rest  
-audit → waits, then emits the latest value at the end of the duration
-
-audit is useful when you want periodic updates with the most recent value.`,
-        comparisons: ['auditTime', 'throttleTime', 'debounceTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const auditDuration = $INPUT_2_VALUE;
@@ -2075,75 +2797,61 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Audit Duration (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Audit Duration (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, auditDuration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, auditDuration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                audit(() => interval(auditDuration[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        audit(() => interval(auditDuration[0])),
+        map((v) => String(v)),
+      );
     },
-    auditTime: {
-        name: 'auditTime',
-        category: 'Filtering',
-        description: `Ignores source values for a fixed duration, then emits the most
-recent value once the duration ends.
+  },
+  auditTime: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Ignores source values for a fixed time duration, then emits the most recent value once the duration ends.',
+      mentalModel:
+        'Check the mailbox every N ms — you always get the latest letter regardless of how many arrived.',
+      stepByStep: [
+        'Receive a source value (starts the timer)',
+        'Ignore all values during the timer',
+        'When the timer expires, emit the most recent source value',
+        'Wait for the next source value to restart the timer',
+      ],
+      timeline: `Source: --1--2--3--------4--5--|
+auditTime(300ms):
+         |--300ms--|      |--300ms--|
+Out:              3               5  (latest when timer fires)`,
+      keyDifferences: [
+        'vs audit → audit uses an observable for duration; auditTime uses fixed time',
+        'vs throttleTime → throttleTime emits first then waits; auditTime waits then emits last',
+        'vs debounceTime → debounceTime resets on each new value; auditTime does not reset',
+      ],
+      useCases: [
+        'Sampling latest resize/scroll events at intervals',
+        'Rate-limiting rapidly changing data',
+        'Periodic latest-value capture',
+      ],
+      gotchas: [
+        'Timer starts on first source emission, not on subscription',
+        'Uses fixed time unlike audit which uses a dynamic observable',
+        'Most recent value wins, even if earlier values were different',
+      ],
+      categoryNote: 'Filtering operator → fixed-time latest-value sampling.',
+    }),
 
-When a value arrives, auditTime starts a timer. While the timer is running,
-incoming values are ignored. When the timer completes, the latest value seen
-during that period is emitted.
+    comparisons: ['audit', 'throttleTime', 'debounceTime', 'sampleTime'],
 
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Audit duration
-1000ms
-
-Timeline
-
-300ms → 1 arrives → start timer
-
-Values during the next 1000ms
-2, 3, 4
-
-1300ms → emit latest value → 4
-
-Next cycle
-
-1200ms → 4 arrives → start timer
-Values during the next 1000ms
-5
-
-Emit latest value → 5
-
-Output
-4, 5
-
-Difference from audit
-
-audit → duration controlled by another observable  
-auditTime → duration controlled directly by time
-
-Example
-
-audit(() => interval(1000))  
-auditTime(1000)
-
-auditTime is useful when you want periodic updates using the latest value.`,
-        comparisons: ['audit', 'throttleTime', 'debounceTime', 'sampleTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const auditDuration = $INPUT_2_VALUE;
@@ -2157,79 +2865,63 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Audit Duration (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Audit Duration (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, auditDuration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, auditDuration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                auditTime(auditDuration[0]),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        auditTime(auditDuration[0]),
+        map((v) => String(v)),
+      );
     },
-    debounce: {
-        name: 'debounce',
-        category: 'Filtering',
-        description: `Delays emitting a value until a duration observable completes.
-If a new value arrives before the duration ends, the previous value is discarded.
+  },
+  debounce: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Delays value emission until a duration observable completes. Resets the timer on each new source value.',
+      mentalModel:
+        'An elevator door — keeps resetting the close timer every time someone walks in.',
+      stepByStep: [
+        'Receive a source value',
+        'Start a duration observable for this value',
+        'If a new value arrives before the duration completes, cancel and restart',
+        'When the duration completes undisturbed, emit the value',
+      ],
+      timeline: `Source: --1--2-----3------------|
+debounce(durationOf(300ms)):
+         ↓  ↓(reset) ↓
+         X  |--300ms--|--300ms--|
+Out:                  2        3  (emitted after silence)`,
+      keyDifferences: [
+        'vs debounceTime → debounceTime uses fixed time; debounce uses an observable',
+        'vs audit → audit does NOT reset on new values; debounce resets every time',
+        'vs throttle → throttle emits immediately then blocks; debounce waits for silence',
+      ],
+      useCases: [
+        'Dynamic debouncing based on value content',
+        'Adaptive input delay (shorter for numbers, longer for text)',
+        'Custom silence detection logic',
+      ],
+      gotchas: [
+        'Only the last value in a rapid burst survives',
+        'Duration observable is created fresh for each value',
+        'If source completes, the last pending value is still emitted',
+      ],
+      categoryNote:
+        'Filtering operator → observable-based adaptive debouncing.',
+    }),
 
-Each time the source emits, debounce starts a duration observable.
-If another value arrives before that duration finishes, the previous value is ignored.
-Only the latest value that survives the duration is emitted.
+    comparisons: ['debounceTime', 'audit', 'throttleTime', 'sampleTime'],
 
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Debounce duration
-1000ms
-
-Timeline
-
-300ms → 1 arrives → start timer  
-600ms → 2 arrives → reset timer  
-900ms → 3 arrives → reset timer  
-1200ms → 4 arrives → reset timer  
-1500ms → 5 arrives → reset timer  
-
-The source completes immediately after emitting 5.
-When the source completes, debounce emits the last pending value immediately.
-
-Output
-5
-
-Difference from similar operators
-
-debounce → duration controlled by another observable  
-debounceTime → duration controlled directly by time
-
-Example
-
-debounce(() => interval(1000))  
-debounceTime(1000)
-
-debounce is commonly used for scenarios like search input where
-you only want to process the latest value after the user stops typing.
-
-Note:
-If the source observable completes while a value is waiting to be emitted,
-debounce immediately emits the last pending value instead of waiting
-for the full duration.
-
-Special behavior:
-If the source completes while a value is waiting for the debounce
-duration to finish, the last value is emitted immediately.`,
-        comparisons: ['debounceTime', 'audit', 'throttleTime', 'sampleTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const debounceDuration = $INPUT_2_VALUE;
@@ -2243,69 +2935,61 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Debounce Duration (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Debounce Duration (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, debounceDuration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, debounceDuration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                debounce(() => interval(debounceDuration[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        debounce(() => interval(debounceDuration[0])),
+        map((v) => String(v)),
+      );
     },
-    debounceTime: {
-        name: 'debounceTime',
-        category: 'Filtering',
-        description: `Delays emitting a value until a specified time has passed without any new values.
+  },
+  debounceTime: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Delays value emission by a fixed time, resetting the timer on each new value — emits only when the source is silent for the full duration.',
+      mentalModel:
+        'A search box — wait until the user stops typing for N ms before searching.',
+      stepByStep: [
+        'Receive a source value',
+        'Start a timer for the specified duration',
+        'If a new value arrives before the timer expires, cancel and restart with the new value',
+        'When the timer completes undisturbed, emit the value',
+      ],
+      timeline: `Source: --h--he--hel--hello------------|
+debounceTime(300ms):
+                              |--300ms--|
+Out:                                   hello  (after 300ms of silence)`,
+      keyDifferences: [
+        'vs debounce → debounce uses an observable for dynamic duration; debounceTime uses fixed time',
+        'vs throttleTime → throttleTime emits first and blocks; debounceTime waits for silence',
+        'vs auditTime → auditTime does not reset on new values; debounceTime resets each time',
+      ],
+      useCases: [
+        'Search-as-you-type input delay',
+        'Window resize handler debouncing',
+        'Form validation delay',
+      ],
+      gotchas: [
+        'Rapid continuous emissions may never trigger output if there is no pause',
+        'Last value before source completion is always emitted',
+        'Very short durations may not effectively prevent rapid fires',
+      ],
+      categoryNote: 'Filtering operator → fixed-time debouncing.',
+    }),
 
-Each time the source emits, debounceTime starts a timer. If another value arrives
-before the timer finishes, the previous value is discarded and the timer resets.
-Only the latest value that survives the full time duration is emitted.
+    comparisons: ['debounce', 'auditTime', 'throttleTime', 'sampleTime'],
 
-Example
-
-Source values emitted every 300ms
-1, 2, 3, 4, 5
-
-Debounce duration
-1000ms
-
-Timeline
-
-300ms → 1 arrives → start timer  
-600ms → 2 arrives → reset timer  
-900ms → 3 arrives → reset timer  
-1200ms → 4 arrives → reset timer  
-1500ms → 5 arrives → reset timer  
-
-If no new value arrives after 5, debounceTime would normally wait 1000ms
-before emitting the latest value.
-
-However, in this demo the source completes immediately after emitting 5.
-When the source completes, debounceTime emits the last pending value immediately.
-
-Output
-5
-
-Difference from debounce
-
-debounce → duration controlled by another observable  
-Example: debounce(() => interval(1000))
-
-debounceTime → duration controlled directly by time  
-Example: debounceTime(1000)
-
-Both operators wait for a pause in the source stream before emitting the latest value.`,
-        comparisons: ['debounce', 'auditTime', 'throttleTime', 'sampleTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const debounceDuration = $INPUT_2_VALUE;
@@ -2319,66 +3003,57 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Debounce Duration (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Debounce Duration (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, debounceDuration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, debounceDuration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                debounceTime(debounceDuration[0]),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        debounceTime(debounceDuration[0]),
+        map((v) => String(v)),
+      );
     },
-    distinct: {
-        name: 'distinct',
-        category: 'Filtering',
-        description: `Emits only values that have not been emitted before.
+  },
+  distinct: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Emits only values that have NEVER been seen before, filtering out all duplicates across the entire stream lifetime.',
+      mentalModel:
+        'A guest list — only new names get through; anyone who already visited is turned away.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Check if it has been seen before (tracked in an internal Set)',
+        'If new, emit it and add to the seen set',
+        'If duplicate, skip silently',
+      ],
+      keyDifferences: [
+        'vs distinctUntilChanged → distinctUntilChanged only compares with the immediately previous value; distinct remembers ALL',
+        'vs distinctUntilKeyChanged → distinctUntilKeyChanged compares by a specific key; distinct compares whole values',
+        'vs filter → filter uses a predicate function; distinct tracks history for deduplication',
+      ],
+      useCases: [
+        'Ensuring unique event processing across a stream',
+        'Deduplicating a stream of IDs',
+        'First-time-only notifications',
+      ],
+      gotchas: [
+        'Internal Set grows indefinitely, consuming memory',
+        'Optional key selector for comparing complex objects',
+        'Optional flush observable can clear the internal set periodically',
+      ],
+      categoryNote: 'Filtering operator → global duplicate elimination.',
+    }),
 
-When a value appears for the first time, it is emitted.
-If the same value appears again later in the stream, it is ignored.
+    comparisons: ['distinctUntilChanged'],
 
-Example
-
-Source values
-1, 2, 2, 3, 1, 4
-
-Processing
-
-1 → first time → emit  
-2 → first time → emit  
-2 → already seen → ignore  
-3 → first time → emit  
-1 → already seen → ignore  
-4 → first time → emit  
-
-Output
-1, 2, 3, 4
-
-Difference from distinctUntilChanged
-
-distinct → removes duplicates across the entire stream  
-distinctUntilChanged → removes only consecutive duplicates
-
-Example
-
-Source
-1,2,2,3,1
-
-distinct output
-1,2,3
-
-distinctUntilChanged output
-1,2,3,1`,
-        comparisons: ['distinctUntilChanged'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2388,62 +3063,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 2, 3, 1, 4] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 2, 3, 1, 4] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                distinct(),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        distinct(),
+        map((v) => String(v)),
+      );
     },
-    distinctUntilChanged: {
-        name: 'distinctUntilChanged',
-        category: 'Filtering',
-        description: `Emits values only when they are different from the previous value.
+  },
+  distinctUntilChanged: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Emits values only when the current value is different from the immediately previous value.',
+      mentalModel:
+        '"Are we there yet?" detector — only speaks up when the answer changes.',
+      stepByStep: [
+        'Receive a value',
+        'Compare it with the previous value',
+        'If different, emit and store as the new previous',
+        'If same, skip silently',
+      ],
+      timeline: `Source: --1--1--2--2--3--1--|
+Out:    --1-----2-----3--1--|  (consecutive duplicates removed)`,
+      keyDifferences: [
+        'vs distinct → distinct remembers ALL previous values forever; distinctUntilChanged only remembers the last',
+        'vs distinctUntilKeyChanged → distinctUntilKeyChanged compares by a specific key; distinctUntilChanged compares whole values',
+        'vs filter → filter uses a predicate; distinctUntilChanged uses comparison with previous',
+      ],
+      useCases: [
+        'Avoiding unnecessary re-renders on identical state',
+        'Reducing duplicate consecutive API calls',
+        'State change detection in reactive streams',
+      ],
+      gotchas: [
+        'Uses === comparison by default (reference equality for objects)',
+        'Custom comparator function can be provided for deep comparison',
+        'First value always emits (there is no previous to compare with)',
+      ],
+      categoryNote: 'Filtering operator → consecutive duplicate elimination.',
+    }),
 
-If the current value is the same as the last emitted value, it is ignored.
-Only changes in value are allowed through.
+    comparisons: ['distinct'],
 
-Example
-
-Source values
-1, 1, 2, 2, 3, 1
-
-Processing
-
-1 → first value → emit  
-1 → same as previous → ignore  
-2 → changed → emit  
-2 → same as previous → ignore  
-3 → changed → emit  
-1 → changed → emit  
-
-Output
-1, 2, 3, 1
-
-Difference from distinct
-
-distinct → removes duplicates across the entire stream  
-distinctUntilChanged → removes only consecutive duplicates
-
-Example
-
-Source
-1,2,2,3,1
-
-distinct output
-1,2,3
-
-distinctUntilChanged output
-1,2,3,1`,
-        comparisons: ['distinct'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2453,57 +3119,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 1, 2, 2, 3, 1] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 1, 2, 2, 3, 1] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                distinctUntilChanged(),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        distinctUntilChanged(),
+        map((v) => String(v)),
+      );
     },
-    distinctUntilKeyChanged: {
-        name: 'distinctUntilKeyChanged',
-        category: 'Filtering',
-        description: `Emits values only when the specified key changes compared to the previous value.
+  },
+  distinctUntilKeyChanged: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        "Emits values only when a specific property (key) differs from the previous value's same property.",
+      mentalModel:
+        'distinctUntilChanged for a single field — ignores changes in other properties.',
+      stepByStep: [
+        'Receive a value (typically an object)',
+        'Extract the specified key/property from the value',
+        'Compare it with the same key from the previous value',
+        'If the key value changed, emit the full object',
+        'If the key value is the same, skip',
+      ],
+      keyDifferences: [
+        'vs distinctUntilChanged → distinctUntilChanged compares the entire value; distinctUntilKeyChanged compares only one key',
+        'vs distinct → distinct remembers all values globally; distinctUntilKeyChanged only compares consecutive',
+        'vs filter → filter uses an arbitrary condition; distinctUntilKeyChanged tracks key-based changes',
+      ],
+      useCases: [
+        'Filtering state changes by a specific property (e.g., status field)',
+        'Reacting only when a relevant field changes',
+        'Optimizing renders based on a specific data field',
+      ],
+      gotchas: [
+        'Only the specified key is compared, not the whole object',
+        'Other properties can change without triggering an emission',
+        'Custom comparator available for the key value comparison',
+      ],
+      categoryNote:
+        'Filtering operator → key-based consecutive duplicate elimination.',
+    }),
 
-This operator is useful when working with objects and you only want to check
-changes for a specific property.
+    comparisons: ['distinct', 'distinctUntilChanged'],
 
-If two consecutive objects have the same value for the selected key,
-the later one is ignored.
-
-Example
-
-Source values
-{ id: 1 }, { id: 1 }, { id: 2 }, { id: 2 }, { id: 3 }
-
-Using key
-"id"
-
-Processing
-
-{ id:1 } → first value → emit  
-{ id:1 } → same id as previous → ignore  
-{ id:2 } → id changed → emit  
-{ id:2 } → same id → ignore  
-{ id:3 } → id changed → emit  
-
-Output
-{ id:1 }, { id:2 }, { id:3 }
-
-Difference from similar operators
-
-distinct → removes duplicates across the entire stream  
-distinctUntilChanged → compares entire values  
-distinctUntilKeyChanged → compares only one property (key)`,
-        comparisons: ['distinct', 'distinctUntilChanged'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2513,59 +3175,71 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            {
-                label: 'Source Values', defaultValue: [
-                    '{"id":1}',
-                    '{"id":1}',
-                    '{"id":2}',
-                    '{"id":2}',
-                    '{"id":3}'
-                ],
-                type: 'object'
-            }
+    inputs: [
+      {
+        label: 'Source Values',
+        defaultValue: [
+          '{"id":1}',
+          '{"id":1}',
+          '{"id":2}',
+          '{"id":2}',
+          '{"id":3}',
         ],
+        type: 'object',
+      },
+    ],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            const parsed = values.map(v => {
-                try {
-                    return JSON.parse(v);
-                } catch {
-                    return { id: v };
-                }
-            });
-
-            return of(...parsed).pipe(
-                distinctUntilKeyChanged('id'),
-                map(v => JSON.stringify(v))
-            );
+      const parsed = values.map((v) => {
+        try {
+          return JSON.parse(v);
+        } catch {
+          return { id: v };
         }
+      });
+
+      return of(...parsed).pipe(
+        distinctUntilKeyChanged('id'),
+        map((v) => JSON.stringify(v)),
+      );
     },
-    elementAt: {
-        name: 'elementAt',
-        category: 'Filtering',
-        description: `Emits only the value at a specified index from the source observable.
+  },
+  elementAt: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Emits only the value at a specified index position from the source, then completes immediately.',
+      mentalModel:
+        'Array bracket notation for streams — picks the exact Nth item.',
+      stepByStep: [
+        'Count emissions starting from index 0',
+        'When the count matches the specified index, emit that value',
+        'Complete immediately',
+        'If source completes before reaching the index, emit default or throw error',
+      ],
+      keyDifferences: [
+        'vs first → first always takes index 0; elementAt takes any index',
+        'vs last → last waits for completion and takes the final value; elementAt picks by position',
+        'vs take → take emits the first N values; elementAt emits a single value at a specific index',
+      ],
+      useCases: [
+        'Extracting a specific positional value from a known sequence',
+        'Getting the Nth result from a stream',
+        'Selecting a specific emission by order',
+      ],
+      gotchas: [
+        'Uses zero-based indexing',
+        'Throws ArgumentOutOfRangeError if index is out of range (unless default provided)',
+        'Completes immediately after emitting the single value',
+      ],
+      categoryNote: 'Filtering operator → positional value selection.',
+    }),
 
-WHEN TO USE:
-Use this when you only need a specific position from a stream.
+    comparisons: ['first', 'last', 'take'],
 
-REAL EXAMPLES:
-• Get 2nd item from API result
-• Pick a specific event from a sequence
-• Extract one value from ordered emissions
-
-KEY IDEA:
-Zero-based index → elementAt(0) = first value
-
-IMPORTANT:
-• Emits only ONE value
-• Throws error if index does not exist (unless default provided)`,
-
-        comparisons: ['first', 'last', 'take'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const index = $INPUT_1_VALUE;
 
@@ -2576,44 +3250,61 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [10, 20, 30, 40] },
-            { label: 'Index', defaultValue: [1] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [10, 20, 30, 40] },
+      { label: 'Index', defaultValue: [1] },
+    ],
 
-        run: (inputs) => {
-            const [values, indexArr] = inputs;
+    run: (inputs) => {
+      const [values, indexArr] = inputs;
 
-            const index = Number(indexArr[0]);
+      const index = Number(indexArr[0]);
 
-            return of(...values).pipe(
-                elementAt(index),
-                map(v => String(v)),
-                catchError(err => of('❌ Index out of range'))
-            );
-        }
+      return of(...values).pipe(
+        elementAt(index),
+        map((v) => String(v)),
+        catchError((err) => of('❌ Index out of range')),
+      );
     },
-    filter: {
-        name: 'filter',
-        category: 'Filtering',
-        description: `Allows only values that match a condition to pass through.
+  },
+  filter: {
+    category: 'Filtering',
+    description: createOperatorDescription({
+      definition:
+        'Emits only values from the source that satisfy a specified predicate function.',
+      mentalModel:
+        'A sieve — only items matching the condition pass through; the rest are discarded.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Apply the predicate function to it',
+        'If predicate returns true, emit the value',
+        'If predicate returns false, skip the value',
+        'Continue for all source emissions',
+      ],
+      timeline: `Source: --1--2--3--4--5--6--|
+filter(x => x % 2 === 0):
+Out:    -----2-----4-----6--|  (only even numbers pass)`,
+      keyDifferences: [
+        'vs find → find takes only the FIRST match then completes; filter emits ALL matches',
+        'vs takeWhile → takeWhile stops entirely on first failure; filter skips non-matches and continues',
+        'vs skipWhile → skipWhile starts emitting after first failure; filter checks every value',
+      ],
+      useCases: [
+        'Filtering even/odd numbers',
+        'Selecting valid API responses',
+        'Removing null/undefined values from a stream',
+      ],
+      gotchas: [
+        'Predicate runs for every emission (no short-circuiting)',
+        'Stateless between calls — no memory of previous values',
+        'Does not transform values, only selects or rejects them',
+      ],
+      categoryNote: 'Filtering operator → predicate-based value selection.',
+    }),
 
-WHEN TO USE:
-Use this when you want to remove unwanted values from a stream.
+    comparisons: ['takeWhile', 'skipWhile', 'distinct'],
 
-REAL EXAMPLES:
-• Show only even numbers
-• Filter successful API responses (status === 200)
-• Allow only valid form inputs
-• Show only active users
-
-KEY IDEA:
-Think of it like an "if condition" for streams.
-Only values that return TRUE are emitted.`,
-
-        comparisons: ['takeWhile', 'skipWhile', 'distinct'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const filterType = "$INPUT_1_VALUE";
 const compareValue = $INPUT_2_VALUE;
@@ -2631,90 +3322,88 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
-            {
-                label: 'Filter Type',
-                defaultValue: ['even'], // even | odd | greaterThan | lessThan
-                options: [
-                    { label: 'Odd Numbers', value: 'odd' },
-                    { label: 'Even Numbers', value: 'even' },
-                    { label: 'Greater Than', value: 'greaterThan' },
-                    { label: 'Less Than', value: 'lessThan' }
-                ],
-                type: 'select'
-            },
-            {
-                label: 'Compare Value (for greaterThan or lessThan)',
-                defaultValue: [3]
-            }
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
+      {
+        label: 'Filter Type',
+        defaultValue: ['even'], // even | odd | greaterThan | lessThan
+        options: [
+          { label: 'Odd Numbers', value: 'odd' },
+          { label: 'Even Numbers', value: 'even' },
+          { label: 'Greater Than', value: 'greaterThan' },
+          { label: 'Less Than', value: 'lessThan' },
         ],
+        type: 'select',
+      },
+      {
+        label: 'Compare Value (for greaterThan or lessThan)',
+        defaultValue: [3],
+      },
+    ],
 
-        run: (inputs) => {
-            const [values, filterTypeArr, compareArr] = inputs;
+    run: (inputs) => {
+      const [values, filterTypeArr, compareArr] = inputs;
 
-            const filterType = filterTypeArr[0];
-            const compareValue = compareArr[0];
+      const filterType = filterTypeArr[0];
+      const compareValue = compareArr[0];
 
-            let predicate: (v: number) => boolean;
+      let predicate: (v: number) => boolean;
 
-            if (filterType === 'even') {
-                predicate = (v: number) => v % 2 === 0;
-            } else if (filterType === 'odd') {
-                predicate = (v: number) => v % 2 !== 0;
-            } else if (filterType === 'greaterThan') {
-                predicate = (v: number) => v > compareValue;
-            } else if (filterType === 'lessThan') {
-                predicate = (v: number) => v < compareValue;
-            } else {
-                predicate = () => true;
-            }
+      if (filterType === 'even') {
+        predicate = (v: number) => v % 2 === 0;
+      } else if (filterType === 'odd') {
+        predicate = (v: number) => v % 2 !== 0;
+      } else if (filterType === 'greaterThan') {
+        predicate = (v: number) => v > compareValue;
+      } else if (filterType === 'lessThan') {
+        predicate = (v: number) => v < compareValue;
+      } else {
+        predicate = () => true;
+      }
 
-            return of(...values).pipe(
-                filter(predicate),
-                map(v => String(v)),
-                catchError(err => of('❌ Invalid filter type'))
-            );
-        }
+      return of(...values).pipe(
+        filter(predicate),
+        map((v) => String(v)),
+        catchError((err) => of('❌ Invalid filter type')),
+      );
     },
-    find: {
-        name: 'find',
-        category: 'Filtering',
+  },
+  find: {
+    category: 'Filtering',
 
-        description: `Emits the FIRST value that matches what you are looking for, then completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits the FIRST value that satisfies a predicate, then immediately completes — like Array.find() for streams.',
+      mentalModel:
+        'Looking for your keys — stop searching the moment you find them.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Apply the predicate function',
+        'If true, emit the value and complete immediately',
+        'If false, continue to the next value',
+        'If source completes without a match, emit undefined',
+      ],
+      keyDifferences: [
+        'vs filter → filter emits ALL matching values and continues; find emits only the first match',
+        'vs first → first errors (EmptyError) if no match; find emits undefined on no match',
+        'vs single → single errors if more than one match; find just takes the first match',
+      ],
+      useCases: [
+        'Finding the first matching item in a stream',
+        'Early-exit search on condition met',
+        'Locating a specific event in an event stream',
+      ],
+      gotchas: [
+        'Completes immediately after the first match',
+        'Emits undefined if no match is found (does not error)',
+        'Unsubscribes from source after finding a match',
+      ],
+      categoryNote: 'Filtering operator → first-match value selection.',
+    }),
 
-Think of it like:
-👉 "Find this value in the stream"
+    comparisons: ['filter', 'first'],
 
-HOW IT WORKS:
-• Goes through values one by one
-• If value matches → emit it
-• Stops immediately after finding
-
-IMPORTANT:
-• Emits only ONE value
-• If not found → emits Not found
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Find value
-3
-
-Processing
-
-1 → not match  
-2 → not match  
-3 → match → emit and complete  
-
-Output
-3`,
-
-        comparisons: ['filter', 'first'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const valueToFind = $INPUT_1_VALUE;
 
@@ -2725,60 +3414,58 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Value to Find', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Value to Find', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, findArr] = inputs;
+    run: (inputs) => {
+      const [values, findArr] = inputs;
 
-            const valueToFind = Number(findArr[0]);
+      const valueToFind = Number(findArr[0]);
 
-            return of(...values).pipe(
-                find(v => v === valueToFind),
-                map(v => v !== undefined ? String(v) : 'Not found')
-            );
-        }
+      return of(...values).pipe(
+        find((v) => v === valueToFind),
+        map((v) => (v !== undefined ? String(v) : 'Not found')),
+      );
     },
-    findIndex: {
-        name: 'findIndex',
-        category: 'Filtering',
+  },
+  findIndex: {
+    category: 'Filtering',
 
-        description: `Emits the INDEX of the first value that matches what you are looking for, then completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits the zero-based INDEX of the first value satisfying a predicate, then completes — like Array.findIndex() for streams.',
+      mentalModel:
+        'Array.findIndex() for streams — tells you WHERE the match is, not what it is.',
+      stepByStep: [
+        'Count emissions starting from index 0',
+        'Apply the predicate to each value',
+        'If true, emit the current index and complete immediately',
+        'If false, increment the index and continue',
+        'If no match found, emit -1 on source completion',
+      ],
+      keyDifferences: [
+        'vs find → find emits the value itself; findIndex emits the numeric position',
+        'vs elementAt → elementAt picks a value at a known index; findIndex finds the index of a match',
+        'vs filter → filter emits all matching values; findIndex emits the index of the first match only',
+      ],
+      useCases: [
+        'Finding the position of the first error in a sequence',
+        'Locating a specific event in a stream by position',
+        'Index-based processing decisions',
+      ],
+      gotchas: [
+        'Uses zero-based indexing',
+        'Returns -1 if no match is found',
+        'Completes immediately after finding a match',
+      ],
+      categoryNote: 'Filtering operator → first-match index selection.',
+    }),
 
-Think of it like:
-👉 "Find position of this value in the stream"
+    comparisons: ['find', 'filter'],
 
-HOW IT WORKS:
-• Goes through values one by one
-• If value matches → emit its index
-• Stops immediately after finding
-
-IMPORTANT:
-• Emits only ONE value (the index)
-• If not found → emits -1
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Find value
-3
-
-Processing
-
-1 → not match  
-2 → not match  
-3 → match → emit index (2) and complete  
-
-Output
-2`,
-
-        comparisons: ['find', 'filter'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const valueToFind = $INPUT_1_VALUE;
 
@@ -2789,55 +3476,60 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Value to Find', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Value to Find', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, findArr] = inputs;
+    run: (inputs) => {
+      const [values, findArr] = inputs;
 
-            const valueToFind = findArr[0];
+      const valueToFind = findArr[0];
 
-            return of(...values).pipe(
-                findIndex(v => v == valueToFind),
-                map(index => index !== -1 ? `📍 Index: ${index}` : '❌ Not found (-1)')
-            );
-        }
+      return of(...values).pipe(
+        findIndex((v) => v == valueToFind),
+        map((index) =>
+          index !== -1 ? `📍 Index: ${index}` : '❌ Not found (-1)',
+        ),
+      );
     },
-    first: {
-        name: 'first',
-        category: 'Filtering',
+  },
+  first: {
+    category: 'Filtering',
 
-        description: `Emits the FIRST value from the stream, then completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits only the FIRST value from the source (or first matching a predicate), then completes.',
+      mentalModel:
+        '"Tell me the first one and stop" — grab the first item off the conveyor belt.',
+      stepByStep: [
+        'Subscribe to the source',
+        'If no predicate: emit the very first value and complete',
+        'If predicate provided: check each value until one matches',
+        'Emit the matching value and complete',
+        'If source completes without a match, throw EmptyError',
+      ],
+      keyDifferences: [
+        'vs take(1) → take(1) does not error on empty source; first throws EmptyError',
+        'vs find → find returns undefined on no match; first throws an error',
+        'vs last → last waits for completion and takes the final value; first takes the first',
+      ],
+      useCases: [
+        'Getting the initial value from a stream',
+        'First matching event detection',
+        'Quick one-time sampling of a stream',
+      ],
+      gotchas: [
+        'Throws EmptyError if source completes without emitting',
+        'With predicate, errors if no value matches',
+        'Use the defaultValue parameter to prevent errors on empty',
+      ],
+      categoryNote: 'Filtering operator → first-value extraction.',
+    }),
 
-Think of it like:
-👉 "Just give me the first value and stop"
+    comparisons: ['take', 'find'],
 
-HOW IT WORKS:
-• Takes the very first value
-• Emits it immediately
-• Completes right after
-
-IMPORTANT:
-• Emits only ONE value
-• If no value is emitted → throws an error
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Processing
-
-1 → first value → emit and complete  
-
-Output
-1`,
-
-        comparisons: ['take', 'find'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2847,62 +3539,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                first(),
-                map(v => `🎯 First: ${v}`),
-                catchError(() => of('❌ No values (EmptyError)'))
-            );
-        }
+      return of(...values).pipe(
+        first(),
+        map((v) => `🎯 First: ${v}`),
+        catchError(() => of('❌ No values (EmptyError)')),
+      );
     },
-    ignoreElements: {
-        name: 'ignoreElements',
-        category: 'Filtering',
+  },
+  ignoreElements: {
+    category: 'Filtering',
 
-        description: `Ignores ALL values from the source and only lets completion or error pass through.
+    description: createOperatorDescription({
+      definition:
+        'Ignores ALL emitted values from the source, only passing through the completion or error signal.',
+      mentalModel:
+        'Earplugs — blocks all noise, only tells you when the concert is over or something breaks.',
+      stepByStep: [
+        'Subscribe to the source observable',
+        'Discard every emitted value',
+        'Wait for completion or error',
+        'Pass through only the completion or error signal',
+      ],
+      keyDifferences: [
+        'vs filter(() => false) → functionally equivalent but ignoreElements is more readable and intentional',
+        'vs last → last emits the final value; ignoreElements emits nothing at all',
+        'vs tap → tap observes without blocking values; ignoreElements blocks all values',
+      ],
+      useCases: [
+        'Waiting for side-effect-only operations to complete',
+        'Error detection without caring about the values',
+        'Synchronizing on completion timing',
+      ],
+      gotchas: [
+        'No values are EVER emitted to subscribers',
+        'Useful only for completion/error signal handling',
+        'Often combined with endWith() to emit a final notification',
+      ],
+      categoryNote: 'Filtering operator → value suppression.',
+    }),
 
-Think of it like:
-👉 "I don't care about values, just tell me when it's done"
+    comparisons: ['filter', 'tap'],
 
-HOW IT WORKS:
-• All emitted values are ignored
-• Nothing is sent to next()
-• When source completes → completion is passed
-
-IMPORTANT:
-• Emits NO values
-• Only completion or error is forwarded
-
-WHEN TO USE:
-• When you only care about completion (e.g., task finished)
-• When triggering side-effects but not showing data
-• When chaining operations where output is irrelevant
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Processing
-
-1 → ignored  
-2 → ignored  
-3 → ignored  
-4 → ignored  
-5 → ignored  
-
-Output
-(no values, only completes)`,
-
-        comparisons: ['filter', 'tap'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2915,64 +3598,55 @@ of(...values)
   });
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                ignoreElements(),
-                // Since no values come, we emit completion message manually
-                map(() => '❌ This will never run'),
-                endWith('✅ Completed (no values emitted)')
-            );
-        }
+      return of(...values).pipe(
+        ignoreElements(),
+        // Since no values come, we emit completion message manually
+        map(() => '❌ This will never run'),
+        endWith('✅ Completed (no values emitted)'),
+      );
     },
-    last: {
-        name: 'last',
-        category: 'Filtering',
+  },
+  last: {
+    category: 'Filtering',
 
-        description: `Emits the LAST value from the stream, after the source completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits only the LAST value from the source after it completes (or last matching a predicate).',
+      mentalModel:
+        '"Wait until the end, then tell me the final one" — check the score after the game ends.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Track the most recent value (or most recent matching predicate)',
+        'Wait for the source to complete',
+        'Emit the last tracked value',
+        'If no values were emitted, throw EmptyError',
+      ],
+      keyDifferences: [
+        'vs first → first takes the first value immediately; last waits for completion',
+        'vs takeLast(1) → functionally equivalent but takeLast does not error on empty',
+        'vs reduce → reduce requires an accumulator function; last simply takes the final value',
+      ],
+      useCases: [
+        'Getting the final result of a process',
+        'Last value before a connection closes',
+        'Final state snapshot after a sequence',
+      ],
+      gotchas: [
+        'Throws EmptyError if source completes without emitting',
+        'Waits for completion — infinite streams never produce a value',
+        'With predicate, errors if no value matches',
+      ],
+      categoryNote: 'Filtering operator → last-value extraction.',
+    }),
 
-Think of it like:
-👉 "Wait till everything is done, then give me the last value"
+    comparisons: ['first', 'takeLast'],
 
-HOW IT WORKS:
-• Collects values as they come
-• Waits for the source to complete
-• Emits the final (last) value
-
-IMPORTANT:
-• Emits only ONE value
-• Emits ONLY after completion
-• If no value is emitted → throws an error
-
-WHEN TO USE:
-• When you need the final result after a process
-• When working with streams that complete (like API responses)
-• When you care about the last state
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Processing
-
-1 → wait  
-2 → wait  
-3 → wait  
-4 → wait  
-5 → last value → emit after completion  
-
-Output
-5`,
-
-        comparisons: ['first', 'takeLast'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -2982,74 +3656,56 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                last(),
-                map(v => `🏁 Last: ${v}`),
-                catchError(() => of('❌ No values (EmptyError)'))
-            );
-        }
+      return of(...values).pipe(
+        last(),
+        map((v) => `🏁 Last: ${v}`),
+        catchError(() => of('❌ No values (EmptyError)')),
+      );
     },
-    sample: {
-        name: 'sample',
-        category: 'Filtering',
+  },
+  sample: {
+    category: 'Filtering',
 
-        description: `Emits the latest value from the source ONLY when another observable (trigger) emits.
+    description: createOperatorDescription({
+      definition:
+        'Emits the most recent value from the source ONLY when a separate notifier observable emits.',
+      mentalModel:
+        'A photographer — takes a snapshot of the latest value only when told to shoot.',
+      stepByStep: [
+        'Subscribe to the source and the notifier',
+        'Store the latest source value',
+        'When the notifier emits, emit the latest stored value',
+        'If no new value exists since the last sample, skip',
+      ],
+      timeline: `Source:   --1--2--3--------4--5--|
+Notifier: --------X--------X-----|
+Out:               3        4     (latest value at notifier time)`,
+      keyDifferences: [
+        'vs sampleTime → sampleTime uses a fixed interval; sample uses an observable trigger',
+        'vs withLatestFrom → withLatestFrom combines values; sample just takes the latest source value',
+        'vs audit → audit is triggered by source values; sample is triggered by an external notifier',
+      ],
+      useCases: [
+        'Sampling data on user interaction (click to capture current value)',
+        'Periodic state snapshots driven by external events',
+        'Throttling a fast producer with a slower consumer signal',
+      ],
+      gotchas: [
+        'No emission if source has not emitted since the last sample',
+        'Notifier drives the timing completely',
+        'Values are discarded if no notifier fires before the next source value',
+      ],
+      categoryNote: 'Filtering operator → signal-triggered value sampling.',
+    }),
 
-Think of it like:
-👉 "Whenever trigger happens, give me the latest value"
+    comparisons: ['sampleTime', 'auditTime', 'throttleTime'],
 
-HOW IT WORKS:
-• Source keeps emitting values
-• The latest value is stored internally
-• When trigger emits → latest value is emitted
-
-IMPORTANT:
-• Does NOT emit on every source value
-• Emits ONLY when trigger fires
-• If source completes early → no further emissions
-• If no value has come yet → nothing is emitted
-
-WHEN TO USE:
-• When you want snapshots of a stream at specific times
-• When syncing data with events (like button clicks)
-• When reducing update frequency
-
-KEY DIFFERENCE:
-• sample → uses another observable as trigger
-
-Example
-
-Source values (every 300ms)
-1, 2, 3, 4, 5
-
-Trigger (every 1000ms)
-
-Timeline
-
-300ms → 1  
-600ms → 2  
-900ms → 3  
-
-1000ms → trigger → emit latest → 3  
-
-1200ms → 4  
-1500ms → 5 → source completes  
-
-(no more trigger after source completes)
-
-Output
-3`,
-
-        comparisons: ['sampleTime', 'auditTime', 'throttleTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const triggerInterval = $INPUT_2_VALUE;
@@ -3063,79 +3719,62 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Trigger Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Trigger Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, triggerInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, triggerInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                sample(interval(triggerInterval[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        sample(interval(triggerInterval[0])),
+        map((v) => String(v)),
+      );
     },
-    sampleTime: {
-        name: 'sampleTime',
-        category: 'Filtering',
+  },
+  sampleTime: {
+    category: 'Filtering',
 
-        description: `Emits the latest value from the source at a fixed time interval.
+    description: createOperatorDescription({
+      definition:
+        'Emits the most recent value from the source at fixed time intervals.',
+      mentalModel:
+        'A clock reporter — checks and reports the latest value every N milliseconds.',
+      stepByStep: [
+        'Start a periodic timer based on the specified interval',
+        'On each tick, check if a new source value exists',
+        'If yes, emit the latest source value',
+        'If no new value since the last tick, skip',
+      ],
+      timeline: `Source: --1--2--3--------4--5--|
+sampleTime(500ms):
+        |--500ms--|--500ms--|--500ms--|
+Out:              3         4     5`,
+      keyDifferences: [
+        'vs sample → sample uses an observable trigger; sampleTime uses a fixed clock interval',
+        'vs auditTime → auditTime is triggered by source values; sampleTime runs on a fixed clock',
+        'vs throttleTime → throttleTime emits the first value then blocks; sampleTime emits the latest periodically',
+      ],
+      useCases: [
+        'Regular polling of the latest state value',
+        'Dashboard updates at fixed intervals',
+        'Display refresh rate limiting',
+      ],
+      gotchas: [
+        'Timer runs independently of source emissions',
+        'Skips a tick if no new value arrived since the last tick',
+        'More regular output cadence than throttle or debounce',
+      ],
+      categoryNote: 'Filtering operator → periodic value sampling.',
+    }),
 
-Think of it like:
-👉 "Every X milliseconds, give me the latest value"
+    comparisons: ['sample', 'auditTime', 'throttleTime'],
 
-HOW IT WORKS:
-• Source keeps emitting values
-• The latest value is stored
-• At every time interval → latest value is emitted
-
-IMPORTANT:
-• Emits at fixed intervals (not based on another observable)
-• Does NOT emit on every source value
-• If source completes early → no further emissions
-• If no value has come yet → nothing is emitted
-
-WHEN TO USE:
-• When you want periodic snapshots of a stream
-• When reducing frequency of updates
-• When displaying live data at intervals
-
-KEY DIFFERENCE:
-• sampleTime → uses time interval as trigger
-• sample → uses another observable as trigger
-
-Example
-
-Source values (every 300ms)
-1, 2, 3, 4, 5
-
-Sample interval
-1000ms
-
-Timeline
-
-300ms → 1  
-600ms → 2  
-900ms → 3  
-
-1000ms → emit latest → 3  
-
-1200ms → 4  
-1500ms → 5 → source completes  
-
-(no next interval before completion)
-
-Output
-3`,
-
-        comparisons: ['sample', 'auditTime', 'throttleTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const sampleInterval = $INPUT_2_VALUE;
@@ -3149,72 +3788,59 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Sample Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Sample Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, sampleInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, sampleInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                sampleTime(sampleInterval[0]),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        sampleTime(sampleInterval[0]),
+        map((v) => String(v)),
+      );
     },
-    single: {
-        name: 'single',
-        category: 'Filtering',
+  },
+  single: {
+    category: 'Filtering',
 
-        description: `Emits the ONLY value that matches a condition.
+    description: createOperatorDescription({
+      definition:
+        'Emits the one and only value matching a predicate. Errors if zero or more than one value matches.',
+      mentalModel:
+        'A strict bouncer — exactly one guest expected; too few or too many is an error.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Check each value against the predicate',
+        'Track matching values',
+        'If exactly one match: emit it and complete',
+        'If zero or multiple matches: throw an error',
+      ],
+      keyDifferences: [
+        'vs first → first takes the first match and ignores the rest; single ERRORS if there are multiple',
+        'vs find → find takes the first match without error; single enforces uniqueness',
+        'vs filter → filter emits ALL matches; single asserts exactly one',
+      ],
+      useCases: [
+        'Asserting exactly one result from a query',
+        'Validating a unique item in a stream',
+        'Strict single-response expectations',
+      ],
+      gotchas: [
+        'Errors on empty source (no values at all)',
+        'Errors if more than one value matches the predicate',
+        'Waits for source completion to verify that only one matched',
+      ],
+      categoryNote: 'Filtering operator → strict single-value assertion.',
+    }),
 
-Think of it like:
-👉 "There should be exactly ONE matching value"
+    comparisons: ['find', 'first'],
 
-HOW IT WORKS:
-• Checks all values in the stream
-• If exactly ONE value matches not more than one then → emit it
-• If NONE match → error
-• If MORE THAN ONE match → error
-
-IMPORTANT:
-• Emits only ONE value
-• Throws error if 0 or multiple matches
-• Waits for the source to complete
-
-WHEN TO USE:
-• When you expect exactly one result
-• When validating unique data
-• When ensuring only one match exists
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Condition
-value === 3
-
-Processing
-
-1 → no match  
-2 → no match  
-3 → match  
-4 → no match  
-5 → no match  
-
-Only one match → emit 3
-
-Output
-3`,
-
-        comparisons: ['find', 'first'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const valueToFind = $INPUT_1_VALUE;
 
@@ -3225,68 +3851,60 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Value to Find', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Value to Find', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, findArr] = inputs;
+    run: (inputs) => {
+      const [values, findArr] = inputs;
 
-            const valueToFind = findArr[0];
+      const valueToFind = findArr[0];
 
-            return of(...values).pipe(
-                single(v => v == valueToFind),
-                map(v => `✅ Single: ${v}`),
-                catchError(() => of('❌ Must have exactly one matching value'))
-            );
-        }
+      return of(...values).pipe(
+        single((v) => v == valueToFind),
+        map((v) => `✅ Single: ${v}`),
+        catchError(() => of('❌ Must have exactly one matching value')),
+      );
     },
-    skip: {
-        name: 'skip',
-        category: 'Filtering',
+  },
+  skip: {
+    category: 'Filtering',
 
-        description: `Skips the first N values from the source, then emits the rest.
+    description: createOperatorDescription({
+      definition:
+        'Skips the first N values from the source, then emits all remaining values.',
+      mentalModel: 'Fast-forward — skip the first N tracks on an album.',
+      stepByStep: [
+        'Count incoming emissions starting from 0',
+        'While count < N, discard the value',
+        'After N values have been skipped, emit all subsequent values',
+        'Continue until source completes',
+      ],
+      timeline: `Source: --1--2--3--4--5--|
+skip(2):
+Out:    ----------3--4--5--|  (first 2 skipped)`,
+      keyDifferences: [
+        'vs skipWhile → skipWhile skips by condition; skip by count',
+        'vs skipUntil → skipUntil skips until an external signal; skip by count',
+        'vs take → take emits the first N and stops; skip removes the first N and continues',
+      ],
+      useCases: [
+        'Ignoring initial setup/warmup emissions',
+        'Skipping stale cached values',
+        'Removing header rows from a data stream',
+      ],
+      gotchas: [
+        'If source emits fewer than N values, nothing is emitted',
+        'Skipped values are permanently discarded',
+        'skip(0) passes everything through unchanged',
+      ],
+      categoryNote: 'Filtering operator → count-based prefix skipping.',
+    }),
 
-Think of it like:
-👉 "Ignore the first few values"
+    comparisons: ['skipWhile', 'take', 'takeLast'],
 
-HOW IT WORKS:
-• Counts incoming values
-• Ignores first N values
-• Starts emitting after that
-
-IMPORTANT:
-• Does NOT modify remaining values
-• If N ≥ total values → nothing is emitted
-
-WHEN TO USE:
-• When you want to ignore initial values
-• When skipping default or unwanted first emissions
-• When handling streams with initial noise
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Skip count
-2
-
-Processing
-
-1 → skipped  
-2 → skipped  
-3 → emit  
-4 → emit  
-5 → emit  
-
-Output
-3, 4, 5`,
-
-        comparisons: ['skipWhile', 'take', 'takeLast'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const skipCount = $INPUT_1_VALUE;
 
@@ -3297,66 +3915,60 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Skip Count', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Skip Count', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, countArr] = inputs;
+    run: (inputs) => {
+      const [values, countArr] = inputs;
 
-            const skipCount = Number(countArr[0]);
+      const skipCount = Number(countArr[0]);
 
-            return of(...values).pipe(
-                skip(skipCount),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        skip(skipCount),
+        map((v) => String(v)),
+      );
     },
-    skipLast: {
-        name: 'skipLast',
-        category: 'Filtering',
+  },
+  skipLast: {
+    category: 'Filtering',
 
-        description: `Skips the last N values from the source.
+    description: createOperatorDescription({
+      definition:
+        'Omits the last N values from the source, emitting everything except the final N values.',
+      mentalModel:
+        'A delay buffer — holds N items back, releasing only when new ones push them out.',
+      stepByStep: [
+        'Buffer each incoming value',
+        'Once the buffer exceeds N items, emit the oldest buffered value',
+        'Continue buffering new values and releasing old ones',
+        'On source completion, discard the remaining N buffered values',
+      ],
+      timeline: `Source: --1--2--3--4--5--|
+skipLast(2):
+Out:    ----------1--2--3--|  (last 2 values: 4, 5 are discarded)`,
+      keyDifferences: [
+        'vs takeLast → takeLast emits only the last N; skipLast excludes the last N',
+        'vs skip → skip removes the first N; skipLast removes the last N',
+        'vs take → take keeps the first N; skipLast keeps everything except the last N',
+      ],
+      useCases: [
+        'Removing trailing summary values',
+        'Ignoring final cleanup emissions',
+        'Processing all but the last N items in a sequence',
+      ],
+      gotchas: [
+        'Must buffer N values before any emission starts (adds delay)',
+        'Source must complete to know which are the "last" values',
+        'All emissions are delayed by N values',
+      ],
+      categoryNote: 'Filtering operator → count-based suffix skipping.',
+    }),
 
-Think of it like:
-👉 "Ignore the last few values"
+    comparisons: ['skip', 'takeLast'],
 
-HOW IT WORKS:
-• Collects values as they come
-• Holds last N values in buffer
-• Emits everything except the last N
-
-IMPORTANT:
-• Emits values with delay (needs to know the end)
-• If N ≥ total values → nothing is emitted
-
-WHEN TO USE:
-• When you want to ignore ending values
-• When final emissions are not needed
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Skip last
-2
-
-Processing
-
-1 → emit  
-2 → emit  
-3 → emit  
-4 → hold  
-5 → hold  
-
-Output
-1, 2, 3`,
-
-        comparisons: ['skip', 'takeLast'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -3367,67 +3979,59 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Skip Last Count', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Skip Last Count', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, countArr] = inputs;
-            const count = Number(countArr[0]);
+    run: (inputs) => {
+      const [values, countArr] = inputs;
+      const count = Number(countArr[0]);
 
-            return of(...values).pipe(
-                skipLast(count),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        skipLast(count),
+        map((v) => String(v)),
+      );
     },
-    skipUntil: {
-        name: 'skipUntil',
-        category: 'Filtering',
+  },
+  skipUntil: {
+    category: 'Filtering',
 
-        description: `Skips values from the source until another observable emits.
+    description: createOperatorDescription({
+      definition:
+        'Skips all values from the source until a notifier observable emits, then emits all subsequent values.',
+      mentalModel:
+        'A traffic light — nothing passes until the green light (notifier) turns on.',
+      stepByStep: [
+        'Subscribe to the source and the notifier',
+        'Discard all source values until the notifier emits',
+        'After notifier emits, start passing through all source values',
+        'Continue until source completes',
+      ],
+      timeline: `Source:   --1--2--3--4--5--|
+Notifier: ---------X-------|
+Out:      ------------4--5--|  (values before notifier are skipped)`,
+      keyDifferences: [
+        'vs skipWhile → skipWhile uses a predicate condition; skipUntil uses a signal',
+        'vs takeUntil → takeUntil STOPS on signal; skipUntil STARTS on signal',
+        'vs skip → skip uses a fixed count; skipUntil uses a signal',
+      ],
+      useCases: [
+        'Waiting for initialization before processing events',
+        'Gating data until user authentication completes',
+        'Synchronizing stream start with an external event',
+      ],
+      gotchas: [
+        'All values before the notifier signal are permanently lost',
+        'Notifier only needs to emit once — subsequent emissions are ignored',
+        'If notifier never emits, no values pass through ever',
+      ],
+      categoryNote: 'Filtering operator → signal-gated value passing.',
+    }),
 
-Think of it like:
-👉 "Ignore values until something happens"
+    comparisons: ['skipWhile', 'takeUntil'],
 
-HOW IT WORKS:
-• Source emits values
-• All values are ignored initially
-• When trigger emits → start emitting from source
-
-IMPORTANT:
-• Before trigger → nothing is emitted
-• After trigger → all values pass through
-
-WHEN TO USE:
-• When waiting for an event (click, API ready)
-• When starting stream after some condition
-
-Example
-
-Source (every 300ms)
-1, 2, 3, 4, 5
-
-Trigger at 1000ms
-
-Timeline
-
-300ms → 1 (ignored)  
-600ms → 2 (ignored)  
-900ms → 3 (ignored)  
-
-1000ms → trigger → start emitting  
-
-1200ms → 4  
-1500ms → 5  
-
-Output
-4, 5`,
-
-        comparisons: ['skipWhile', 'takeUntil'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const triggerInterval = $INPUT_2_VALUE;
@@ -3441,68 +4045,61 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Trigger Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Trigger Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, triggerInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, triggerInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                skipUntil(interval(triggerInterval[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        skipUntil(interval(triggerInterval[0])),
+        map((v) => String(v)),
+      );
     },
-    skipWhile: {
-        name: 'skipWhile',
-        category: 'Filtering',
+  },
+  skipWhile: {
+    category: 'Filtering',
 
-        description: `Skips values while a condition is true, then emits the rest.
+    description: createOperatorDescription({
+      definition:
+        'Skips values while a predicate returns true, then emits ALL subsequent values regardless of the predicate.',
+      mentalModel:
+        'A gate that opens permanently — stays closed while the condition holds, opens forever once it fails.',
+      stepByStep: [
+        'Receive a value and check the predicate',
+        'While predicate returns true, skip the value',
+        'On the first false, start emitting',
+        'All subsequent values pass through WITHOUT re-checking the predicate',
+      ],
+      timeline: `Source: --1--2--3--4--1--2--|
+skipWhile(x => x < 3):
+Out:    --------3--4--1--2--|  (after 3 passes, ALL values emitted even 1 and 2)`,
+      keyDifferences: [
+        'vs filter → filter checks EVERY value; skipWhile only checks until the first failure',
+        'vs skipUntil → skipUntil uses an external signal; skipWhile uses a predicate',
+        'vs takeWhile → takeWhile STOPS on failure; skipWhile STARTS on failure',
+      ],
+      useCases: [
+        'Skipping initial zero or null values',
+        'Waiting for a stream to reach a valid state',
+        'Ignoring warmup emissions',
+      ],
+      gotchas: [
+        'Once the predicate fails, ALL subsequent values pass unchecked',
+        'Predicate is NEVER re-evaluated after the first failure',
+        'If predicate never fails, the entire stream is empty',
+      ],
+      categoryNote: 'Filtering operator → predicate-gated prefix skipping.',
+    }),
 
-Think of it like:
-👉 "Skip while condition is true, then allow everything"
+    comparisons: ['filter', 'skip', 'takeWhile'],
 
-HOW IT WORKS:
-• Applies condition to each value
-• While condition is true → skip
-• Once false → start emitting ALL values
-
-IMPORTANT:
-• Condition is checked only until first false
-• After that → everything passes through
-
-WHEN TO USE:
-• When ignoring initial unwanted values
-• When waiting for condition to become false
-
-Example
-
-Source values
-1, 2, 3, 4, 1, 2
-
-Condition
-value < 3
-
-Processing
-
-1 → skip  
-2 → skip  
-3 → condition false → emit  
-4 → emit  
-1 → emit  
-2 → emit  
-
-Output
-3, 4, 1, 2`,
-
-        comparisons: ['filter', 'skip', 'takeWhile'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const threshold = $INPUT_1_VALUE;
 
@@ -3513,65 +4110,58 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 1, 2] },
-            { label: 'Threshold Value', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 1, 2] },
+      { label: 'Threshold Value', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, thresholdArr] = inputs;
-            const threshold = thresholdArr[0];
+    run: (inputs) => {
+      const [values, thresholdArr] = inputs;
+      const threshold = thresholdArr[0];
 
-            return of(...values).pipe(
-                skipWhile(v => v < threshold),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        skipWhile((v) => v < threshold),
+        map((v) => String(v)),
+      );
     },
-    take: {
-        name: 'take',
-        category: 'Filtering',
+  },
+  take: {
+    category: 'Filtering',
 
-        description: `Emits only the first N values from the source, then completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits only the first N values from the source, then completes immediately.',
+      mentalModel:
+        '"Give me the first N and stop" — take items off the top of a stack.',
+      stepByStep: [
+        'Count emissions starting from 0',
+        'Emit each value',
+        'When count reaches N, complete and unsubscribe from source',
+      ],
+      timeline: `Source: --1--2--3--4--5--|
+take(3):
+Out:    --1--2--3|  (complete after 3)`,
+      keyDifferences: [
+        'vs first → first emits one value and errors on empty; take(1) does not error',
+        'vs takeLast → takeLast emits the last N after completion; take emits the first N immediately',
+        'vs takeWhile → takeWhile uses a condition; take uses a fixed count',
+      ],
+      useCases: [
+        'Limiting infinite streams to a specific count',
+        'Taking the first N API results',
+        'Quick sampling of a stream',
+      ],
+      gotchas: [
+        'Completes and unsubscribes after N values',
+        'Does NOT error if source has fewer than N values',
+        'take(0) completes immediately without subscribing',
+      ],
+      categoryNote: 'Filtering operator → count-based prefix selection.',
+    }),
 
-Think of it like:
-👉 "Give me first N values and stop"
+    comparisons: ['skip', 'first', 'takeWhile'],
 
-HOW IT WORKS:
-• Starts emitting values
-• Counts each emission
-• After N values → completes immediately
-
-IMPORTANT:
-• Emits only N values
-• Automatically unsubscribes after N values
-• If N ≥ total values → emits all values
-
-WHEN TO USE:
-• When you need only a limited number of values
-• When preventing infinite streams
-• When taking initial data only
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Take count
-3
-
-Processing
-
-1 → emit  
-2 → emit  
-3 → emit → complete  
-
-Output
-1, 2, 3`,
-
-        comparisons: ['skip', 'first', 'takeWhile'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -3582,63 +4172,61 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Take Count', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Take Count', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, countArr] = inputs;
+    run: (inputs) => {
+      const [values, countArr] = inputs;
 
-            const count = Number(countArr[0]);
+      const count = Number(countArr[0]);
 
-            return of(...values).pipe(
-                take(count),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        take(count),
+        map((v) => String(v)),
+      );
     },
-    takeLast: {
-        name: 'takeLast',
-        category: 'Filtering',
+  },
+  takeLast: {
+    category: 'Filtering',
 
-        description: `Emits the last N values from the source, after it completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits only the last N values from the source after it completes.',
+      mentalModel:
+        '"Tell me the final N results after everything is done" — last few frames of a movie.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Buffer values, keeping only the most recent N',
+        'Wait for the source to complete',
+        'Emit all N buffered values in order',
+        'Complete',
+      ],
+      timeline: `Source: --1--2--3--4--5--|
+takeLast(2):
+Out:    -----------------4--5|  (emits last 2 after completion)`,
+      keyDifferences: [
+        'vs last → last emits only the very last value; takeLast emits the last N',
+        'vs skipLast → skipLast removes the last N; takeLast keeps only the last N',
+        'vs take → take emits the first N immediately; takeLast waits for completion',
+      ],
+      useCases: [
+        'Getting the most recent N items from a completed stream',
+        'Processing final results of a computation',
+        'Last N log entries',
+      ],
+      gotchas: [
+        'Nothing emits until the source completes',
+        'Must buffer N values in memory while waiting',
+        'Not suitable for infinite streams — they never complete',
+      ],
+      categoryNote: 'Filtering operator → completion-based suffix selection.',
+    }),
 
-Think of it like:
-👉 "Give me the last few values at the end"
+    comparisons: ['take', 'skipLast'],
 
-HOW IT WORKS:
-• Collects all values internally
-• Waits for the source to complete
-• Emits the last N values
-
-IMPORTANT:
-• Emits only after completion
-• If N ≥ total values → emits all values
-
-WHEN TO USE:
-• When you need final values from a stream
-• When working with completed data sets
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Take last
-2
-
-Processing
-
-(wait until complete)  
-Emit last 2 values → 4, 5  
-
-Output
-4, 5`,
-
-        comparisons: ['take', 'skipLast'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -3649,65 +4237,59 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Take Last Count', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Take Last Count', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, countArr] = inputs;
-            const count = Number(countArr[0]);
+    run: (inputs) => {
+      const [values, countArr] = inputs;
+      const count = Number(countArr[0]);
 
-            return of(...values).pipe(
-                takeLast(count),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        takeLast(count),
+        map((v) => String(v)),
+      );
     },
-    takeUntil: {
-        name: 'takeUntil',
-        category: 'Filtering',
+  },
+  takeUntil: {
+    category: 'Filtering',
 
-        description: `Emits values from the source until another observable (trigger) emits.
+    description: createOperatorDescription({
+      definition:
+        'Emits values from the source until a notifier observable emits, then completes immediately.',
+      mentalModel:
+        'A countdown timer — everything runs until the alarm goes off, then it stops.',
+      stepByStep: [
+        'Subscribe to the source and the notifier',
+        'Emit source values normally',
+        'When the notifier emits, complete immediately',
+        'Unsubscribe from the source',
+      ],
+      timeline: `Source:   --1--2--3--4--5--|
+Notifier: -----------X------|
+Out:      --1--2--3|  (complete when notifier fires)`,
+      keyDifferences: [
+        'vs takeWhile → takeWhile uses a predicate condition; takeUntil uses an external signal',
+        'vs skipUntil → skipUntil STARTS on signal; takeUntil STOPS on signal',
+        'vs take → take uses a fixed count; takeUntil uses a signal',
+      ],
+      useCases: [
+        'Component destruction cleanup (ngOnDestroy pattern)',
+        'Canceling operations on user action',
+        'Time-based or event-based stream termination',
+      ],
+      gotchas: [
+        'Should be the LAST operator in pipe to properly unsubscribe from upstream',
+        'The notifier emission value does not matter — only the timing',
+        'Source is unsubscribed immediately when notifier fires',
+      ],
+      categoryNote: 'Filtering operator → signal-based stream termination.',
+    }),
 
-Think of it like:
-👉 "Keep taking values until something happens"
+    comparisons: ['skipUntil', 'takeWhile'],
 
-HOW IT WORKS:
-• Source emits values normally
-• When trigger emits → stop immediately
-• No further values are emitted
-
-IMPORTANT:
-• Stops as soon as trigger fires
-• Does not emit the value that comes after trigger
-
-WHEN TO USE:
-• When stopping a stream based on an event
-• When handling component destruction (Angular)
-• When canceling ongoing processes
-
-Example
-
-Source (every 300ms)
-1, 2, 3, 4, 5
-
-Trigger at 1000ms
-
-Timeline
-
-300ms → 1  
-600ms → 2  
-900ms → 3  
-
-1000ms → trigger → stop  
-
-Output
-1, 2, 3`,
-
-        comparisons: ['skipUntil', 'takeWhile'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const triggerInterval = $INPUT_2_VALUE;
@@ -3721,65 +4303,61 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Trigger Interval (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Trigger Interval (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, triggerInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, triggerInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                takeUntil(interval(triggerInterval[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        takeUntil(interval(triggerInterval[0])),
+        map((v) => String(v)),
+      );
     },
-    takeWhile: {
-        name: 'takeWhile',
-        category: 'Filtering',
+  },
+  takeWhile: {
+    category: 'Filtering',
 
-        description: `Emits values while a condition is true, then stops.
+    description: createOperatorDescription({
+      definition:
+        'Emits values while a predicate returns true, then completes on the first false value.',
+      mentalModel:
+        'A conveyor belt that stops the moment a defective item appears.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Apply the predicate function',
+        'If true, emit the value',
+        'If false, complete immediately and unsubscribe',
+      ],
+      timeline: `Source: --1--2--3--4--1--|
+takeWhile(x => x < 3):
+Out:    --1--2|  (stops at first x >= 3, stream ends)`,
+      keyDifferences: [
+        'vs filter → filter skips non-matching but continues; takeWhile stops entirely',
+        'vs skipWhile → skipWhile starts on first failure; takeWhile stops on first failure',
+        'vs takeUntil → takeUntil uses an external signal; takeWhile uses a predicate',
+      ],
+      useCases: [
+        'Reading values until a threshold is exceeded',
+        'Processing a stream while data is valid',
+        'Consuming values until an end-of-sequence marker',
+      ],
+      gotchas: [
+        'Optional inclusive parameter includes the failing value in the output',
+        'Once stopped, the stream cannot resume',
+        'Predicate failure causes immediate completion and unsubscribe',
+      ],
+      categoryNote: 'Filtering operator → predicate-based stream termination.',
+    }),
 
-Think of it like:
-👉 "Keep taking values while condition is true"
+    comparisons: ['skipWhile', 'take'],
 
-HOW IT WORKS:
-• Applies condition to each value
-• While condition is true → emit values
-• Once condition becomes false → stop completely
-
-IMPORTANT:
-• Stops permanently after first false condition
-• Does not emit the value that breaks the condition
-
-WHEN TO USE:
-• When processing values until a condition fails
-• When working with thresholds or limits
-
-Example
-
-Source values
-1, 2, 3, 4, 1
-
-Condition
-value < 3
-
-Processing
-
-1 → emit  
-2 → emit  
-3 → condition false → stop  
-
-Output
-1, 2`,
-
-        comparisons: ['skipWhile', 'take'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const threshold = $INPUT_1_VALUE;
 
@@ -3790,67 +4368,61 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 1] },
-            { label: 'Threshold Value', defaultValue: [3] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 1] },
+      { label: 'Threshold Value', defaultValue: [3] },
+    ],
 
-        run: (inputs) => {
-            const [values, thresholdArr] = inputs;
-            const threshold = thresholdArr[0];
+    run: (inputs) => {
+      const [values, thresholdArr] = inputs;
+      const threshold = thresholdArr[0];
 
-            return of(...values).pipe(
-                takeWhile(v => v < threshold),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        takeWhile((v) => v < threshold),
+        map((v) => String(v)),
+      );
     },
-    throttle: {
-        name: 'throttle',
-        category: 'Filtering',
+  },
+  throttle: {
+    category: 'Filtering',
 
-        description: `Emits the first value, then ignores subsequent values for a duration controlled by another observable.
+    description: createOperatorDescription({
+      definition:
+        'Emits a value immediately, then ignores subsequent source values for a duration determined by another observable.',
+      mentalModel:
+        'A bouncer with a cooldown — lets one person in, then blocks the door until the cooldown ends.',
+      stepByStep: [
+        'Receive a source value and emit it immediately',
+        'Start the duration observable',
+        'Ignore all source values while the duration is active',
+        'When the duration completes, accept the next source value',
+        'Repeat the cycle',
+      ],
+      timeline: `Source: --1--2--3--------4--5--|
+throttle(durationOf(400ms)):
+Out:    --1--------------4-----|  (2,3 ignored during cooldown, 5 ignored)`,
+      keyDifferences: [
+        'vs throttleTime → throttleTime uses fixed duration; throttle uses an observable',
+        'vs debounce → debounce waits for silence and emits last; throttle emits first immediately',
+        'vs audit → audit emits the LAST value after duration; throttle emits the FIRST',
+      ],
+      useCases: [
+        'Rate-limiting with dynamic cooldown intervals',
+        'Scroll handling with variable throttle duration',
+        'Adaptive throttling based on system load',
+      ],
+      gotchas: [
+        'Emits the FIRST value of each cycle (leading edge by default)',
+        'Subsequent values during the cooldown are permanently lost',
+        'Duration observable is recreated for each cycle',
+        'Configurable leading/trailing edge behavior via config object (default: leading=true, trailing=false)',
+      ],
+      categoryNote: 'Filtering operator → observable-based rate limiting.',
+    }),
 
-Think of it like:
-👉 "Emit → lock → ignore → unlock → repeat"
+    comparisons: ['throttleTime', 'auditTime', 'debounceTime'],
 
-HOW IT WORKS:
-• Emit first value immediately
-• Start duration (controlled by another observable)
-• Ignore all values during that duration
-• After duration ends → next value can be emitted
-
-KEY DIFFERENCE:
-• throttle → duration controlled by another observable
-
-Example
-
-Source (every 300ms)
-1    2    3    4    5    6    7    8    9
-300  600  900 1200 1500 1800 2100 2400 2700
-
-Duration = 1000ms
-
-Timeline
-
-300ms  → 1  ✅ emit → lock till 1300ms  
-600ms  → 2  ❌ ignored  
-900ms  → 3  ❌ ignored  
-1200ms → 4  ❌ ignored  
-
-1500ms → 5  ✅ emit → lock till 2500ms  
-1800ms → 6  ❌ ignored  
-2100ms → 7  ❌ ignored  
-2400ms → 8  ❌ ignored  
-
-2700ms → 9  ✅ emit  
-
-Output
-1, 5, 9`,
-
-        comparisons: ['throttleTime', 'auditTime', 'debounceTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const duration = $INPUT_2_VALUE;
@@ -3864,70 +4436,63 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Throttle Duration (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Throttle Duration (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, duration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, duration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                throttle(() => interval(duration[0])),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        throttle(() => interval(duration[0])),
+        map((v) => String(v)),
+      );
     },
-    throttleTime: {
-        name: 'throttleTime',
-        category: 'Filtering',
+  },
+  throttleTime: {
+    category: 'Filtering',
 
-        description: `Emits the first value, then ignores subsequent values for a fixed time duration.
+    description: createOperatorDescription({
+      definition:
+        'Emits a value immediately, then ignores subsequent source values for a fixed time duration.',
+      mentalModel:
+        'A rate limiter — allow one action per N milliseconds, ignore the rest.',
+      stepByStep: [
+        'Receive a source value and emit it immediately',
+        'Start a timer for the specified duration',
+        'Ignore all source values during the timer',
+        'When the timer expires, accept the next source value',
+        'Repeat the cycle',
+      ],
+      timeline: `Source: --1--2--3--------4--5--|
+throttleTime(400ms):
+         |--400ms--|      |--400ms--|
+Out:    --1--------------4--------|  (2,3,5 throttled)`,
+      keyDifferences: [
+        'vs throttle → throttle uses an observable for duration; throttleTime uses fixed time',
+        'vs debounceTime → debounceTime waits for silence; throttleTime emits immediately',
+        'vs auditTime → auditTime emits the last value after duration; throttleTime emits the first',
+      ],
+      useCases: [
+        'Button click rate limiting',
+        'Scroll and resize event throttling',
+        'API call rate limiting',
+      ],
+      gotchas: [
+        'Leading edge by default (emits the first value immediately)',
+        'Configurable leading/trailing edge behavior via config object',
+        'Fixed interval regardless of emission frequency',
+      ],
+      categoryNote: 'Filtering operator → fixed-time rate limiting.',
+    }),
 
-Think of it like:
-👉 "Emit → lock → ignore → unlock → repeat"
+    comparisons: ['throttle', 'auditTime', 'debounceTime'],
 
-HOW IT WORKS:
-• Emit first value immediately
-• Start fixed timer
-• Ignore all values during that time
-• After time ends → next value can be emitted
-
-KEY DIFFERENCE:
-• throttleTime → duration controlled by fixed time
-• throttleTime → duration controlled by another observable
-
-Example
-
-Source (every 300ms)
-1    2    3    4    5    6    7    8    9
-300  600  900 1200 1500 1800 2100 2400 2700
-
-Throttle time = 1000ms
-
-Timeline
-
-300ms  → 1  ✅ emit → lock till 1300ms  
-600ms  → 2  ❌ ignored  
-900ms  → 3  ❌ ignored  
-1200ms → 4  ❌ ignored  
-
-1500ms → 5  ✅ emit → lock till 2500ms  
-1800ms → 6  ❌ ignored  
-2100ms → 7  ❌ ignored  
-2400ms → 8  ❌ ignored  
-
-2700ms → 9  ✅ emit  
-
-Output
-1, 5, 9`,
-
-        comparisons: ['throttle', 'auditTime', 'debounceTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const duration = $INPUT_2_VALUE;
@@ -3941,64 +4506,59 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Throttle Time (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Throttle Time (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, duration] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, duration] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                throttleTime(duration[0]),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        throttleTime(duration[0]),
+        map((v) => String(v)),
+      );
     },
-    tap: {
-        name: 'tap',
-        category: 'Utility',
+  },
+  tap: {
+    category: 'Utility & Side Effects',
 
-        description: `Performs a side effect for each value without modifying the stream.
+    description: createOperatorDescription({
+      definition:
+        'Performs side effects for each emission without modifying the values passing through.',
+      mentalModel:
+        'A security camera — observes everything passing by without touching or changing anything.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Execute the side-effect function (e.g., logging)',
+        'Pass the original value through unchanged',
+        'Continue for all emissions',
+      ],
+      keyDifferences: [
+        'vs map → map transforms values and emits new ones; tap passes values unchanged',
+        'vs finalize → finalize runs once on completion/error; tap runs for every emission',
+        'vs subscribe → subscribe is the terminal handler; tap is used mid-pipe for side effects',
+      ],
+      useCases: [
+        'Logging and debugging emissions',
+        'DOM manipulation side effects',
+        'Analytics event tracking',
+        'Setting loading flags in a pipe chain',
+      ],
+      gotchas: [
+        'Should NOT modify values — keep side effects pure',
+        'Errors thrown inside tap propagate to the stream',
+        'Can accept next/error/complete handlers like subscribe',
+      ],
+      categoryNote: 'Utility operator → transparent side-effect execution.',
+    }),
 
-Think of it like:
-👉 "Peek at values without changing them"
+    comparisons: ['map', 'filter'],
 
-HOW IT WORKS:
-• Receives each value from the source
-• Executes a side-effect (like logging)
-• Passes the same value forward unchanged
-
-IMPORTANT:
-• Does NOT modify values
-• Used only for side effects (logging, debugging)
-• Output remains exactly the same as input
-
-WHEN TO USE:
-• Debugging streams
-• Logging values
-• Triggering side effects (analytics, tracking)
-
-Example
-
-Source values
-1, 2, 3
-
-Processing
-
-1 → tap logs → emit 1  
-2 → tap logs → emit 2  
-3 → tap logs → emit 3  
-
-Output
-1, 2, 3 (unchanged)`,
-
-        comparisons: ['map', 'filter'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -4008,65 +4568,55 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                tap(v => console.log('🔍 Tap:', v)),
-                map(v => String(v)) // pass unchanged
-            );
-        }
+      return of(...values).pipe(
+        tap((v) => console.log('🔍 Tap:', v)),
+        map((v) => String(v)), // pass unchanged
+      );
     },
-    delay: {
-        name: 'delay',
-        category: 'Utility',
+  },
+  delay: {
+    category: 'Utility & Side Effects',
 
-        description: `Delays each value by a fixed amount of time before emitting it.
+    description: createOperatorDescription({
+      definition:
+        'Delays each emitted value from the source by a fixed amount of time.',
+      mentalModel:
+        'A conveyor belt with a fixed-length tunnel — everything enters and exits in the same order, just later.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Hold it for the specified delay duration',
+        'After the delay, emit the value',
+        'Repeat for each value, preserving original emission order',
+      ],
+      timeline: `Source: --1--2--3--|
+delay(300ms):
+Out:    -----1--2--3--|  (each value shifted by 300ms)`,
+      keyDifferences: [
+        'vs delayWhen → delayWhen uses a per-value observable for dynamic delays; delay uses fixed time',
+        'vs debounceTime → debounceTime can suppress values; delay emits everything',
+        'vs timer → timer delays the subscription start; delay delays each value individually',
+      ],
+      useCases: [
+        'Simulating network latency in development',
+        'Staggering UI animations',
+        'Adding intentional pauses between operations',
+      ],
+      gotchas: [
+        'ALL values are delayed by the same fixed amount',
+        'Order is always preserved',
+        'Delay does not skip or filter any values',
+      ],
+      categoryNote: 'Utility operator → fixed-time value delay.',
+    }),
 
-Think of it like:
-👉 "Shift everything forward in time"
+    comparisons: ['delayWhen', 'debounceTime'],
 
-HOW IT WORKS:
-• Each value is received immediately
-• Emission is delayed by fixed time
-• Order remains same
-
-IMPORTANT:
-• Does NOT skip or drop values
-• Only shifts them in time
-• All values are delayed equally
-
-WHEN TO USE:
-• Simulating network delay
-• Creating timed UI effects
-• Testing async behavior
-
-Example
-
-Source (every 300ms)
-1    2    3    4    5
-300  600  900 1200 1500
-
-Delay = 1000ms
-
-Timeline
-
-300ms  → 1 → emit at 1300ms  
-600ms  → 2 → emit at 1600ms  
-900ms  → 3 → emit at 1900ms  
-1200ms → 4 → emit at 2200ms  
-1500ms → 5 → emit at 2500ms  
-
-Output
-1, 2, 3, 4, 5 (same order, delayed)`,
-
-        comparisons: ['delayWhen', 'debounceTime'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const delayTime = $INPUT_2_VALUE;
@@ -4080,72 +4630,63 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] },
-            { label: 'Delay Time (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Delay Time (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, delayTime] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, delayTime] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                delay(delayTime[0]),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        delay(delayTime[0]),
+        map((v) => String(v)),
+      );
     },
-    delayWhen: {
-        name: 'delayWhen',
-        category: 'Utility',
+  },
+  delayWhen: {
+    category: 'Utility & Side Effects',
 
-        description: `Delays each value based on another observable.
+    description: createOperatorDescription({
+      definition:
+        'Delays each value emission by a duration determined by a per-value observable.',
+      mentalModel:
+        'An airport runway — each plane gets its own clearance time before takeoff.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Call the delay duration selector function with the value',
+        'Subscribe to the returned duration observable',
+        'When the duration observable emits, emit the original value',
+        'Repeat for each source value',
+      ],
+      timeline: `Source: --A--B--C--|
+delayWhen(v => timer(v.delay)):
+A.delay=100, B.delay=500, C.delay=200
+Out:    ---A----C--------B--|  (order may change based on per-value delays)`,
+      keyDifferences: [
+        'vs delay → delay uses a fixed time for all values; delayWhen is per-value and dynamic',
+        'vs concatMap → concatMap transforms values; delayWhen only delays without transforming',
+        'vs debounce → debounce can suppress values; delayWhen emits all values',
+      ],
+      useCases: [
+        'Variable-latency simulation',
+        'Priority-based emission ordering',
+        'Per-item conditional delays based on value',
+      ],
+      gotchas: [
+        'Duration observables are created per value',
+        'Only the FIRST emission from the duration observable triggers the delay',
+        'Values can arrive out of order if their delays differ',
+      ],
+      categoryNote: 'Utility operator → dynamic per-value delay.',
+    }),
 
-Think of it like:
-👉 "Delay depends on something else"
+    comparisons: ['delay', 'sample', 'throttle'],
 
-HOW IT WORKS:
-• Each value triggers a new observable
-• Value is emitted only when that observable completes
-• Delay can vary per value
-
-IMPORTANT:
-• Delay is dynamic (not fixed)
-• Each value can have different delay
-• Controlled by another observable
-
-KEY DIFFERENCE:
-• delay → fixed time
-• delayWhen → dynamic delay (observable-based)
-
-WHEN TO USE:
-• When delay depends on conditions
-• When creating dynamic timing behavior
-• When coordinating multiple async streams
-
-Example
-
-Source (every 300ms)
-1    2    3    4    5
-
-DelayWhen = value * 200ms
-
-Timeline
-
-1 → delay 200ms → emit  
-2 → delay 400ms → emit  
-3 → delay 600ms → emit  
-4 → delay 800ms → emit  
-5 → delay 1000ms → emit  
-
-Output
-1, 2, 3, 4, 5 (different delays)`,
-
-        comparisons: ['delay', 'sample', 'throttle'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 
@@ -4158,66 +4699,58 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Source Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                delayWhen(v => interval(v * 200)),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        delayWhen((v) => interval(v * 200)),
+        map((v) => String(v)),
+      );
     },
-    finalize: {
-        name: 'finalize',
-        category: 'Utility',
+  },
+  finalize: {
+    category: 'Utility & Side Effects',
 
-        description: `Executes a function when the observable completes or errors.
+    description: createOperatorDescription({
+      definition:
+        'Executes a callback function when the observable completes, errors, or is unsubscribed — like a finally block.',
+      mentalModel:
+        'A finally block in try/catch — cleanup code that runs no matter what happens.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Pass all values through normally',
+        'On complete, error, or unsubscribe, execute the finalize callback',
+        'Propagate the original signal (completion or error)',
+      ],
+      keyDifferences: [
+        'vs tap → tap runs per emission; finalize runs once at the end',
+        'vs catchError → catchError handles errors by replacing the stream; finalize just runs cleanup',
+        'vs endWith → endWith emits a value at completion; finalize runs a side effect',
+      ],
+      useCases: [
+        'Closing connections and releasing resources',
+        'Resetting a loading spinner after async operation',
+        'Releasing locks or authentication tokens',
+        'Logging completion/error events',
+      ],
+      gotchas: [
+        'Runs on complete, error, AND unsubscribe',
+        'Does NOT modify the stream or swallow errors',
+        'Cannot change completion or error behavior — purely for side effects',
+      ],
+      categoryNote: 'Utility operator → lifecycle cleanup handler.',
+    }),
 
-Think of it like:
-👉 "Always run this at the end"
+    comparisons: ['tap', 'catchError'],
 
-HOW IT WORKS:
-• Stream emits values normally
-• When stream completes OR errors → finalize runs
-• Runs exactly once at the end
-
-IMPORTANT:
-• Does NOT modify values
-• Runs on both completion and error
-• Runs even if unsubscribed early
-
-WHEN TO USE:
-• Cleanup logic (like stopping loaders)
-• Closing resources (subscriptions, connections)
-• Logging when stream ends
-
-Example
-
-Source values
-1, 2, 3
-
-Processing
-
-1 → emit  
-2 → emit  
-3 → emit  
-
-Stream completes → finalize runs  
-
-Output
-1, 2, 3  
-(then finalize executes)`,
-
-        comparisons: ['tap', 'complete'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -4227,70 +4760,65 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return new Observable(observer => {
-                of(...values).pipe(
-                    map(v => String(v)),
-                    finalize(() => {
-                        observer.next('✅ Finalize: Stream ended');
-                        observer.complete();
-                    })
-                ).subscribe({
-                    next: v => observer.next(v),
-                    error: err => observer.error(err)
-                });
-            });
-        }
+      return new Observable((observer) => {
+        of(...values)
+          .pipe(
+            map((v) => String(v)),
+            finalize(() => {
+              observer.next('✅ Finalize: Stream ended');
+              observer.complete();
+            }),
+          )
+          .subscribe({
+            next: (v) => observer.next(v),
+            error: (err) => observer.error(err),
+          });
+      });
     },
-    repeat: {
-        name: 'repeat',
-        category: 'Utility',
+  },
+  repeat: {
+    category: 'Utility & Side Effects',
 
-        description: `Repeats the source observable a specified number of times.
+    description: createOperatorDescription({
+      definition:
+        'Re-subscribes to the source observable a specified number of times after it completes.',
+      mentalModel:
+        'A playlist on repeat — when the last song ends, start from the first song again.',
+      stepByStep: [
+        'Subscribe to the source observable',
+        'Emit all values',
+        'On completion, re-subscribe to the source',
+        'Repeat the specified number of times',
+        'After all repeats, complete',
+      ],
+      timeline: `Source: --1--2--3--| (repeat(2))
+Out:    --1--2--3--1--2--3--|  (replayed 2 times total)`,
+      keyDifferences: [
+        'vs retry → retry re-subscribes on ERROR; repeat re-subscribes on COMPLETION',
+        'vs expand → expand feeds values back recursively; repeat replays the entire source',
+        'vs interval → interval emits continuously; repeat replays finite sources',
+      ],
+      useCases: [
+        'Polling APIs at intervals (combined with delay)',
+        'Repeating animations in a loop',
+        'Cycling through a known sequence',
+      ],
+      gotchas: [
+        'Only re-subscribes on completion, NOT on error',
+        'Infinite repeat if no count is specified',
+        'Often combined with delay to add pauses between repeats',
+      ],
+      categoryNote: 'Utility operator → completion-based re-subscription.',
+    }),
 
-Think of it like:
-👉 "Run the same stream again and again"
+    comparisons: ['repeatWhen', 'retry'],
 
-HOW IT WORKS:
-• Source runs normally
-• When it completes → it starts again
-• Repeats this process N times
-
-IMPORTANT:
-• Repeats only after completion
-• Total executions = original + repeats
-• If no count is given → repeats infinitely
-
-WHEN TO USE:
-• Retrying operations
-• Replaying sequences
-• Looping streams
-
-Example
-
-Source values
-1, 2, 3
-
-Repeat count
-2
-
-Processing
-
-Run 1 → 1, 2, 3  
-Run 2 → 1, 2, 3  
-
-Output
-1, 2, 3, 1, 2, 3`,
-
-        comparisons: ['repeatWhen', 'retry'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const count = $INPUT_1_VALUE;
 
@@ -4301,63 +4829,59 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Repeat Count', defaultValue: [2] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Repeat Count', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, countArr] = inputs;
-            const count = Number(countArr[0]);
+    run: (inputs) => {
+      const [values, countArr] = inputs;
+      const count = Number(countArr[0]);
 
-            return of(...values).pipe(
-                repeat(count),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        repeat(count),
+        map((v) => String(v)),
+      );
     },
-    timeout: {
-        name: 'timeout',
-        category: 'Error Handling',
+  },
+  timeout: {
+    category: 'Utility & Side Effects',
 
-        description: `Throws an error if a value is not emitted within the specified time.
+    description: createOperatorDescription({
+      definition:
+        'Throws a TimeoutError if the source does not emit a value within a specified time.',
+      mentalModel:
+        'A deadline — if nothing happens before the clock runs out, you get an error.',
+      stepByStep: [
+        'Start a timer upon subscription',
+        'If a value is emitted before the timer expires, emit it and restart the timer',
+        'If the timer expires before the next value, throw TimeoutError',
+        'Unsubscribe from the source',
+      ],
+      timeline: `Source: --1-----------X (no value for 500ms)
+timeout(500ms):
+Out:    --1-----------#  (TimeoutError thrown)`,
+      keyDifferences: [
+        'vs timeoutWith → timeoutWith switches to a fallback observable; timeout throws an error',
+        'vs race → race picks the fastest from initial subscription; timeout monitors ongoing silence',
+        'vs debounceTime → debounceTime filters values; timeout errors on slow source',
+      ],
+      useCases: [
+        'API call timeout enforcement',
+        'User activity / inactivity detection',
+        'Ensuring responsive data streams',
+      ],
+      gotchas: [
+        'TimeoutError kills the stream unless caught with catchError',
+        'Timer resets on each emission',
+        'Can configure separate first-value timeout and between-value timeout',
+      ],
+      categoryNote: 'Utility operator → time-based error enforcement.',
+    }),
 
-Think of it like:
-👉 "If nothing comes in time → fail"
+    comparisons: ['timeoutWith', 'delay'],
 
-HOW IT WORKS:
-• Starts timer for each emission
-• If next value does not arrive in time → error is thrown
-• Timer resets after each emission
-
-IMPORTANT:
-• Works between emissions
-• Throws error on delay
-• Useful for detecting slow streams
-
-WHEN TO USE:
-• Handling slow API responses
-• Detecting delays in streams
-• Adding time limits
-
-Example
-
-Source (every 500ms)
-1    2    3    4
-
-Timeout = 300ms
-
-Timeline
-
-0ms → start  
-500ms → too late → ❌ timeout error  
-
-Output
-❌ Timeout Error`,
-
-        comparisons: ['timeoutWith', 'delay'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const timeoutLimit = $INPUT_2_VALUE;
@@ -4371,73 +4895,63 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4] },
-            { label: 'Source Interval (ms)', defaultValue: [500] },
-            { label: 'Timeout (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+      { label: 'Timeout (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, timeoutArr] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, timeoutArr] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                timeout(timeoutArr[0]),
-                map(v => String(v)),
-                catchError(() => of('❌ Timeout Error'))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        timeout(timeoutArr[0]),
+        map((v) => String(v)),
+        catchError(() => of('❌ Timeout Error')),
+      );
     },
-    timeoutWith: {
-        name: 'timeoutWith',
-        category: 'Error Handling',
+  },
+  timeoutWith: {
+    category: 'Utility & Side Effects',
 
-        description: `Switches to another observable if a value is not emitted within the specified time.
+    description: createOperatorDescription({
+      definition:
+        'Switches to a fallback observable if the source does not emit within a specified time, instead of throwing an error.',
+      mentalModel:
+        'A backup plan — if the main source is too slow, switch to plan B seamlessly.',
+      stepByStep: [
+        'Start a timer upon subscription',
+        'If a value is emitted before the timer expires, emit it and restart',
+        'If the timer expires, unsubscribe from the source',
+        'Subscribe to the fallback observable and emit its values',
+      ],
+      timeline: `Source:   --1-----------X (timeout after 500ms)
+Fallback: default_value
+Out:      --1-----------default_value|  (switched to fallback)`,
+      keyDifferences: [
+        'vs timeout → timeout throws an error; timeoutWith provides a graceful fallback',
+        'vs race → race picks the fastest from the start; timeoutWith switches after a timeout',
+        'vs catchError → catchError handles errors; timeoutWith handles silence',
+      ],
+      useCases: [
+        'Fallback data source when primary API is slow',
+        'Default values when network is unreliable',
+        'Graceful degradation on connection issues',
+      ],
+      gotchas: [
+        'Switches permanently to the fallback (no return to the original source)',
+        'Fallback observable should provide meaningful default data',
+        'Timer resets on each source emission before switch',
+        'Deprecated in RxJS 7+ — use timeout({ each: duration, with: () => fallback$ }) instead',
+      ],
+      categoryNote: 'Utility operator → time-based fallback switching.',
+    }),
 
-Think of it like:
-👉 "If nothing comes in time → switch to backup"
+    comparisons: ['timeout', 'catchError'],
 
-HOW IT WORKS:
-• Starts timer for each emission
-• If timeout occurs → switches to fallback observable
-• Continues with fallback instead of error
-
-IMPORTANT:
-• Does NOT throw error
-• Switches to another observable
-• Useful for fallback logic
-
-KEY DIFFERENCE:
-• timeout → throws error
-• timeoutWith → switches to fallback
-
-WHEN TO USE:
-• Providing fallback data
-• Handling slow APIs gracefully
-• Avoiding errors
-
-Example
-
-Source (every 500ms)
-1    2    3
-
-Timeout = 300ms
-
-Fallback
-'Fallback A', 'Fallback B'
-
-Timeline
-
-0ms → start  
-500ms → too late → switch to fallback  
-
-Output
-Fallback A, Fallback B`,
-
-        comparisons: ['timeout', 'catchError'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const timeoutLimit = $INPUT_2_VALUE;
@@ -4451,68 +4965,59 @@ interval(sourceInterval)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Source Interval (ms)', defaultValue: [500] },
-            { label: 'Timeout (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+      { label: 'Timeout (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [values, sourceInterval, timeoutArr] = inputs;
+    run: (inputs) => {
+      const [values, sourceInterval, timeoutArr] = inputs;
 
-            return interval(sourceInterval[0]).pipe(
-                take(values.length),
-                map(i => values[i]),
-                timeoutWith(timeoutArr[0], of('Fallback A', 'Fallback B')),
-                map(v => String(v))
-            );
-        }
+      return interval(sourceInterval[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        timeoutWith(timeoutArr[0], of('Fallback A', 'Fallback B')),
+        map((v) => String(v)),
+      );
     },
-    toArray: {
-        name: 'toArray',
-        category: 'Utility',
+  },
+  toArray: {
+    category: 'Utility & Side Effects',
 
-        description: `Collects all emitted values and emits them as a single array when the source completes.
+    description: createOperatorDescription({
+      definition:
+        'Collects ALL emitted values and emits them as a single array when the source completes.',
+      mentalModel:
+        'A shopping bag — collect all items first, then hand over the full bag at checkout.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Accumulate all emitted values in an internal array',
+        'Wait for the source to complete',
+        'Emit the entire array as a single value',
+        'Complete',
+      ],
+      keyDifferences: [
+        'vs reduce → reduce applies a custom accumulator function; toArray simply collects',
+        'vs buffer → buffer emits multiple arrays based on signals; toArray emits one array at the end',
+        'vs scan → scan emits running accumulation; toArray emits only the final complete array',
+      ],
+      useCases: [
+        'Converting a stream to an array for batch processing',
+        'Collecting all results before rendering',
+        'Converting an observable to a Promise-friendly single emission',
+      ],
+      gotchas: [
+        'Source MUST complete or the array is never emitted',
+        'Entire stream is buffered in memory',
+        'Not suitable for infinite streams',
+      ],
+      categoryNote: 'Utility operator → stream-to-array collection.',
+    }),
 
-Think of it like:
-👉 "Wait for everything, then give me all values together"
+    comparisons: ['reduce', 'scan'],
 
-HOW IT WORKS:
-• Values are collected internally
-• Nothing is emitted during the stream
-• When source completes → emit full array
-
-IMPORTANT:
-• Emits only ONCE (at completion)
-• Requires source to complete
-• If source never completes → nothing is emitted
-
-WHEN TO USE:
-• When you need all values together
-• When converting stream into array
-• When processing batch data
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Processing
-
-1 → store  
-2 → store  
-3 → store  
-4 → store  
-5 → store  
-
-Source completes → emit array  
-
-Output
-[1, 2, 3, 4, 5]`,
-
-        comparisons: ['reduce', 'scan'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -4522,60 +5027,54 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                toArray(),
-                map(arr => JSON.stringify(arr))
-            );
-        }
+      return of(...values).pipe(
+        toArray(),
+        map((arr) => JSON.stringify(arr)),
+      );
     },
-    catchError: {
-        name: 'catchError',
-        category: 'Error Handling',
+  },
+  catchError: {
+    category: 'Error Handling',
 
-        description: `Catches an error and replaces it with another observable.
+    description: createOperatorDescription({
+      definition:
+        'Catches errors from the source observable and replaces the errored stream with a fallback observable or value.',
+      mentalModel:
+        'A safety net — if the trapeze artist falls, catch them and put on a backup act.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Pass values through normally',
+        'If an error occurs, intercept it',
+        'Call the error handler function to get a fallback observable',
+        'Subscribe to the fallback and emit its values',
+      ],
+      keyDifferences: [
+        'vs retry → retry re-subscribes to the same source on error; catchError switches to a fallback',
+        'vs throwIfEmpty → throwIfEmpty creates errors; catchError handles them',
+        'vs finalize → finalize runs cleanup code; catchError provides recovery logic',
+      ],
+      useCases: [
+        'HTTP error recovery with default/cached data',
+        'Showing graceful error messages to users',
+        'Fallback to cache when network fails',
+        'Logging errors while providing default values',
+      ],
+      gotchas: [
+        'The original source stream is terminated on error',
+        'Returning the source observable inside catchError retries (can cause infinite loops)',
+        'Can re-throw the error to propagate it downstream',
+      ],
+      categoryNote: 'Error Handling operator → error recovery with fallback.',
+    }),
 
-Think of it like:
-👉 "If error happens → recover with something else"
+    comparisons: ['retry', 'timeoutWith'],
 
-HOW IT WORKS:
-• Source emits values normally
-• If error occurs → catch it
-• Replace error with another observable
-
-IMPORTANT:
-• When error occurs → original stream stops
-• catchError replaces it with a new observable
-• Prevents error from crashing the stream chain
-
-WHEN TO USE:
-• Handling API errors
-• Providing fallback data
-• Avoiding application crashes
-
-Example
-
-Source values
-1, 2, ❌ error
-
-Processing
-
-1 → emit  
-2 → emit  
-error → catch → switch to fallback  
-
-Output
-1, 2, Fallback`,
-
-        comparisons: ['retry', 'timeoutWith'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -4589,67 +5088,66 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values (use "error")', defaultValue: [1, 2, 'error', 3] }
-        ],
+    inputs: [
+      {
+        label: 'Source Values (use "error")',
+        defaultValue: [1, 2, 'error', 3],
+      },
+    ],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                map(v => {
-                    if (v === 'error') throw new Error('Error');
-                    return String(v);
-                }),
-                catchError(() => of('⚠️ Fallback value'))
-            );
-        }
+      return of(...values).pipe(
+        map((v) => {
+          if (v === 'error') throw new Error('Error');
+          return String(v);
+        }),
+        catchError(() => of('⚠️ Fallback value')),
+      );
     },
-    retry: {
-        name: 'retry',
-        category: 'Error Handling',
+  },
+  retry: {
+    category: 'Error Handling',
 
-        description: `Retries the source observable when an error occurs.
+    description: createOperatorDescription({
+      definition:
+        'Re-subscribes to the source observable when an error occurs, retrying the failed operation.',
+      mentalModel:
+        '"Try again" — if something fails, automatically retry from scratch.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Emit values normally',
+        'If an error occurs, re-subscribe from the beginning',
+        'Repeat up to the configured retry count',
+        'After the final attempt fails, propagate the error',
+      ],
+      timeline: `Source: --1--2--#(error)  retry(2)
+Initial:   --1--2--#
+Retry 1:   --1--2--#
+Retry 2:   --1--2--#
+Out:       --1--2--1--2--1--2--❌ Final Error  (3 attempts total: 1 initial + 2 retries)`,
+      keyDifferences: [
+        'vs catchError → catchError switches to a fallback; retry re-attempts the same source',
+        'vs repeat → repeat re-subscribes on success; retry re-subscribes on error',
+        'vs retryWhen → retryWhen provides custom retry logic with delays; retry is simpler',
+      ],
+      useCases: [
+        'Retrying failed HTTP requests',
+        'Network resilience for flaky connections',
+        'Transient error recovery',
+      ],
+      gotchas: [
+        'Each retry starts from scratch (full re-subscription)',
+        'Infinite retries without a count can loop forever',
+        'Side effects in the source execute again on each retry',
+      ],
+      categoryNote: 'Error Handling operator → automatic error retry.',
+    }),
 
-Think of it like:
-👉 "If it fails, try again"
+    comparisons: ['retryWhen', 'repeat'],
 
-HOW IT WORKS:
-• Source runs normally
-• If error occurs → restart the stream
-• Retries up to N times
-
-IMPORTANT:
-• Only works on errors (not completion)
-• If retries exceed limit → error is thrown
-• Total attempts = original + retries
-
-WHEN TO USE:
-• Retrying failed API calls
-• Handling temporary failures
-• Improving reliability
-
-Example
-
-Source values
-1, 2, ❌ error
-
-Retry count
-2
-
-Processing
-
-Run 1 → 1, 2 → error  
-Run 2 → 1, 2 → error  
-Run 3 → 1, 2 → error → stop  
-
-Output
-1, 2, 1, 2, 1, 2  
-(then error)`,
-
-        comparisons: ['retryWhen', 'repeat'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const retryCount = $INPUT_1_VALUE;
 
@@ -4665,65 +5163,63 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values (use "error" to simulate)', defaultValue: [1, 2, 'error'] },
-            { label: 'Retry Count', defaultValue: [2] }
-        ],
+    inputs: [
+      {
+        label: 'Source Values (use "error" to simulate)',
+        defaultValue: [1, 2, 'error'],
+      },
+      { label: 'Retry Count', defaultValue: [2] },
+    ],
 
-        run: (inputs) => {
-            const [values, retryArr] = inputs;
-            const retryCount = Number(retryArr[0]);
+    run: (inputs) => {
+      const [values, retryArr] = inputs;
+      const retryCount = Number(retryArr[0]);
 
-            return of(...values).pipe(
-                map(v => {
-                    if (v === 'error') throw new Error('Error');
-                    return String(v);
-                }),
-                retry(retryCount),
-                catchError(() => of('❌ Final Error after retries'))
-            );
-        }
+      return of(...values).pipe(
+        map((v) => {
+          if (v === 'error') throw new Error('Error');
+          return String(v);
+        }),
+        retry(retryCount),
+        catchError(() => of('❌ Final Error after retries')),
+      );
     },
-    throwIfEmpty: {
-        name: 'throwIfEmpty',
-        category: 'Error Handling',
+  },
+  throwIfEmpty: {
+    category: 'Error Handling',
 
-        description: `Throws an error if the source completes without emitting any value.
+    description: createOperatorDescription({
+      definition:
+        'Throws an error if the source observable completes without emitting any values.',
+      mentalModel:
+        'A strict validator — if the box is empty, raise an alarm; otherwise pass through.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Track whether any value has been emitted',
+        'If the source completes and no values were emitted, throw an error',
+        'If at least one value was emitted, complete normally',
+      ],
+      keyDifferences: [
+        'vs defaultIfEmpty → defaultIfEmpty provides a fallback value; throwIfEmpty throws an error',
+        'vs first → first errors on empty but also extracts the first value; throwIfEmpty only guards emptiness',
+        'vs isEmpty → isEmpty checks and reports emptiness as boolean; throwIfEmpty enforces non-emptiness with error',
+      ],
+      useCases: [
+        'Validating required data exists in a query',
+        'Asserting API returns at least one result',
+        'Guarding against empty filter results',
+      ],
+      gotchas: [
+        'Only errors on completely empty source (zero emissions)',
+        'Custom error factory function is optional (defaults to EmptyError)',
+        'All values pass through unchanged if at least one exists',
+      ],
+      categoryNote: 'Error Handling operator → empty-stream error enforcement.',
+    }),
 
-Think of it like:
-👉 "If nothing came → throw error"
+    comparisons: ['defaultIfEmpty', 'first'],
 
-HOW IT WORKS:
-• Waits for source to emit values
-• If at least one value → pass through
-• If none → throw error on completion
-
-IMPORTANT:
-• Works only on completion
-• Does NOT affect streams with values
-• Useful for validation
-
-WHEN TO USE:
-• Ensuring data exists
-• Validating empty responses
-• Avoiding silent empty streams
-
-Example
-
-Source values
-(no values)
-
-Processing
-
-(no emission)  
-source completes → throw error  
-
-Output
-❌ Error: Empty stream`,
-
-        comparisons: ['defaultIfEmpty', 'first'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -4733,72 +5229,54 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                throwIfEmpty(() => new Error('Empty stream')),
-                map(v => String(v)),
-                catchError(() => of('❌ Error: Empty stream'))
-            );
-        }
+      return of(...values).pipe(
+        throwIfEmpty(() => new Error('Empty stream')),
+        map((v) => String(v)),
+        catchError(() => of('❌ Error: Empty stream')),
+      );
     },
-    share: {
-        name: 'share',
-        category: 'Multicasting',
+  },
+  share: {
+    category: 'Multicasting & Sharing',
 
-        description: `Shares a single execution of the source among multiple subscribers.
+    description: createOperatorDescription({
+      definition:
+        'Shares a single execution of the source observable among multiple subscribers, multicasting values in real-time.',
+      mentalModel:
+        'A live TV broadcast — one signal, many viewers, all seeing the same thing simultaneously.',
+      stepByStep: [
+        'First subscriber triggers the source subscription',
+        'Emit values to all current subscribers',
+        'Late subscribers miss past emissions',
+        'When all subscribers leave, unsubscribe from the source',
+        'Next new subscriber triggers a fresh source subscription',
+      ],
+      keyDifferences: [
+        'vs shareReplay → shareReplay replays past values to late subscribers; share does not',
+        'vs connectable → connectable requires manual connect(); share auto-connects',
+        'vs Subject → share wraps source with a refCounted Subject automatically',
+      ],
+      useCases: [
+        'Sharing expensive HTTP calls among multiple consumers',
+        'Multicasting WebSocket messages',
+        'Preventing duplicate side effects from multiple subscriptions',
+      ],
+      gotchas: [
+        'Late subscribers miss all past values',
+        'Source re-subscribes when a new subscriber appears after all others left',
+        'Not suitable when replay of past values is needed',
+      ],
+      categoryNote: 'Multicasting operator → live shared execution.',
+    }),
 
-Think of it like:
-👉 "Run once, share with everyone"
+    comparisons: ['shareReplay'],
 
-HOW IT WORKS:
-• Without share → each subscriber runs the source separately
-• With share → all subscribers share the same execution
-• Late subscribers only receive future values
-
-IMPORTANT:
-• Prevents duplicate executions
-• No replay (no memory)
-• Late subscribers miss previous values
-
-WHEN TO USE:
-• Avoid multiple API calls
-• Share live data between components
-• Optimize performance
-
-Example
-
-Source (every 500ms)
-1    2    3    4    5
-
-Subscriber A starts at 0ms  
-Subscriber B joins at 1000ms  
-
-Timeline
-
-0ms   → A subscribes  
-500ms → 1 → A  
-1000ms → 2 → A  
-
-1000ms → B subscribes  
-
-1500ms → 3 → A, B  
-2000ms → 4 → A, B  
-2500ms → 5 → A, B  
-
-Output
-
-A → 1, 2, 3, 4, 5  
-B → 3, 4, 5 (missed 1,2)`,
-
-        comparisons: ['shareReplay'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const intervalTime = $INPUT_1_VALUE;
 
@@ -4816,92 +5294,69 @@ setTimeout(() => {
 }, intervalTime * 2);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr] = inputs;
-            const intervalTime = intervalArr[0];
+    run: (inputs) => {
+      const [values, intervalArr] = inputs;
+      const intervalTime = intervalArr[0];
 
-            const source$ = interval(intervalTime).pipe(
-                take(values.length),
-                map(i => values[i]),
-                share()
-            );
+      const source$ = interval(intervalTime).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        share(),
+      );
 
-            return new Observable(observer => {
+      return new Observable((observer) => {
+        // Subscriber A (starts immediately)
+        source$.subscribe((v) => observer.next(`A → ${v}`));
 
-                // Subscriber A (starts immediately)
-                source$.subscribe(v => observer.next(`A → ${v}`));
-
-                // Subscriber B (joins late)
-                setTimeout(() => {
-                    source$.subscribe(v => observer.next(`B → ${v}`));
-                }, intervalTime * 2);
-
-            });
-        }
+        // Subscriber B (joins late)
+        setTimeout(() => {
+          source$.subscribe((v) => observer.next(`B → ${v}`));
+        }, intervalTime * 2);
+      });
     },
-    shareReplay: {
-        name: 'shareReplay',
-        category: 'Multicasting',
+  },
+  shareReplay: {
+    category: 'Multicasting & Sharing',
 
-        description: `Shares a single execution AND replays previous values to new subscribers.
+    description: createOperatorDescription({
+      definition:
+        'Shares a single source execution AND replays a specified number of previous emissions to new subscribers.',
+      mentalModel:
+        'A DVR recording — live viewers and late arrivals can both watch from a buffer.',
+      stepByStep: [
+        'First subscriber triggers the source subscription',
+        'Emit values to all subscribers',
+        'Buffer the last N values',
+        'Late subscribers immediately receive the buffered values',
+        'Then continue receiving live values',
+      ],
+      keyDifferences: [
+        'vs share → share does not replay past values; shareReplay provides a replay buffer',
+        'vs ReplaySubject → shareReplay wraps with a ReplaySubject internally',
+        'vs connectable → connectable needs manual connect; shareReplay is automatic',
+      ],
+      useCases: [
+        'Caching HTTP responses for multiple components',
+        'Sharing and replaying latest app state',
+        'Config/settings that multiple parts of the app need',
+      ],
+      gotchas: [
+        'Replay buffer persists in memory even after all subscribers leave',
+        'refCount option controls whether source resets or persists',
+        'Large buffer size means large memory usage',
+      ],
+      categoryNote:
+        'Multicasting operator → cached shared execution with replay.',
+    }),
 
-Think of it like:
-👉 "Run once, share, and remember values"
+    comparisons: ['share'],
 
-HOW IT WORKS:
-• Source runs once (shared execution)
-• Last N values are stored (buffer)
-• New subscribers immediately receive stored values
-
-IMPORTANT:
-• Prevents duplicate execution
-• Replays previous values to late subscribers
-• Has memory (buffer)
-
-KEY DIFFERENCE:
-• share → no memory
-• shareReplay → remembers past values
-
-WHEN TO USE:
-• Caching API responses
-• Sharing data across components
-• Avoiding repeated calls with memory
-
-Example
-
-Source (every 500ms)
-1    2    3    4    5
-
-Subscriber A starts at 0ms  
-Subscriber B joins at 1000ms  
-Replay buffer = 2  
-
-Timeline
-
-0ms   → A subscribes  
-500ms → 1 → A  
-1000ms → 2 → A  
-
-1000ms → B subscribes  
-👉 B instantly gets last 2 values → 1, 2  
-
-1500ms → 3 → A, B  
-2000ms → 4 → A, B  
-2500ms → 5 → A, B  
-
-Output
-
-A → 1, 2, 3, 4, 5  
-B → 1, 2, 3, 4, 5 (replayed + live)`,
-
-        comparisons: ['share'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const intervalTime = $INPUT_1_VALUE;
 const bufferSize = $INPUT_2_VALUE;
@@ -4920,74 +5375,72 @@ setTimeout(() => {
 }, intervalTime * 2);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Interval (ms)', defaultValue: [500] },
-            { label: 'Replay Buffer Size', defaultValue: [2] },
-            { label: 'Subscriber Delay (ms)', defaultValue: [1000] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Interval (ms)', defaultValue: [500] },
+      { label: 'Replay Buffer Size', defaultValue: [2] },
+      { label: 'Subscriber Delay (ms)', defaultValue: [1000] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr, bufferArr, delayArr] = inputs;
+    run: (inputs) => {
+      const [values, intervalArr, bufferArr, delayArr] = inputs;
 
-            const intervalTime = intervalArr[0];
-            const bufferSize = bufferArr[0];
-            const delayTime = delayArr[0];
+      const intervalTime = intervalArr[0];
+      const bufferSize = bufferArr[0];
+      const delayTime = delayArr[0];
 
-            const source$ = interval(intervalTime).pipe(
-                take(values.length),
-                map(i => values[i]),
-                shareReplay(bufferSize)
-            );
+      const source$ = interval(intervalTime).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        shareReplay(bufferSize),
+      );
 
-            return new Observable(observer => {
+      return new Observable((observer) => {
+        // Subscriber A (immediate)
+        source$.subscribe((v) => observer.next(`A → ${v}`));
 
-                // Subscriber A (immediate)
-                source$.subscribe(v => observer.next(`A → ${v}`));
-
-                // Subscriber B (late)
-                setTimeout(() => {
-                    source$.subscribe(v => observer.next(`B → ${v}`));
-                }, delayTime);
-
-            });
-        }
+        // Subscriber B (late)
+        setTimeout(() => {
+          source$.subscribe((v) => observer.next(`B → ${v}`));
+        }, delayTime);
+      });
     },
-    connect: {
-        name: 'connect',
-        category: 'Multicasting',
+  },
+  connect: {
+    category: 'Multicasting & Sharing',
 
-        description: `Creates a shared stream with custom control over how values are shared.
+    description: createOperatorDescription({
+      definition:
+        'Creates a shared observable with custom control over how the source is multicast, using a connector function.',
+      mentalModel:
+        'A mixing board — you control exactly how the shared signal is split and processed.',
+      stepByStep: [
+        'Call the connector function with the shared source observable',
+        'Inside the connector, apply custom operators or splitting logic',
+        'Return the shaped observable from the connector',
+        'Sharing and subscription management is handled automatically',
+      ],
+      keyDifferences: [
+        'vs share → share has no customization; connect allows custom multicast logic',
+        'vs connectable → connectable needs manual connect(); connect uses a selector function',
+        'vs shareReplay → shareReplay only adds replay; connect allows arbitrary custom logic',
+      ],
+      useCases: [
+        'Custom multicast with different operator chains per consumer',
+        'Combining a shared source in complex ways',
+        'Advanced multicasting patterns',
+      ],
+      gotchas: [
+        'Connector function receives the shared source observable',
+        'Must return an observable from the connector function',
+        'More advanced than share/shareReplay — use only when needed',
+      ],
+      categoryNote: 'Multicasting operator → custom multicast control.',
+    }),
 
-Think of it like:
-👉 "Control how multiple subscribers receive values"
+    comparisons: ['connectable', 'share'],
 
-HOW IT WORKS:
-• Creates a shared stream internally
-• Multiple subscribers share same execution
-• You define how values are distributed
-
-IMPORTANT:
-• Starts automatically (no manual connect needed)
-• Allows custom sharing logic
-• More flexible than share
-
-KEY DIFFERENCE:
-• connect → YOU control HOW the stream is shared
-• connectable → YOU control WHEN the stream starts
-
-WHEN TO USE:
-• When you want custom sharing behavior
-• When managing multiple subscribers differently
-
-Example
-
-Two subscribers receive values from same stream  
-Custom logic controls how values are shared`,
-
-        comparisons: ['connectable', 'share'],
-
-        syntax: `
+    syntax: `
 interval(500)
   .pipe(
     connect(shared$ => merge(
@@ -4998,62 +5451,64 @@ interval(500)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr] = inputs;
-            const intervalTime = intervalArr[0];
+    run: (inputs) => {
+      const [values, intervalArr] = inputs;
+      const intervalTime = intervalArr[0];
 
-            return interval(intervalTime).pipe(
-                take(values.length),
-                map(i => values[i]),
-                connect(shared$ =>
-                    merge(
-                        shared$.pipe(map(v => `A → ${v}`)),
-                        shared$.pipe(map(v => `B → ${v}`))
-                    )
-                )
-            );
-        }
+      return interval(intervalTime).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        connect((shared$) =>
+          merge(
+            shared$.pipe(map((v) => `A → ${v}`)),
+            shared$.pipe(map((v) => `B → ${v}`)),
+          ),
+        ),
+      );
     },
-    connectable: {
-        name: 'connectable',
-        category: 'Multicasting',
+  },
+  connectable: {
+    category: 'Multicasting & Sharing',
 
-        description: `Creates a connectable observable that does NOT start automatically.
+    description: createOperatorDescription({
+      definition:
+        'Creates a connectable observable that does NOT emit until connect() is manually called.',
+      mentalModel:
+        'A stage play — actors wait in position until the director says "action!".',
+      stepByStep: [
+        'Create a connectable observable from the source',
+        'Subscribers attach (but no emissions yet)',
+        'Call connect() to start the source subscription',
+        'All attached subscribers begin receiving values',
+        'Manage the connection lifecycle manually',
+      ],
+      keyDifferences: [
+        'vs share → share auto-connects on first subscription; connectable requires manual connect()',
+        'vs connect → connect uses a selector function; connectable uses manual control',
+        'vs Subject → Subject is a simpler manual multicast; connectable wraps a source',
+      ],
+      useCases: [
+        'Synchronizing multiple subscribers before starting emissions',
+        'Manual control over expensive operation timing',
+        'Hot observable creation with controlled start',
+      ],
+      gotchas: [
+        'Must call connect() manually or nothing happens',
+        'Subscribers attached before connect() are valid and will receive values',
+        'Connection must be managed manually (unsubscribe from the connect() return)',
+      ],
+      categoryNote:
+        'Multicasting operator → manually controlled shared execution.',
+    }),
 
-Think of it like:
-👉 "Prepare the stream, start it manually"
+    comparisons: ['connect', 'share'],
 
-HOW IT WORKS:
-• Converts source into a connectable observable
-• Subscribers can subscribe before execution starts
-• Nothing happens until connect() is called
-
-IMPORTANT:
-• Does NOT emit automatically
-• Requires manual .connect()
-• All subscribers receive values from the beginning
-
-KEY DIFFERENCE:
-• connectable → YOU control WHEN the stream starts
-• connect → YOU control HOW the stream is shared
-
-WHEN TO USE:
-• When you want full control over start timing
-• When all subscribers must receive complete data
-
-Example
-
-Subscribers A and B subscribe first  
-Then connect() is called → stream starts for both together`,
-
-        comparisons: ['connect', 'share'],
-
-        syntax: `
+    syntax: `
 const source$ = connectable(interval(500));
 
 source$.subscribe(a => console.log('A:', a));
@@ -5062,77 +5517,68 @@ source$.subscribe(b => console.log('B:', b));
 source$.connect();
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
-            { label: 'Interval (ms)', defaultValue: [500] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] },
+      { label: 'Interval (ms)', defaultValue: [500] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr] = inputs;
-            const intervalTime = intervalArr[0];
+    run: (inputs) => {
+      const [values, intervalArr] = inputs;
+      const intervalTime = intervalArr[0];
 
-            const source$ = connectable(
-                interval(intervalTime).pipe(
-                    take(values.length),
-                    map(i => values[i])
-                )
-            );
+      const source$ = connectable(
+        interval(intervalTime).pipe(
+          take(values.length),
+          map((i) => values[i]),
+        ),
+      );
 
-            return new Observable(observer => {
-                source$.subscribe(v => observer.next(`A → ${v}`));
-                source$.subscribe(v => observer.next(`B → ${v}`));
+      return new Observable((observer) => {
+        source$.subscribe((v) => observer.next(`A → ${v}`));
+        source$.subscribe((v) => observer.next(`B → ${v}`));
 
-                setTimeout(() => {
-                    source$.connect();
-                }, intervalTime);
-            });
-        }
+        setTimeout(() => {
+          source$.connect();
+        }, intervalTime);
+      });
     },
-    count: {
-        name: 'count',
-        category: 'Utility',
+  },
+  count: {
+    category: 'Aggregation',
 
-        description: `Counts how many values are emitted and emits the total when the source completes.
+    description: createOperatorDescription({
+      definition:
+        'Counts how many values the source emits (optionally matching a predicate) and emits the total after completion.',
+      mentalModel:
+        'A turnstile counter — counts everyone who passes through and reports the total when done.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Increment a counter on each value (or each matching the predicate)',
+        'Wait for the source to complete',
+        'Emit the total count as a single value',
+        'Complete',
+      ],
+      keyDifferences: [
+        'vs reduce → reduce applies a custom accumulator; count is a specialized counter',
+        'vs toArray → toArray collects values; count just counts them (more memory efficient)',
+        'vs scan → scan emits running count; count emits only the final total',
+      ],
+      useCases: [
+        'Counting total events or matches',
+        'Measuring stream length',
+        'Validating expected emission count',
+      ],
+      gotchas: [
+        'Source must complete for the count to be emitted',
+        'Returns 0 for empty source or no predicate matches',
+        'Predicate is optional — counts all emissions if omitted',
+      ],
+      categoryNote: 'Aggregate operator → emission counting.',
+    }),
 
-Think of it like:
-👉 "How many values did I get?"
+    comparisons: ['toArray', 'reduce'],
 
-HOW IT WORKS:
-• Observes each value
-• Keeps increasing count
-• Emits final count when source completes
-
-IMPORTANT:
-• Emits only ONCE (at completion)
-• Requires source to complete
-• Can use condition (predicate) to count selectively
-
-WHEN TO USE:
-• Counting total values in a stream
-• Counting matching values
-• Validating number of emissions
-
-Example
-
-Source values
-1, 2, 3, 4, 5
-
-Processing
-
-1 → count = 1  
-2 → count = 2  
-3 → count = 3  
-4 → count = 4  
-5 → count = 5  
-
-Source completes → emit count  
-
-Output
-5`,
-
-        comparisons: ['toArray', 'reduce'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -5142,64 +5588,52 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4, 5] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                count(),
-                map(v => `🔢 Count: ${v}`)
-            );
-        }
+      return of(...values).pipe(
+        count(),
+        map((v) => `🔢 Count: ${v}`),
+      );
     },
-    max: {
-        name: 'max',
-        category: 'Utility',
+  },
+  max: {
+    category: 'Aggregation',
 
-        description: `Emits the maximum (largest) value from the source when it completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits the maximum (largest) value from the source after it completes.',
+      mentalModel:
+        'A high score board — tracks all scores and announces the winner at the end.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Track the maximum value seen so far',
+        'When the source completes, emit the maximum value',
+        'Complete',
+      ],
+      keyDifferences: [
+        'vs min → min finds the smallest value; max finds the largest',
+        'vs reduce → reduce is a general-purpose accumulator; max is specialized for maximum',
+        'vs last → last takes the final value regardless of magnitude; max takes the largest',
+      ],
+      useCases: [
+        'Finding the highest value in a dataset',
+        'Peak detection in sensor readings',
+        'Maximum price/score calculation',
+      ],
+      gotchas: [
+        'Source must complete before the max is emitted',
+        'Optional comparer function for custom comparison logic',
+        'Works with numbers by default',
+      ],
+      categoryNote: 'Aggregate operator → maximum value selection.',
+    }),
 
-Think of it like:
-👉 "What is the biggest value?"
+    comparisons: ['min', 'reduce'],
 
-HOW IT WORKS:
-• Compares values one by one
-• Keeps track of the largest value
-• Emits the maximum when source completes
-
-IMPORTANT:
-• Emits only ONCE (at completion)
-• Requires source to complete
-• Uses comparison internally
-
-WHEN TO USE:
-• Finding highest value
-• Getting max score, price, etc.
-• Comparing values in a stream
-
-Example
-
-Source values
-1, 5, 3, 9, 2
-
-Processing
-
-1 → current max = 1  
-5 → current max = 5  
-3 → ignored  
-9 → current max = 9  
-2 → ignored  
-
-Source completes → emit max  
-
-Output
-9`,
-
-        comparisons: ['min', 'reduce'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -5209,65 +5643,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 5, 3, 9, 2] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 5, 3, 9, 2] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                max(),
-                map(v => `🔝 Max: ${v}`),
-                defaultIfEmpty('No values')
-            );
-        }
+      return of(...values).pipe(
+        max(),
+        map((v) => `🔝 Max: ${v}`),
+        defaultIfEmpty('No values'),
+      );
     },
-    min: {
-        name: 'min',
-        category: 'Utility',
+  },
+  min: {
+    category: 'Aggregation',
 
-        description: `Emits the minimum (smallest) value from the source when it completes.
+    description: createOperatorDescription({
+      definition:
+        'Emits the minimum (smallest) value from the source after it completes.',
+      mentalModel:
+        'A bargain finder — tracks all prices and announces the cheapest at the end.',
+      stepByStep: [
+        'Subscribe to the source',
+        'Track the minimum value seen so far',
+        'When the source completes, emit the minimum value',
+        'Complete',
+      ],
+      keyDifferences: [
+        'vs max → max finds the largest value; min finds the smallest',
+        'vs reduce → reduce is a general-purpose accumulator; min is specialized for minimum',
+        'vs first → first takes the first value regardless; min takes the smallest',
+      ],
+      useCases: [
+        'Finding the lowest value in a dataset',
+        'Minimum latency detection',
+        'Cheapest price calculation',
+      ],
+      gotchas: [
+        'Source must complete before the min is emitted',
+        'Optional comparer function for custom comparison logic',
+        'Works with numbers by default',
+      ],
+      categoryNote: 'Aggregate operator → minimum value selection.',
+    }),
 
-Think of it like:
-👉 "What is the smallest value?"
+    comparisons: ['max', 'reduce'],
 
-HOW IT WORKS:
-• Compares values one by one
-• Keeps track of the smallest value
-• Emits the minimum when source completes
-
-IMPORTANT:
-• Emits only ONCE (at completion)
-• Requires source to complete
-• Uses comparison internally
-
-WHEN TO USE:
-• Finding lowest value
-• Getting minimum price, score, etc.
-• Comparing values in a stream
-
-Example
-
-Source values
-7, 2, 5, 1, 9
-
-Processing
-
-7 → current min = 7  
-2 → current min = 2  
-5 → ignored  
-1 → current min = 1  
-9 → ignored  
-
-Source completes → emit min  
-
-Output
-1`,
-
-        comparisons: ['max', 'reduce'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -5277,67 +5699,54 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [7, 2, 5, 1, 9] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [7, 2, 5, 1, 9] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                min(),
-                map(v => `🔽 Min: ${v}`),
-                defaultIfEmpty('No values')
-            );
-        }
+      return of(...values).pipe(
+        min(),
+        map((v) => `🔽 Min: ${v}`),
+        defaultIfEmpty('No values'),
+      );
     },
-    reduce: {
-        name: 'reduce',
-        category: 'Utility',
+  },
+  reduce: {
+    category: 'Aggregation',
 
-        description: `Applies an accumulator function to all values and emits a single final result when the source completes.
+    description: createOperatorDescription({
+      definition:
+        'Applies an accumulator function to all source values and emits only the single final accumulated result after completion.',
+      mentalModel:
+        'Array.reduce() for streams — process everything and give me one final answer.',
+      stepByStep: [
+        'Initialize with the seed value (if provided)',
+        'Receive each value from the source',
+        'Apply the accumulator function: accumulator(currentValue, sourceValue)',
+        'Store the result',
+        'On source completion, emit the final accumulated result',
+      ],
+      keyDifferences: [
+        'vs scan → scan emits every intermediate result; reduce emits only the final value',
+        'vs count → count is a specialized reducer for counting; reduce is general-purpose',
+        'vs toArray → toArray collects values; reduce transforms them with a custom accumulator',
+      ],
+      useCases: [
+        'Summing all values in a stream',
+        'Computing final statistics from data',
+        'Accumulating complex final state',
+      ],
+      gotchas: [
+        'Source must complete for the result to be emitted',
+        'Without a seed, uses the first value as the initial accumulator',
+        'Only ONE value is ever emitted',
+      ],
+      categoryNote: 'Aggregate operator → final accumulated result.',
+    }),
 
-Think of it like:
-👉 "Keep combining values → give final result at the end"
+    comparisons: ['scan', 'count', 'toArray'],
 
-HOW IT WORKS:
-• Starts with an initial value (optional)
-• Combines each value using accumulator function
-• Emits final accumulated result on completion
-
-IMPORTANT:
-• Emits only ONCE (at completion)
-• Requires source to complete
-• Similar to Array.reduce()
-
-WHEN TO USE:
-• Summing values
-• Building final result from stream
-• Aggregating data
-
-Example
-
-Source values
-1, 2, 3, 4
-
-Accumulator
-sum = previous + current
-
-Processing
-
-1 → sum = 1  
-2 → sum = 3  
-3 → sum = 6  
-4 → sum = 10  
-
-Source completes → emit result  
-
-Output
-10`,
-
-        comparisons: ['scan', 'count', 'toArray'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -5347,66 +5756,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3, 4] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3, 4] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                reduce((acc, curr) => acc + Number(curr), 0),
-                map(v => `🧮 Result: ${v}`)
-            );
-        }
+      return of(...values).pipe(
+        reduce((acc, curr) => acc + Number(curr), 0),
+        map((v) => `🧮 Result: ${v}`),
+      );
     },
-    every: {
-        name: 'every',
-        category: 'Utility',
+  },
+  every: {
+    category: 'Conditional & Boolean',
 
-        description: `Checks whether ALL values satisfy a condition and emits true or false.
+    description: createOperatorDescription({
+      definition:
+        'Checks whether ALL values from the source satisfy a predicate, emitting true or false.',
+      mentalModel:
+        'A quality inspector — checks every item on the line and reports pass/fail for the whole batch.',
+      stepByStep: [
+        'Receive each value from the source',
+        'Apply the predicate',
+        'If any value fails (false): emit false immediately and complete',
+        'If all values pass: wait for completion, then emit true',
+      ],
+      keyDifferences: [
+        'vs filter → filter selects matching values; every tests ALL values and returns a boolean',
+        'vs find → find locates the first match; every checks if all match',
+        'vs isEmpty → isEmpty checks for any values at all; every checks a condition on all values',
+      ],
+      useCases: [
+        'Validating that all items meet criteria',
+        'Form-wide validation checks',
+        'Data quality assertion',
+      ],
+      gotchas: [
+        'Short-circuits on the first failure (emits false immediately)',
+        'Empty source emits true (vacuous truth)',
+        'Source must complete for a true result',
+      ],
+      categoryNote:
+        'Conditional & Boolean operator → universal predicate check.',
+    }),
 
-Think of it like:
-👉 "Are all values valid?"
+    comparisons: ['find', 'filter'],
 
-HOW IT WORKS:
-• Applies condition (predicate) to each value
-• If all values pass → emit true
-• If any value fails → emit false immediately
-
-IMPORTANT:
-• Emits only ONCE
-• Can complete early on first failure
-• Does NOT wait for full stream if condition fails
-
-WHEN TO USE:
-• Validating all data
-• Checking conditions across entire stream
-• Ensuring all values meet criteria
-
-Example
-
-Source values
-2, 4, 6, 8
-
-Condition
-value > threshold i.e. 1
-
-Processing
-
-2 → pass  
-4 → pass  
-6 → pass  
-8 → pass  
-
-All passed → emit true  
-
-Output
-true`,
-
-        comparisons: ['some', 'filter'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const threshold = $INPUT_1_VALUE;
 
@@ -5417,61 +5813,54 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [2, 4, 6, 8] },
-            { label: 'Threshold Value', defaultValue: [1] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [2, 4, 6, 8] },
+      { label: 'Threshold Value', defaultValue: [1] },
+    ],
 
-        run: (inputs) => {
-            const [values, thresholdArr] = inputs;
-            const threshold = Number(thresholdArr[0]);
+    run: (inputs) => {
+      const [values, thresholdArr] = inputs;
+      const threshold = Number(thresholdArr[0]);
 
-            return of(...values).pipe(
-                every(v => v > threshold),
-                map(v => `✅ All match: ${v}`)
-            );
-        }
+      return of(...values).pipe(
+        every((v) => v > threshold),
+        map((v) => `✅ All match: ${v}`),
+      );
     },
-    isEmpty: {
-        name: 'isEmpty',
-        category: 'Utility',
+  },
+  isEmpty: {
+    category: 'Conditional & Boolean',
 
-        description: `Checks whether the source emits any values and returns true or false.
+    description: createOperatorDescription({
+      definition:
+        'Emits true if the source completes without emitting any value, or false if any value is emitted.',
+      mentalModel: '"Is the box empty?" — peek inside and report.',
+      stepByStep: [
+        'Subscribe to the source',
+        'If any value is emitted, emit false and complete immediately',
+        'If the source completes without any values, emit true',
+      ],
+      keyDifferences: [
+        'vs throwIfEmpty → throwIfEmpty errors on empty; isEmpty reports a boolean',
+        'vs defaultIfEmpty → defaultIfEmpty provides a fallback value; isEmpty reports emptiness',
+        'vs count → count returns 0 for empty; isEmpty returns a boolean true/false',
+      ],
+      useCases: [
+        'Checking if a query returned results',
+        'Conditional logic based on stream emptiness',
+        'API response validation',
+      ],
+      gotchas: [
+        'Emits false immediately on the first value (short-circuits)',
+        'Source must complete for a true result',
+        'Does not pass through any source values',
+      ],
+      categoryNote: 'Conditional & Boolean operator → emptiness check.',
+    }),
 
-Think of it like:
-👉 "Did anything come?"
+    comparisons: ['defaultIfEmpty', 'every'],
 
-HOW IT WORKS:
-• Waits for first value
-• If any value is emitted → emit false immediately
-• If no values and source completes → emit true
-
-IMPORTANT:
-• Emits only ONCE
-• Can complete early if value is found
-• Does NOT wait for full stream if value exists
-
-WHEN TO USE:
-• Checking if stream has data
-• Validating empty responses
-• Conditional flows
-
-Example
-
-Source values
-(empty)
-
-Processing
-
-(no values emitted)  
-source completes → emit true  
-
-Output
-true`,
-
-        comparisons: ['defaultIfEmpty', 'every'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 
 of(...values)
@@ -5481,66 +5870,53 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [] }
-        ],
+    inputs: [{ label: 'Source Values', defaultValue: [] }],
 
-        run: (inputs) => {
-            const [values] = inputs;
+    run: (inputs) => {
+      const [values] = inputs;
 
-            return of(...values).pipe(
-                isEmpty(),
-                map(v => `📭 Is Empty: ${v}`)
-            );
-        }
+      return of(...values).pipe(
+        isEmpty(),
+        map((v) => `📭 Is Empty: ${v}`),
+      );
     },
-    defaultIfEmpty: {
-        name: 'defaultIfEmpty',
-        category: 'Utility',
+  },
+  defaultIfEmpty: {
+    category: 'Conditional & Boolean',
 
-        description: `Emits a default value if the source completes without emitting anything.
+    description: createOperatorDescription({
+      definition:
+        'Emits a specified default value if the source completes without emitting any values.',
+      mentalModel:
+        'A backup plan — if the cupboard is bare, use the emergency supplies.',
+      stepByStep: [
+        'Subscribe to the source',
+        'If any value is emitted, pass it through normally',
+        'If the source completes without emitting any values, emit the default value',
+        'Complete',
+      ],
+      keyDifferences: [
+        'vs throwIfEmpty → throwIfEmpty errors on empty; defaultIfEmpty provides a fallback',
+        'vs startWith → startWith ALWAYS prepends values; defaultIfEmpty only emits if source is empty',
+        'vs isEmpty → isEmpty reports emptiness as boolean; defaultIfEmpty provides a substitute value',
+      ],
+      useCases: [
+        'Default API response when no data is returned',
+        'Placeholder values for empty streams',
+        'Fallback configuration when no overrides exist',
+      ],
+      gotchas: [
+        'Only emits default if source was COMPLETELY empty (zero emissions)',
+        'If source emits even one value, the default is never used',
+        'Default is a single value, not a stream',
+      ],
+      categoryNote:
+        'Conditional & Boolean operator → empty-stream fallback value.',
+    }),
 
-Think of it like:
-👉 "If nothing came → give default value"
+    comparisons: ['isEmpty', 'throwIfEmpty'],
 
-HOW IT WORKS:
-• Waits for values from source
-• If at least one value → pass through normally
-• If no values → emit default value on completion
-
-IMPORTANT:
-• Emits original values if present
-• Emits default ONLY if empty
-• Does NOT modify non-empty streams
-
-KEY DIFFERENCE:
-• isEmpty → tells if empty (true/false)
-• defaultIfEmpty → replaces empty with value
-
-WHEN TO USE:
-• Providing fallback values
-• Handling empty API responses
-• Avoiding empty outputs
-
-Example
-
-Source values
-(empty)
-
-Default value
-"Fallback"
-
-Processing
-
-(no values emitted)  
-source completes → emit "Fallback"  
-
-Output
-Fallback`,
-
-        comparisons: ['isEmpty', 'throwIfEmpty'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const defaultValue = $INPUT_1_VALUE;
 
@@ -5551,68 +5927,56 @@ of(...values)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [] },
-            { label: 'Default Value', defaultValue: ['Fallback'] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [] },
+      { label: 'Default Value', defaultValue: ['Fallback'] },
+    ],
 
-        run: (inputs) => {
-            const [values, defaultArr] = inputs;
-            const defaultValue = defaultArr[0];
+    run: (inputs) => {
+      const [values, defaultArr] = inputs;
+      const defaultValue = defaultArr[0];
 
-            return of(...values).pipe(
-                defaultIfEmpty(defaultValue),
-                map(v => String(v))
-            );
-        }
+      return of(...values).pipe(
+        defaultIfEmpty(defaultValue),
+        map((v) => String(v)),
+      );
     },
-    sequenceEqual: {
-        name: 'sequenceEqual',
-        category: 'Utility',
+  },
+  sequenceEqual: {
+    category: 'Conditional & Boolean',
 
-        description: `Compares two sequences and emits true if they are exactly the same.
+    description: createOperatorDescription({
+      definition:
+        'Compares two observable sequences value-by-value and emits true only if they produce the exact same values in the same order.',
+      mentalModel:
+        'Comparing two playlists song by song — both must match exactly.',
+      stepByStep: [
+        'Subscribe to the source and the compareTo observable',
+        'Compare values at each emission position',
+        'If any pair differs, emit false and complete',
+        'If both complete with all pairs matching, emit true',
+      ],
+      keyDifferences: [
+        'vs every → every checks a predicate; sequenceEqual compares two entire sequences',
+        'vs combineLatest → combineLatest combines values; sequenceEqual compares for equality',
+        'vs zip → zip pairs values for processing; sequenceEqual pairs them for comparison',
+      ],
+      useCases: [
+        'Testing observable output against expected values',
+        'Validating data consistency between two sources',
+        'Comparing expected vs actual event sequences',
+      ],
+      gotchas: [
+        'Both sequences must be finite for a definitive result',
+        'Order matters — same values in a different order produces false',
+        'Length matters — different lengths always produce false',
+      ],
+      categoryNote: 'Conditional & Boolean operator → sequence comparison.',
+    }),
 
-Think of it like:
-👉 "Are both sequences identical?"
+    comparisons: ['every', 'zip'],
 
-HOW IT WORKS:
-• Compares values from both sequences one by one
-• Checks order and length
-• If all values match → true
-• If any mismatch → false
-
-IMPORTANT:
-• Emits only ONCE
-• Requires both sequences to complete
-• Order and length must match
-
-WHEN TO USE:
-• Comparing arrays or streams
-• Validating data equality
-• Testing expected vs actual values
-
-Example
-
-Sequence A
-1, 2, 3
-
-Sequence B
-1, 2, 3
-
-Processing
-
-1 == 1 → match  
-2 == 2 → match  
-3 == 3 → match  
-
-Both complete → emit true  
-
-Output
-true`,
-
-        comparisons: ['every', 'zip'],
-
-        syntax: `
+    syntax: `
 const valuesA = $INPUT_0_ARRAY;
 const valuesB = $INPUT_1_ARRAY;
 
@@ -5623,63 +5987,54 @@ of(...valuesA)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Sequence A', defaultValue: [1, 2, 3] },
-            { label: 'Sequence B', defaultValue: [1, 2, 3] }
-        ],
+    inputs: [
+      { label: 'Sequence A', defaultValue: [1, 2, 3] },
+      { label: 'Sequence B', defaultValue: [1, 2, 3] },
+    ],
 
-        run: (inputs) => {
-            const [valuesA, valuesB] = inputs;
+    run: (inputs) => {
+      const [valuesA, valuesB] = inputs;
 
-            return of(...valuesA).pipe(
-                sequenceEqual(of(...valuesB)),
-                map(v => `🔁 Equal: ${v}`)
-            );
-        }
+      return of(...valuesA).pipe(
+        sequenceEqual(of(...valuesB)),
+        map((v) => `🔁 Equal: ${v}`),
+      );
     },
-    timeInterval: {
-        name: 'timeInterval',
-        category: 'Utility',
+  },
+  timeInterval: {
+    category: 'Time-based',
 
-        description: `Emits each value along with the time interval since the previous emission.
+    description: createOperatorDescription({
+      definition:
+        'Emits each source value along with the time elapsed since the previous emission.',
+      mentalModel: 'A lap timer — records the split time between each event.',
+      stepByStep: [
+        'Track the time of subscription (or last emission)',
+        'On each new value, compute the interval since the previous',
+        'Emit an object: { value, interval }',
+        'Use the current time as the reference for the next interval',
+      ],
+      keyDifferences: [
+        'vs timestamp → timestamp adds absolute time; timeInterval adds relative time gap',
+        'vs pairwise → pairwise gives previous value; timeInterval gives time gap between values',
+        'vs scan → scan can compute intervals manually; timeInterval is purpose-built',
+      ],
+      useCases: [
+        'Measuring typing speed between keystrokes',
+        'Monitoring event frequency',
+        'Performance gap analysis between emissions',
+      ],
+      gotchas: [
+        'First interval is the time since subscription, not since first value',
+        'Returns { value, interval } objects (wraps original values)',
+        'Interval is measured in milliseconds',
+      ],
+      categoryNote: 'Time-based operator → inter-emission timing.',
+    }),
 
-Think of it like:
-👉 "Tell me how much time passed before this value"
+    comparisons: ['timestamp', 'delay'],
 
-HOW IT WORKS:
-• Tracks time between emissions
-• Wraps each value with its time gap
-• Emits object: { value, interval }
-
-IMPORTANT:
-• First emission interval is from subscription start
-• Does NOT change original values (just wraps them)
-• Useful for timing analysis
-
-WHEN TO USE:
-• Measuring delays between values
-• Debugging timing issues
-• Performance analysis
-
-Example
-
-Source (every 300ms)
-1    2    3
-
-Timeline
-
-300ms → 1 → interval: 300  
-600ms → 2 → interval: 300  
-900ms → 3 → interval: 300  
-
-Output
-{ value: 1, interval: 300 }  
-{ value: 2, interval: 300 }  
-{ value: 3, interval: 300 }`,
-
-        comparisons: ['timestamp', 'delay'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const intervalTime = $INPUT_1_VALUE;
 
@@ -5693,70 +6048,57 @@ interval(intervalTime)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr] = inputs;
-            const intervalTime = intervalArr[0];
+    run: (inputs) => {
+      const [values, intervalArr] = inputs;
+      const intervalTime = intervalArr[0];
 
-            return interval(intervalTime).pipe(
-                take(values.length),
-                map(i => values[i]),
-                timeInterval(),
-                map(obj => `⏱ ${obj.value} after ${obj.interval}ms`)
-            );
-        }
+      return interval(intervalTime).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        timeInterval(),
+        map((obj) => `⏱ ${obj.value} after ${obj.interval}ms`),
+      );
     },
-    timestamp: {
-        name: 'timestamp',
-        category: 'Utility',
+  },
+  timestamp: {
+    category: 'Time-based',
 
-        description: `Attaches the current timestamp to each emitted value.
+    description: createOperatorDescription({
+      definition: 'Attaches the current timestamp to each emitted value.',
+      mentalModel:
+        'A postmark — stamps each letter with the exact time it was processed.',
+      stepByStep: [
+        'Receive a value from the source',
+        'Get the current timestamp (Date.now())',
+        'Emit an object: { value, timestamp }',
+        'Repeat for each value',
+      ],
+      keyDifferences: [
+        'vs timeInterval → timeInterval measures gaps between emissions; timestamp records absolute time',
+        'vs map → could add timestamps via map, but timestamp is purpose-built and more readable',
+        'vs tap → tap runs side effects; timestamp transforms the output by wrapping values',
+      ],
+      useCases: [
+        'Event logging with precise timestamps',
+        'Audit trail creation',
+        'Debugging emission timing',
+      ],
+      gotchas: [
+        'Timestamp uses Date.now() (milliseconds since epoch)',
+        'Returns { value, timestamp } objects — original values are wrapped',
+        'Does not affect timing of emissions, only adds metadata',
+      ],
+      categoryNote: 'Time-based operator → absolute emission timestamping.',
+    }),
 
-Think of it like:
-👉 "Tell me the exact time this value came"
+    comparisons: ['timeInterval', 'delay'],
 
-HOW IT WORKS:
-• Each value is wrapped with current time
-• Emits object: { value, timestamp }
-• Timestamp is in milliseconds (epoch time)
-
-IMPORTANT:
-• Does NOT change the value
-• Adds time metadata
-• Each emission gets its own timestamp
-
-KEY DIFFERENCE:
-• timeInterval → time between values
-• timestamp → actual time of value
-
-WHEN TO USE:
-• Logging when values arrive
-• Debugging event timing
-• Tracking real-time data
-
-Example
-
-Source (every 300ms)
-1    2    3
-
-Timeline
-
-300ms → 1 → timestamp: 1700000000000  
-600ms → 2 → timestamp: 1700000000300  
-900ms → 3 → timestamp: 1700000000600  
-
-Output
-{ value: 1, timestamp: ... }  
-{ value: 2, timestamp: ... }  
-{ value: 3, timestamp: ... }`,
-
-        comparisons: ['timeInterval', 'delay'],
-
-        syntax: `
+    syntax: `
 const values = $INPUT_0_ARRAY;
 const intervalTime = $INPUT_1_VALUE;
 
@@ -5769,122 +6111,123 @@ interval(intervalTime)
   .subscribe(console.log);
 `.trim(),
 
-        inputs: [
-            { label: 'Source Values', defaultValue: [1, 2, 3] },
-            { label: 'Interval (ms)', defaultValue: [300] }
-        ],
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Interval (ms)', defaultValue: [300] },
+    ],
 
-        run: (inputs) => {
-            const [values, intervalArr] = inputs;
-            const intervalTime = intervalArr[0];
+    run: (inputs) => {
+      const [values, intervalArr] = inputs;
+      const intervalTime = intervalArr[0];
 
-            return interval(intervalTime).pipe(
-                take(values.length),
-                map(i => values[i]),
-                timestamp(),
-                map(obj => `🕒 ${obj.value} at ${obj.timestamp}`)
-            );
-        }
-    }
+      return interval(intervalTime).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        timestamp(),
+        map((obj) => `🕒 ${obj.value} at ${obj.timestamp}`),
+      );
+    },
+  },
 };
 
-// Comparison groups for related operators
-export const OPERATOR_COMPARISONS: Record<string, string[]> = {
-    // Combination operators
-    'combineLatest': ['combineLatestAll', 'zip', 'zipAll', 'forkJoin', 'withLatestFrom'],
-    'combineLatestAll': ['combineLatest', 'zipAll'],
-    'zip': ['zipAll', 'combineLatest', 'forkJoin'],
-    'zipAll': ['zip', 'combineLatestAll'],
-    'forkJoin': ['combineLatest', 'zip'],
-    'withLatestFrom': ['combineLatest', 'zip'],
-    'concat': ['concatAll', 'concatMap', 'merge', 'mergeAll'],
-    'concatAll': ['mergeAll', 'switchAll', 'concat'],
-    'switchMap': ['mergeMap', 'concatMap', 'exhaustMap', 'map', 'switchAll'],
-};
+// Auto-populate name from registry key
+export const OPERATOR_REGISTRY: Record<string, OperatorDemo> = {};
+for (const [key, entry] of Object.entries(_REGISTRY)) {
+  OPERATOR_REGISTRY[key] = { ...entry, name: key };
+}
 
 /**
  * Creates a composite operator that runs multiple operators simultaneously
  * and displays their outputs side-by-side
  */
 export function createCompositeOperator(operatorNames: string[]): OperatorDemo {
-    const validOperators = operatorNames.filter(name => OPERATOR_REGISTRY[name]);
+  const validOperators = operatorNames.filter(
+    (name) => OPERATOR_REGISTRY[name],
+  );
 
-    if (validOperators.length === 0) {
-        throw new Error('No valid operators provided for composite comparison');
+  if (validOperators.length === 0) {
+    throw new Error('No valid operators provided for composite comparison');
+  }
+
+  // Determine maximum input count among operators
+  const maxInputCount = Math.max(
+    ...validOperators.map((name) => OPERATOR_REGISTRY[name].inputs.length),
+  );
+
+  // Build merged input contract
+  const mergedInputs: {
+    label: string;
+    defaultValue: any[];
+    type?: 'number' | 'text' | 'object' | 'radio' | 'select';
+    hide?: boolean;
+  }[] = [];
+
+  for (let i = 0; i < maxInputCount; i++) {
+    for (const opName of validOperators) {
+      const op = OPERATOR_REGISTRY[opName];
+      if (op.inputs[i] && !op.inputs[i].hide) {
+        mergedInputs[i] = op.inputs[i];
+        break;
+      }
     }
+  }
 
-    // Determine maximum input count among operators
-    const maxInputCount = Math.max(
-        ...validOperators.map(name => OPERATOR_REGISTRY[name].inputs.length)
-    );
+  return {
+    name: operatorNames.join(' vs '),
+    category: 'Comparison',
+    description: `Side - by - side comparison of: ${operatorNames.join(', ')}`,
+    syntax: 'Compare operators with identical inputs to see the differences',
 
-    // Build merged input contract
-    const mergedInputs: {
-        label: string;
-        defaultValue: any[];
-        type?: 'number' | 'text' | 'object' | 'radio' | 'select';
-        hide?: boolean;
-    }[] = [];
+    inputs: mergedInputs,
 
-    for (let i = 0; i < maxInputCount; i++) {
-        for (const opName of validOperators) {
-            const op = OPERATOR_REGISTRY[opName];
-            if (op.inputs[i] && !op.inputs[i].hide) {
-                mergedInputs[i] = op.inputs[i];
-                break;
-            }
-        }
-    }
+    run: (inputs: number[][]) => {
+      return new Observable((subscriber) => {
+        const subscriptions: Subscription[] = [];
+        let completedCount = 0;
 
-    return {
-        name: operatorNames.join(' vs '),
-        category: 'Comparison',
-        description: `Side - by - side comparison of: ${operatorNames.join(', ')}`,
-        syntax: 'Compare operators with identical inputs to see the differences',
+        // Emit headers
+        validOperators.forEach((opName) => {
+          subscriber.next({
+            type: 'composite-header',
+            operator: opName,
+          } as PlaygroundEvent);
+        });
 
-        inputs: mergedInputs,
+        // Execute operators
+        validOperators.forEach((opName) => {
+          const operator = OPERATOR_REGISTRY[opName];
+          if (!operator) return;
 
-        run: (inputs: number[][]) => {
-            return new Observable(subscriber => {
-                const subscriptions: Subscription[] = [];
+          const sub = operator.run(inputs).subscribe({
+            next: (event: PlaygroundEvent) => {
+              if (typeof event === 'string') {
+                subscriber.next(`[${opName}]${event}`);
+              } else if (event.type === 'inner') {
+                subscriber.next({
+                  type: 'inner',
+                  label: `[${opName}]${event.label}`,
+                } as PlaygroundEvent);
+              } else if (event.type === 'value') {
+                subscriber.next({
+                  type: 'value',
+                  value: `[${opName}]${event.value}`,
+                } as PlaygroundEvent);
+              }
+            },
+            error: (err) => subscriber.error(err),
+            complete: () => {
+              completedCount++;
+              if (completedCount === validOperators.length) {
+                subscriber.complete();
+              }
+            },
+          });
 
-                // Emit headers
-                validOperators.forEach(opName => {
-                    subscriber.next({
-                        type: 'composite-header',
-                        operator: opName
-                    } as PlaygroundEvent);
-                });
+          subscriptions.push(sub);
+        });
 
-                // Execute operators
-                validOperators.forEach(opName => {
-                    const operator = OPERATOR_REGISTRY[opName];
-                    if (!operator) return;
-
-                    const sub = operator.run(inputs).subscribe({
-                        next: (event: PlaygroundEvent) => {
-                            if (typeof event === 'string') {
-                                subscriber.next(`[${opName}]${event}`);
-                            } else if (event.type === 'inner') {
-                                subscriber.next({
-                                    type: 'inner',
-                                    label: `[${opName}]${event.label}`
-                                } as PlaygroundEvent);
-                            } else if (event.type === 'value') {
-                                subscriber.next({
-                                    type: 'value',
-                                    value: `[${opName}]${event.value}`
-                                } as PlaygroundEvent);
-                            }
-                        },
-                        error: err => subscriber.error(err)
-                    });
-
-                    subscriptions.push(sub);
-                });
-
-                return () => subscriptions.forEach(s => s.unsubscribe());
-            });
-        }
-    };
+        return () => subscriptions.forEach((s) => s.unsubscribe());
+      });
+    },
+  };
 }

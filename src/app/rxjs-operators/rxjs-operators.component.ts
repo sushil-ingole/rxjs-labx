@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { OPERATOR_REGISTRY } from '../data/operator-registry';
 
 interface OperatorGroup {
   title: string;
@@ -42,140 +43,34 @@ export class RxjsOperatorsComponent {
       .filter(g => g.operators.length > 0 || g.title.toLowerCase().includes(term));
   }
 
-  operatorGroups: OperatorGroup[] = [
-    {
-      title: 'Creation & Combination',
-      operators: [
-        'combineLatest',
-        'combineLatestAll',
-        'concat',
-        'concatAll',
-        'concatMap',
-        'exhaustAll',
-        'exhaustMap',
-        'forkJoin',
-        'merge',
-        'mergeAll',
-        'mergeMap',
-        'mergeScan',
-        'pairwise',
-        'race',
-        'raceWith',
-        'startWith',
-        'switchAll',
-        'switchMap',
-        'withLatestFrom',
-        'zip',
-        'zipAll'
-      ]
-    },
-    {
-      title: 'Transformation',
-      operators: [
-        'buffer',
-        'bufferCount',
-        'bufferTime',
-        'bufferToggle',
-        'bufferWhen',
-        'expand',
-        'groupBy',
-        'map',
-        'scan',
-        'window',
-        'windowCount',
-        'windowTime',
-        'windowToggle',
-        'windowWhen'
-      ]
-    },
-    {
-      title: 'Filtering',
-      operators: [
-        'audit',
-        'auditTime',
-        'debounce',
-        'debounceTime',
-        'distinct',
-        'distinctUntilChanged',
-        'distinctUntilKeyChanged',
-        'elementAt',
-        'filter',
-        'find',
-        'findIndex',
-        'first',
-        'ignoreElements',
-        'last',
-        'sample',
-        'sampleTime',
-        'single',
-        'skip',
-        'skipLast',
-        'skipUntil',
-        'skipWhile',
-        'take',
-        'takeLast',
-        'takeUntil',
-        'takeWhile',
-        'throttle',
-        'throttleTime'
-      ]
-    },
-    {
-      title: 'Utility & Side Effects',
-      operators: [
-        'tap',
-        'delay',
-        'delayWhen',
-        'finalize',
-        'repeat',
-        'timeout',
-        'timeoutWith',
-        'toArray'
-      ]
-    },
-    {
-      title: 'Error Handling',
-      operators: [
-        'catchError',
-        'retry',
-        'throwIfEmpty'
-      ]
-    },
-    {
-      title: 'Multicasting & Sharing',
-      operators: [
-        'share',
-        'shareReplay',
-        'connect',
-        'connectable'
-      ]
-    },
-    {
-      title: 'Aggregation',
-      operators: [
-        'count',
-        'max',
-        'min',
-        'reduce'
-      ]
-    },
-    {
-      title: 'Conditional & Boolean',
-      operators: [
-        'every',
-        'isEmpty',
-        'defaultIfEmpty',
-        'sequenceEqual'
-      ]
-    },
-    {
-      title: 'Time-based',
-      operators: [
-        'timeInterval',
-        'timestamp'
-      ]
-    }
+  // Category display order
+  private static readonly CATEGORY_ORDER = [
+    'Creation & Combination',
+    'Transformation',
+    'Filtering',
+    'Utility & Side Effects',
+    'Error Handling',
+    'Multicasting & Sharing',
+    'Aggregation',
+    'Conditional & Boolean',
+    'Time-based'
   ];
+
+  // Auto-generated from OPERATOR_REGISTRY categories
+  operatorGroups: OperatorGroup[] = (() => {
+    const groups = new Map<string, string[]>();
+    for (const [name, op] of Object.entries(OPERATOR_REGISTRY)) {
+      const cat = op.category;
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat)!.push(name);
+    }
+    // Sort operators alphabetically within each group
+    for (const ops of groups.values()) ops.sort();
+    // Order groups by defined category order
+    return RxjsOperatorsComponent.CATEGORY_ORDER
+      .filter(cat => groups.has(cat))
+      .map(cat => ({ title: cat, operators: groups.get(cat)! }));
+  })();
 
   deprecatedOperators: OperatorGroup[] = [
     {

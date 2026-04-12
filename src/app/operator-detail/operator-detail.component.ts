@@ -3,7 +3,6 @@ import {
   OPERATOR_REGISTRY,
   OperatorDemo,
   OutputRow,
-  OPERATOR_COMPARISONS,
   createCompositeOperator
 } from '../data/operator-registry';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -105,7 +104,7 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
       } else {
         this.operator = OPERATOR_REGISTRY[this.operatorName];
         this.isComposite = false;
-        this.relatedOperators = OPERATOR_COMPARISONS[this.operatorName] || [];
+        this.relatedOperators = this.operator?.comparisons || [];
       }
 
       if (this.operator) {
