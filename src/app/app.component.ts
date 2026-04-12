@@ -11,5 +11,5 @@ import { RxjsOperatorsComponent } from "./rxjs-operators/rxjs-operators.componen
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-
+  readonly currentYear = new Date().getFullYear();
 }
