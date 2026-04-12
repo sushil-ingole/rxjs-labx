@@ -318,28 +318,16 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
   }
 
   getInputType(input: any): string {
-    const label = input.label.toLowerCase();
-
-    if (
-      label.includes('interval') ||
-      label.includes('time') ||
-      label.includes('count') ||
-      label.includes('index') ||
-      label.includes('compare') ||
-      label.includes('ms') ||
-      label.includes('size')
-    ) return 'number';
-
+    if (input.defaultValue.length === 1 && typeof input.defaultValue[0] === 'number') {
+      return 'number';
+    }
     return 'text';
   }
 
   getPlaceholder(input: any): string {
-    const label = input.label.toLowerCase();
-
-    if (label.includes('interval') || label.includes('time')) {
+    if (input.defaultValue.length === 1 && typeof input.defaultValue[0] === 'number') {
       return 'Single number';
     }
-
     return 'Comma separated values';
   }
 
