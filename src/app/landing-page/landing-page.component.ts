@@ -13,6 +13,7 @@ import { COMPARISON_GUIDES } from '../rxjs-operators/rxjs-operators.component';
 })
 export class LandingPageComponent {
   private readonly registry = Object.values(OPERATOR_REGISTRY);
+  readonly currentYear = new Date().getFullYear();
 
   stats = [
     { value: `${this.registry.length}+`, label: 'Operators' },
