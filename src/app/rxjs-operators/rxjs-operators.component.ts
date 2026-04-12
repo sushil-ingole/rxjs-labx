@@ -133,9 +133,23 @@ export class RxjsOperatorsComponent {
     },
 
     {
-      title: 'Take Family',
+      title: 'Take & Skip (Count-based)',
       operators: [
-        'take-VS-takeLast-VS-takeUntil-VS-takeWhile'
+        'take-VS-takeLast-VS-skip-VS-skipLast'
+      ]
+    },
+
+    {
+      title: 'Take vs Skip (Until — Time Trigger)',
+      operators: [
+        'takeUntil-VS-skipUntil'
+      ]
+    },
+
+    {
+      title: 'Take vs Skip (While — Condition)',
+      operators: [
+        'takeWhile-VS-skipWhile'
       ]
     },
 
@@ -143,13 +157,6 @@ export class RxjsOperatorsComponent {
       title: 'First vs Last vs Single',
       operators: [
         'first-VS-last-VS-single'
-      ]
-    },
-
-    {
-      title: 'Skip Family',
-      operators: [
-        'skip-VS-skipLast-VS-skipUntil-VS-skipWhile'
       ]
     },
 
@@ -163,49 +170,42 @@ export class RxjsOperatorsComponent {
     {
       title: 'Distinct Variants',
       operators: [
-        'distinct-VS-distinctUntilChanged-VS-distinctUntilKeyChanged'
+        'distinct-VS-distinctUntilChanged'
       ]
     },
 
     {
-      title: 'Buffer vs Window',
+      title: 'Buffer vs Window (Event-based)',
       operators: [
-        'buffer-VS-bufferCount-VS-bufferTime-VS-window-VS-windowCount-VS-windowTime'
+        'buffer-VS-window'
       ]
     },
 
     {
-      title: 'Find vs Element Access',
+      title: 'Buffer vs Window (Time-based)',
       operators: [
-        'find-VS-findIndex-VS-elementAt'
+        'bufferTime-VS-windowTime'
       ]
     },
 
     {
-      title: 'Repeat vs Retry (Core Difference)',
+      title: 'Buffer vs Window (Count-based)',
       operators: [
-        'repeat-VS-retry'
+        'bufferCount-VS-windowCount'
       ]
     },
 
     {
-      title: 'Retry Strategies',
+      title: 'Find vs FindIndex',
       operators: [
-        'retry-VS-retryWhen'
-      ]
-    },
-
-    {
-      title: 'Repeat Strategies',
-      operators: [
-        'repeat-VS-repeatWhen'
+        'find-VS-findIndex'
       ]
     },
 
     {
       title: 'Error Handling',
       operators: [
-        'catchError-VS-retry-VS-retryWhen'
+        'catchError-VS-retry'
       ]
     },
 
@@ -262,13 +262,6 @@ export class RxjsOperatorsComponent {
       title: 'Empty Handling',
       operators: [
         'isEmpty-VS-defaultIfEmpty-VS-throwIfEmpty'
-      ]
-    },
-
-    {
-      title: 'Sequence Comparison',
-      operators: [
-        'sequenceEqual-VS-every'
       ]
     },
 
