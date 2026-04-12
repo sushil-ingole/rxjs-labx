@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { RxjsOperatorsComponent } from "./rxjs-operators/rxjs-operators.component";
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RxjsOperatorsComponent],
+  imports: [RouterOutlet, RouterLink, RxjsOperatorsComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

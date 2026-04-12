@@ -62,8 +62,4 @@ export class LandingPageComponent {
       description: `Explore ${this.deprecatedCount}+ deprecated operators with working playgrounds and clear guidance on modern replacements.`
     }
   ];
-
-  openGitHub() {
-    window.open('https://github.com/sushil-ingole/rxjs-labx', '_blank');
-  }
 }

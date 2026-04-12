@@ -1,0 +1,55 @@
+@use '../styles.scss' as *;
+
+.topnav {
+    padding: 16px 0;
+    border-bottom: 1px solid $border;
+    background: $bg;
+}
+
+.container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    font-size: $font-xl;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: $text-primary;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.brand-accent {
+    color: $primary;
+}
+
+.btn.ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: $font-sm;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+    border: 1px solid $border;
+    background: transparent;
+    color: $text-primary;
+    text-decoration: none;
+
+    &:hover {
+        background: $card-bg;
+        border-color: darken($border, 8%);
+        transform: translateY(-2px);
+        box-shadow: $shadow-sm;
+    }
+}
