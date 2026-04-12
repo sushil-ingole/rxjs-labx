@@ -10,25 +10,55 @@ import { RouterLink } from '@angular/router';
   styleUrl: './landing-page.component.scss'
 })
 export class LandingPageComponent {
+  stats = [
+    { value: '50+', label: 'Operators' },
+    { value: 'Live', label: 'Timelines' },
+    { value: '100%', label: 'Free' }
+  ];
+
   features = [
-    'Visual timelines instead of theory',
-    'Real-time input experimentation',
-    'Understand behavior instantly'
+    {
+      icon: '▶',
+      title: 'Live Visual Timelines',
+      description: 'See values emitted over time — not static marble diagrams, but actual running streams.'
+    },
+    {
+      icon: '⚡',
+      title: 'Instant Experimentation',
+      description: 'Change inputs, hit run, and watch the output update. No setup, no boilerplate.'
+    },
+    {
+      icon: '🔍',
+      title: 'Side-by-Side Comparisons',
+      description: 'Compare similar operators like switchMap vs mergeMap to see exactly how they differ.'
+    }
   ];
 
   capabilities = [
-    'Play with RxJS operators in real-time',
-    'Modify inputs and see output changes',
-    'Understand timing & async behavior visually',
-    'Build intuition instead of memorizing'
+    {
+      title: 'Real-time operator playground',
+      description: 'Pick any operator and run it with custom inputs. See each emitted value timestamped on a live timeline.'
+    },
+    {
+      title: 'Adjustable parameters',
+      description: 'Modify source values, intervals, and operator arguments to understand how each parameter affects behavior.'
+    },
+    {
+      title: 'Async behavior visualization',
+      description: 'Timing is what makes RxJS tricky. Watch delays, intervals, and race conditions play out visually.'
+    },
+    {
+      title: 'Compare & contrast operators',
+      description: 'Run composite comparisons to see multiple operators process the same input side by side.'
+    }
   ];
 
   futureItems = [
-    'Operators',
-    'Observables',
-    'Subjects',
-    'Schedulers',
-    'Marble Testing'
+    { label: 'Operators', active: true },
+    { label: 'Observables', active: false },
+    { label: 'Subjects', active: false },
+    { label: 'Schedulers', active: false },
+    { label: 'Marble Testing', active: false }
   ];
 
   openGitHub() {

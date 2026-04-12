@@ -1,85 +1,125 @@
 <div class="landing">
 
-    <div class="container">
-
-        <!-- HERO -->
-        <section class="hero">
-            <h1>RxJS Labx</h1>
-
+    <!-- HERO -->
+    <section class="hero">
+        <div class="container">
+            <span class="badge">Open-Source Learning Tool</span>
+            <h1>Master RxJS by <span class="gradient-text">seeing it run.</span></h1>
             <p class="subtitle">
-                Learn RxJS the way it actually makes sense — by seeing it in action.
+                Stop guessing what operators do. Watch values flow through pipelines in real time,
+                tweak inputs on the fly, and build genuine intuition � not memorized syntax.
             </p>
-
             <div class="actions">
-                <button class="btn primary" [routerLink]="['/operators']">Explore Playground</button>
-                <button class="btn secondary" (click)="openGitHub()">GitHub</button>
+                <button class="btn primary large" [routerLink]="['/operators']">
+                    Open Playground
+                    <span class="btn-arrow">&rarr;</span>
+                </button>
+                <button class="btn ghost" (click)="openGitHub()">
+                    View on GitHub
+                </button>
             </div>
-        </section>
+            <div class="hero-stats">
+                <div class="stat" *ngFor="let stat of stats">
+                    <span class="stat-value">{{ stat.value }}</span>
+                    <span class="stat-label">{{ stat.label }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <!-- PROBLEM -->
-        <section class="section center narrow">
-            <h2>Why RxJS feels hard</h2>
+    <!-- PROBLEM -->
+    <section class="section problem">
+        <div class="container narrow">
+            <span class="section-label">The Problem</span>
+            <h2>Why RxJS feels impossibly hard</h2>
             <p>
-                Most tutorials explain concepts but don’t show behavior over time.
-                <br />
-                That’s where confusion starts.
+                Docs describe behavior in words. Marble diagrams are static.
+                Stack Overflow answers assume you already understand timing.
+                None of them let you <strong>experiment</strong>.
             </p>
-        </section>
+        </div>
+    </section>
 
-        <!-- SOLUTION -->
-        <section class="section center">
-            <h2>What makes this different</h2>
+    <!-- DIFFERENTIATORS -->
+    <section class="section">
+        <div class="container">
+            <span class="section-label">The Difference</span>
+            <h2>Built for how developers actually learn</h2>
 
             <div class="grid three">
-                <div class="card" *ngFor="let item of features">
-                    {{ item }}
+                <div class="feature-card" *ngFor="let item of features">
+                    <span class="feature-icon">{{ item.icon }}</span>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- FEATURES -->
-        <section class="section center">
-            <h2>What you can do</h2>
+    <!-- CAPABILITIES -->
+    <section class="section alt-bg">
+        <div class="container">
+            <span class="section-label">Capabilities</span>
+            <h2>Everything you need to explore RxJS</h2>
 
             <div class="grid two">
-                <div class="card" *ngFor="let item of capabilities">
-                    {{ item }}
+                <div class="capability-card" *ngFor="let item of capabilities; let i = index">
+                    <span class="cap-number">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                    <div class="cap-content">
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.description }}</p>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- FUTURE -->
-        <section class="section center narrow">
+    <!-- ROADMAP -->
+    <section class="section">
+        <div class="container narrow center">
+            <span class="section-label">Roadmap</span>
             <h2>This is just the beginning</h2>
-
             <p class="muted">
-                Starting with operators. Expanding to the full RxJS ecosystem.
+                Operators are live today. The full RxJS ecosystem is on the way.
             </p>
 
             <div class="tags">
-                <span *ngFor="let item of futureItems">{{ item }}</span>
+                <span *ngFor="let item of futureItems" [class.active]="item.active">
+                    {{ item.active ? '&#10003;' : '&#9702;' }} {{ item.label }}
+                </span>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- PHILOSOPHY -->
-        <section class="section center narrow">
-            <h2>Philosophy</h2>
-            <p class="highlight">
-                If you can see it, you can understand it.
-            </p>
-        </section>
+    <!-- PHILOSOPHY -->
+    <section class="section philosophy">
+        <div class="container narrow center">
+            <blockquote>
+                "If you can see it, you can understand it."
+            </blockquote>
+            <p class="muted">The core principle behind every feature in RxJS Labx.</p>
+        </div>
+    </section>
 
-        <!-- CTA -->
-        <section class="cta">
-            <h2>Start exploring RxJS</h2>
-            <button class="btn primary large">Open Playground</button>
-        </section>
-
-    </div>
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container narrow center">
+            <h2>Ready to finally understand RxJS?</h2>
+            <p>Jump into the playground. Pick an operator. See what happens.</p>
+            <button class="btn primary large" [routerLink]="['/operators']">
+                Start Exploring
+                <span class="btn-arrow">&rarr;</span>
+            </button>
+        </div>
+    </section>
 
     <!-- FOOTER -->
     <footer>
-        Built with Angular & RxJS
+        <div class="container">
+            <span>Built with Angular &amp; RxJS &mdash; by
+                <a href="https://github.com/sushil-ingole" target="_blank" rel="noopener">Sushil Ingole</a>
+            </span>
+        </div>
     </footer>
 
 </div>
