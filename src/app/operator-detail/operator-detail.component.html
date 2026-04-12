@@ -85,7 +85,7 @@
                             </select>
                             } @else {
                             <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
-                                [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
+                                [placeholder]="getPlaceholder(input)" />
                             }
 
                         </div>
@@ -150,7 +150,7 @@
                             <label>{{ input.label }}</label>
 
                             <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
-                                [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
+                                [placeholder]="getPlaceholder(input)" />
 
                         </div>
 

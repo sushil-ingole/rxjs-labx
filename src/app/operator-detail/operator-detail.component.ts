@@ -195,7 +195,8 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
     const parsedInputs = this.parseInputs();
     let index = 1;
 
-    this.subscription = this.operator.run(parsedInputs).subscribe(event => {
+    this.subscription = this.operator.run(parsedInputs).subscribe({
+    next: (event) => {
       const elapsed = Date.now() - this.startTime;
 
       const extractOpName = (text: string): string | null => {
@@ -239,6 +240,26 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
       }
 
       this.cdr.markForCheck();
+    },
+    error: (err) => {
+      const elapsed = Date.now() - this.startTime;
+      const errorRow: OutputRow = {
+        kind: 'meta',
+        value: `❌ Error: ${err?.message || err}`,
+        time: `${elapsed} ms`
+      };
+
+      if (this.isComposite) {
+        const firstOp = this.operatorNames[0];
+        const existing = this.groupedOutput.get(firstOp) || [];
+        this.groupedOutput = new Map(this.groupedOutput);
+        this.groupedOutput.set(firstOp, [...existing, errorRow]);
+      } else {
+        this.output = [...this.output, errorRow];
+      }
+
+      this.cdr.markForCheck();
+    }
     });
 
     this.cdr.markForCheck();
@@ -282,7 +303,13 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
         const first = input.defaultValue[0];
 
         if (typeof first === 'number') {
-          return cleaned.map((v: any) => {
+          // Single-number inputs (interval, count, timeout): fallback to default if invalid
+          if (input.defaultValue.length === 1) {
+            const num = Number(cleaned[0]);
+            return [isNaN(num) ? input.defaultValue[0] : num];
+          }
+
+          return cleaned.map((v: any, i: number) => {
             const num = Number(v);
             return isNaN(num) ? v : num;
           });
