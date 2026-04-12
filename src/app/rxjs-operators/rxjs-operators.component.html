@@ -91,7 +91,7 @@
             </p>
 
             <div class="grid-table">
-                <div class="grid-cell" *ngFor="let group of deprecatedOperators">
+                <div class="grid-cell" *ngFor="let group of filteredDeprecatedOperators">
                     <div class="cell-header deprecated-header">
                         <span class="header-title">{{ group.title }}</span>
                         <span class="header-count">{{ group.operators.length }}</span>

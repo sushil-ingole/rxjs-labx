@@ -196,6 +196,10 @@ export class RxjsOperatorsComponent {
     return this.filterGroups(this.comparisonGuides);
   }
 
+  get filteredDeprecatedOperators(): OperatorGroup[] {
+    return this.filterGroups(this.deprecatedOperators);
+  }
+
   private filterGroups(groups: OperatorGroup[]): OperatorGroup[] {
     if (!this.searchTerm.trim()) return groups;
     const term = this.searchTerm.toLowerCase();
