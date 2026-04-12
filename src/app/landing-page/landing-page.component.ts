@@ -63,14 +63,6 @@ export class LandingPageComponent {
     }
   ];
 
-  futureItems = [
-    { label: 'Operators', active: true },
-    { label: 'Observables', active: false },
-    { label: 'Subjects', active: false },
-    { label: 'Schedulers', active: false },
-    { label: 'Marble Testing', active: false }
-  ];
-
   openGitHub() {
     window.open('https://github.com/sushil-ingole/rxjs-labx', '_blank');
   }
