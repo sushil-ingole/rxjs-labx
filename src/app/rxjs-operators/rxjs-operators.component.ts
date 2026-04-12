@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 interface OperatorGroup {
   title: string;
@@ -10,12 +11,36 @@ interface OperatorGroup {
 @Component({
   selector: 'app-rxjs-operators',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './rxjs-operators.component.html',
   styleUrl: './rxjs-operators.component.scss'
 })
 export class RxjsOperatorsComponent {
   readonly libraryName = 'RxJS';
+  searchTerm = '';
+
+  get totalOperators(): number {
+    return this.operatorGroups.reduce((sum, g) => sum + g.operators.length, 0);
+  }
+
+  get filteredOperatorGroups(): OperatorGroup[] {
+    return this.filterGroups(this.operatorGroups);
+  }
+
+  get filteredComparisonGuides(): OperatorGroup[] {
+    return this.filterGroups(this.comparisonGuides);
+  }
+
+  private filterGroups(groups: OperatorGroup[]): OperatorGroup[] {
+    if (!this.searchTerm.trim()) return groups;
+    const term = this.searchTerm.toLowerCase();
+    return groups
+      .map(g => ({
+        ...g,
+        operators: g.operators.filter(op => op.toLowerCase().includes(term))
+      }))
+      .filter(g => g.operators.length > 0 || g.title.toLowerCase().includes(term));
+  }
 
   operatorGroups: OperatorGroup[] = [
     {

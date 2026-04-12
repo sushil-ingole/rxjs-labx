@@ -1,62 +1,109 @@
-<div class="container">
+<div class="page">
 
-    <h1>{{ libraryName }} Operators — Quick Reference</h1>
+    <!-- HEADER -->
+    <header class="page-header">
+        <div class="container">
+            <span class="badge">Quick Reference</span>
+            <h1>{{ libraryName }} <span class="gradient-text">Operators</span></h1>
+            <p class="subtitle">
+                Browse every operator by category. Click any operator to open its interactive playground.
+            </p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search operators..." [(ngModel)]="searchTerm" />
+            </div>
+            <div class="stats-row">
+                <span class="stat">{{ totalOperators }} operators</span>
+                <span class="divider">&middot;</span>
+                <span class="stat">{{ operatorGroups.length }} categories</span>
+                <span class="divider">&middot;</span>
+                <span class="stat">{{ comparisonGuides.length }} comparisons</span>
+            </div>
+        </div>
+    </header>
 
     <!-- ACTIVE OPERATORS -->
-    <section>
-        <h2>Active Operators</h2>
+    <section class="section">
+        <div class="container">
+            <span class="section-label">Explore</span>
+            <h2>Active Operators</h2>
 
-        <div class="grid-table">
-            <div class="grid-cell" *ngFor="let group of operatorGroups">
-                <div class="cell-header">
-                    {{ group.title }}
+            <div class="grid-table">
+                <div class="grid-cell" *ngFor="let group of filteredOperatorGroups">
+                    <div class="cell-header">
+                        <span class="header-title">{{ group.title }}</span>
+                        <span class="header-count">{{ group.operators.length }}</span>
+                    </div>
+
+                    <ul class="cell-body">
+                        <li *ngFor="let operator of group.operators" class="clickable"
+                            [routerLink]="['/operator', operator]">
+                            <span class="op-name">{{ operator }}</span>
+                            <span class="op-arrow">&rarr;</span>
+                        </li>
+                    </ul>
                 </div>
-
-                <ul class="cell-body">
-                    <li *ngFor="let operator of group.operators" class="clickable"
-                        [routerLink]="['/operator', operator]">
-                        {{ operator }}
-                    </li>
-                </ul>
             </div>
+
+            <p class="no-results" *ngIf="filteredOperatorGroups.length === 0 && searchTerm">
+                No operators matching "{{ searchTerm }}"
+            </p>
         </div>
     </section>
 
     <!-- COMPARISONS & DIFFERENCES -->
-    <section class="comparisons">
-        <h2>Comparisons & Differences — Learn by Comparing</h2>
+    <section class="section alt-bg comparisons">
+        <div class="container">
+            <span class="section-label">Learn by Comparing</span>
+            <h2>Comparisons &amp; Differences</h2>
+            <p class="section-desc">
+                Run operators side by side with the same input to see exactly how they differ.
+            </p>
 
-        <div class="grid-table">
-            <div class="grid-cell" *ngFor="let group of comparisonGuides">
-                <div class="cell-header">
-                    {{ group.title }}
+            <div class="grid-table">
+                <div class="grid-cell" *ngFor="let group of filteredComparisonGuides">
+                    <div class="cell-header comparison-header">
+                        <span class="header-title">{{ group.title }}</span>
+                    </div>
+
+                    <ul class="cell-body">
+                        <li *ngFor="let operator of group.operators" class="clickable"
+                            [routerLink]="['/operator', operator]">
+                            <span class="op-name">{{ operator }}</span>
+                            <span class="op-arrow">&rarr;</span>
+                        </li>
+                    </ul>
                 </div>
-
-                <ul class="cell-body">
-                    <li *ngFor="let operator of group.operators" class="clickable"
-                        [routerLink]="['/operator', operator]">
-                        {{ operator }}
-                    </li>
-                </ul>
             </div>
+
+            <p class="no-results" *ngIf="filteredComparisonGuides.length === 0 && searchTerm">
+                No comparisons matching "{{ searchTerm }}"
+            </p>
         </div>
     </section>
 
     <!-- DEPRECATED OPERATORS -->
-    <section class="deprecated">
-        <h2>Deprecated Operators</h2>
+    <section class="section deprecated">
+        <div class="container">
+            <span class="section-label deprecated-label">Legacy</span>
+            <h2>Deprecated Operators</h2>
+            <p class="section-desc">
+                These operators are deprecated and will be removed in future RxJS versions. Avoid using them in new code.
+            </p>
 
-        <div class="grid-table">
-            <div class="grid-cell" *ngFor="let group of deprecatedOperators">
-                <div class="cell-header">
-                    {{ group.title }}
+            <div class="grid-table">
+                <div class="grid-cell" *ngFor="let group of deprecatedOperators">
+                    <div class="cell-header deprecated-header">
+                        <span class="header-title">{{ group.title }}</span>
+                        <span class="header-count">{{ group.operators.length }}</span>
+                    </div>
+
+                    <ul class="cell-body">
+                        <li *ngFor="let operator of group.operators" class="deprecated-item">
+                            <span class="dep-icon">&x26A0;</span>
+                            <span class="op-name">{{ operator }}</span>
+                        </li>
+                    </ul>
                 </div>
-
-                <ul class="cell-body">
-                    <li *ngFor="let operator of group.operators">
-                        ⚠ {{ operator }}
-                    </li>
-                </ul>
             </div>
         </div>
     </section>
