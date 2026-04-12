@@ -238,8 +238,6 @@ const bInterval = $INPUT_3_VALUE;
 const obs1$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
 const obs2$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
 
-// Combines latest values whenever EITHER observable emits
-// Pattern: [1,10] → [2,10] → [2,20] → [3,20] → [3,30]
 combineLatest([obs1$, obs2$])
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
@@ -323,11 +321,10 @@ Out:    [3,10] → [3,20] → [3,30]`,
 
     syntax: `
 const aValues = $INPUT_0_ARRAY;
-const aInterval = $INPUT_1_VALUE;
+const intervalMs = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
-const bInterval = $INPUT_3_VALUE;
 
-interval(1000)
+interval(intervalMs)
   .pipe(
     take(2),
     map(i => i === 0 ? of(...aValues) : of(...bValues)),
@@ -398,10 +395,8 @@ Out: 1, 2, 3, 10, 20, 30  (sequential, never mixed)`,
 const aValues = $INPUT_0_ARRAY;
 const bValues = $INPUT_2_ARRAY;
 
-// First observable emits all, then second comes next
-// Output: 1, 2, 3, 10, 20, 30 (in order, never mixed)
 concat(of(...aValues), of(...bValues))
-  .subscribe(value => console.log(value));
+  .subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -464,14 +459,12 @@ const aValues = $INPUT_0_ARRAY;
 const bValues = $INPUT_2_ARRAY;
 
 // Outer observable emits inner observables
-// concatAll subscribes to them ONE BY ONE
-// Output: 1, 2, 3, 10, 20, 30 (never mixed)
 of(
   of(...aValues),
   of(...bValues)
 )
 .pipe(concatAll())
-.subscribe(value => console.log(value));
+.subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -790,10 +783,6 @@ const bInterval = $INPUT_3_VALUE;
 const obs1$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
 const obs2$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
 
-// Waits for BOTH to complete, then emits ONCE: [3, 30]
-// obs1$ completes first with value 3
-// obs2$ completes last with value 30
-// Result: only one emission with the final values
 forkJoin([obs1$, obs2$])
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
@@ -864,13 +853,11 @@ const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
 const bInterval = $INPUT_3_VALUE;
 
-// Both observables run in parallel
-// Output may interleave depending on timing
 merge(
   interval(aInterval).pipe(take(aValues.length), map(i => aValues[i])),
   interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]))
 )
-.subscribe(value => console.log(value));
+.subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -941,13 +928,12 @@ const aInterval = $INPUT_1_VALUE;
 const bInterval = $INPUT_3_VALUE;
 
 // Outer observable emits inner observables
-// mergeAll subscribes to ALL inner observables immediately
 of(
   interval(aInterval).pipe(take(aValues.length), map(i => aValues[i])),
   interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]))
 )
 .pipe(mergeAll())
-.subscribe(value => console.log(value));
+.subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -1020,8 +1006,6 @@ const innerValues = $INPUT_2_ARRAY;
 const sourceInterval = $INPUT_1_VALUE;
 const innerInterval = $INPUT_3_VALUE;
 
-// Each source value creates an inner observable
-// mergeMap runs ALL inner observables in parallel
 interval(sourceInterval)
   .pipe(
     take(sourceValues.length),
@@ -1032,10 +1016,7 @@ interval(sourceInterval)
       )
     )
   )
-  .subscribe(value => console.log(value));
-
-// Output (interleaved, order depends on timing):
-// inner-1: 10, inner-2: 10, inner-1: 20, inner-3: 10, ...
+  .subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -1607,23 +1588,15 @@ const sourceInterval = $INPUT_1_VALUE;
 const otherValues = $INPUT_2_ARRAY;
 const otherInterval = $INPUT_3_VALUE;
 
-// SOURCE observable: Drives WHEN emissions happen
+// SOURCE observable
 const source$ = interval(sourceInterval).pipe(take(sourceValues.length), map(i => sourceValues[i]));
 
-// OTHER observable: Provides values, but doesn't control emission timing
+// OTHER observable
 const other$ = interval(otherInterval).pipe(take(otherValues.length), map(i => otherValues[i]));
 
-// withLatestFrom emits ONLY when source$ emits
-// At that moment, it grabs the most recent value from other$
 source$.pipe(
-  withLatestFrom(other$),
-  map(([s, o]) => console.log(s, o))  // Always pairs: [source value, latest other value]
-).subscribe();
-
-// Behavior:
-// - When source emits → output happens (using latest from other)
-// - When other emits alone → NO output (source didn't emit!)
-// - Emission frequency follows source, not other
+  withLatestFrom(other$)
+).subscribe(([s, o]) => console.log(s, o));
 `.trim(),
 
     inputs: [
@@ -1697,8 +1670,6 @@ const bInterval = $INPUT_3_VALUE;
 const obs1$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
 const obs2$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
 
-// zip waits for BOTH observables before emitting
-// Result: emissions happen at 500ms pace (the slower one)
 zip(obs1$, obs2$)
   .subscribe(([a, b]) => console.log(a, b));
 `.trim(),
@@ -1764,12 +1735,11 @@ const aInterval = $INPUT_1_VALUE;
 const bValues = $INPUT_2_ARRAY;
 const bInterval = $INPUT_3_VALUE;
 
-// OUTER SOURCE: Emits observables at 1500ms intervals (dynamically)
-// This simulates tasks being created over time
+// OUTER SOURCE
 const taskStream$ = interval(aInterval).pipe(
   take(2),
   map(i =>
-    // INNER OBSERVABLE: Each emits values at 300ms intervals
+    // INNER OBSERVABLE
     interval(bInterval).pipe(
       take(i === 0 ? aValues.length : bValues.length),
       map(j => i === 0 ? aValues[j] : bValues[j])
@@ -1777,8 +1747,6 @@ const taskStream$ = interval(aInterval).pipe(
   )
 );
 
-// zipAll combines inner observables using zip logic
-// Notice timing is different from zip - observables arrive dynamically!
 taskStream$
   .pipe(zipAll())
   .subscribe(([val1, val2]) => console.log(val1, val2));
@@ -2060,17 +2028,15 @@ const sourceInterval = $INPUT_1_VALUE;
 const openInterval = $INPUT_2_VALUE;
 const closeInterval = $INPUT_3_VALUE;
 
-// SOURCE emits actual values
+// SOURCE
 const source$ = interval(sourceInterval).pipe(
   take(values.length),
   map(i => values[i])
 );
 
-// OPENING observable decides when buffers start
+// OPENING observable
 const openings$ = interval(openInterval);
 
-// Each opening creates a new buffer
-// That buffer will close after closeInterval
 source$
   .pipe(
     bufferToggle(
@@ -2331,16 +2297,11 @@ group.subscribe(v => console.log(group.key, v));
 const sourceValues = $INPUT_0_ARRAY;
 const mapValues = $INPUT_2_ARRAY;
 
-// map transforms values directly
-// No inner observables, no concurrency, no cancellation
 of(...sourceValues)
   .pipe(
     map((_, index) => mapValues[index])
   )
-  .subscribe(value => console.log(value));
-
-// Output:
-// 10 → 20 → 30
+  .subscribe(console.log);
 `.trim(),
 
     inputs: [
@@ -2460,7 +2421,8 @@ interval(sourceInterval)
   .pipe(
     take(values.length),
     map(i => values[i]),
-    window(interval(windowInterval))
+    window(interval(windowInterval)),
+    mergeMap((win$, i) => win$.pipe(map(v => 'Window ' + (i + 1) + ': ' + v)))
   )
   .subscribe(console.log);
 `.trim(),
@@ -2522,7 +2484,8 @@ const count = $INPUT_1_VALUE;
 
 of(...values)
   .pipe(
-    windowCount(count)
+    windowCount(count),
+    mergeMap((win$, i) => win$.pipe(map(v => 'Window ' + (i + 1) + ': ' + v)))
   )
   .subscribe(console.log);
 `.trim(),
@@ -2584,7 +2547,8 @@ interval(sourceInterval)
   .pipe(
     take(values.length),
     map(i => values[i]),
-    windowTime(windowTimeMs)
+    windowTime(windowTimeMs),
+    mergeMap((win$, i) => win$.pipe(map(v => 'Window ' + (i + 1) + ': ' + v)))
   )
   .subscribe(console.log);
 `.trim(),
@@ -2652,7 +2616,8 @@ interval(sourceInterval)
   .pipe(
     take(values.length),
     map(i => values[i]),
-    windowToggle(interval(openInterval), () => interval(closeInterval))
+    windowToggle(interval(openInterval), () => interval(closeInterval)),
+    mergeMap((win$, i) => win$.pipe(map(v => 'Window ' + (i + 1) + ': ' + v)))
   )
   .subscribe(console.log);
 `.trim(),
@@ -2721,7 +2686,8 @@ interval(sourceInterval)
   .pipe(
     take(values.length),
     map(i => values[i]),
-    windowWhen(() => interval(closeInterval))
+    windowWhen(() => interval(closeInterval)),
+    mergeMap((win$, i) => win$.pipe(map(v => 'Window ' + (i + 1) + ': ' + v)))
   )
   .subscribe(console.log);
 `.trim(),
@@ -5360,6 +5326,7 @@ setTimeout(() => {
 const values = $INPUT_0_ARRAY;
 const intervalTime = $INPUT_1_VALUE;
 const bufferSize = $INPUT_2_VALUE;
+const subscriberDelay = $INPUT_3_VALUE;
 
 const source$ = interval(intervalTime)
   .pipe(
@@ -5372,7 +5339,7 @@ source$.subscribe(a => console.log('A:', a));
 
 setTimeout(() => {
   source$.subscribe(b => console.log('B:', b));
-}, intervalTime * 2);
+}, subscriberDelay);
 `.trim(),
 
     inputs: [
@@ -5441,8 +5408,13 @@ setTimeout(() => {
     comparisons: ['connectable', 'share'],
 
     syntax: `
-interval(500)
+const values = $INPUT_0_ARRAY;
+const intervalTime = $INPUT_1_VALUE;
+
+interval(intervalTime)
   .pipe(
+    take(values.length),
+    map(i => values[i]),
     connect(shared$ => merge(
       shared$.pipe(map(v => 'A: ' + v)),
       shared$.pipe(map(v => 'B: ' + v))
@@ -5509,7 +5481,15 @@ interval(500)
     comparisons: ['connect', 'share'],
 
     syntax: `
-const source$ = connectable(interval(500));
+const values = $INPUT_0_ARRAY;
+const intervalTime = $INPUT_1_VALUE;
+
+const source$ = connectable(
+  interval(intervalTime).pipe(
+    take(values.length),
+    map(i => values[i])
+  )
+);
 
 source$.subscribe(a => console.log('A:', a));
 source$.subscribe(b => console.log('B:', b));
