@@ -240,7 +240,7 @@
     margin: 0;
     color: $text-secondary;
     line-height: 1.65;
-    font-size: $font-base;
+    font-size: $font-sm;
     white-space: pre-wrap;
     font-family: monospace;
 }
@@ -274,7 +274,7 @@
     border: 1px solid $border;
     border-radius: 10px;
     padding: 14px;
-    font-size: $font-base;
+    font-size: $font-sm;
     line-height: 1.6;
     overflow-x: auto;
     color: $text-primary;
@@ -303,7 +303,7 @@ label {
     width: max-content;
     font-weight: 500;
     color: $text-secondary;
-    font-size: $font-base;
+    font-size: $font-sm;
     margin-right: 8px;
 }
 
@@ -311,7 +311,7 @@ input,
 select {
     flex: 1;
     padding: 8px 12px;
-    font-size: $font-base;
+    font-size: $font-sm;
     border-radius: 8px;
     border: 1px solid $border;
     background: $bg;
@@ -364,7 +364,7 @@ select {
 
     input {
         padding: 7px 10px;
-        font-size: $font-base;
+        font-size: $font-sm;
         min-width: 0;
         width: 100%;
         box-sizing: border-box;
@@ -610,7 +610,7 @@ select {
     font-family: monospace;
     align-items: center;
     padding: 4px 8px;
-    font-size: $font-base;
+    font-size: $font-sm;
     border-radius: 6px;
     transition: background 0.15s ease;
 
@@ -733,7 +733,7 @@ select {
 
 .panel-description {
     padding: 12px 14px;
-    font-size: $font-base;
+    font-size: $font-sm;
     color: $text-secondary;
     background: $card-bg;
     overflow-y: auto;
@@ -773,7 +773,7 @@ select {
     font-family: monospace;
     align-items: center;
     padding: 3px 6px;
-    font-size: $font-base;
+    font-size: $font-sm;
     border-radius: 4px;
     transition: background 0.15s ease;
 
