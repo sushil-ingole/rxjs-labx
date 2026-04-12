@@ -42,8 +42,8 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
   /* --- Composite view filter --- */
   showFilterDropdown = false;
   panelSections = [
-    { key: 'description', label: 'Description', visible: true },
-    { key: 'syntax', label: 'Syntax', visible: true },
+    { key: 'description', label: 'Description', visible: false },
+    { key: 'syntax', label: 'Syntax', visible: false },
     { key: 'output', label: 'Output', visible: true }
   ];
 

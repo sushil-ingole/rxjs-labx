@@ -250,6 +250,21 @@
     max-width: 800px;
 }
 
+.composite-hint {
+    font-size: $font-sm;
+    color: $text-secondary;
+    margin: 0 0 16px;
+    padding: 8px 14px;
+    background: $primary-soft;
+    border-radius: 8px;
+    border-left: 3px solid $primary;
+    max-width: 700px;
+
+    strong {
+        color: $text-primary;
+    }
+}
+
 /* =========================
    SYNTAX / CODE
 ========================= */
