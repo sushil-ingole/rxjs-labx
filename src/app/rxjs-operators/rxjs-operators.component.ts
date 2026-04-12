@@ -4,10 +4,174 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { OPERATOR_REGISTRY } from '../data/operator-registry';
 
-interface OperatorGroup {
+export interface OperatorGroup {
   title: string;
   operators: string[];
 }
+
+export const COMPARISON_GUIDES: OperatorGroup[] = [
+
+  {
+    title: 'Combination Basics',
+    operators: [
+      'combineLatest-VS-zip-VS-forkJoin-VS-withLatestFrom'
+    ]
+  },
+
+  {
+    title: 'Flattening (Inner Observables)',
+    operators: [
+      'mergeMap-VS-concatMap-VS-switchMap-VS-exhaustMap'
+    ]
+  },
+
+  {
+    title: 'Flatten Helpers',
+    operators: [
+      'mergeAll-VS-concatAll-VS-switchAll-VS-exhaustAll'
+    ]
+  },
+
+  {
+    title: 'Take & Skip (Count-based)',
+    operators: [
+      'take-VS-takeLast-VS-skip-VS-skipLast'
+    ]
+  },
+
+  {
+    title: 'Take vs Skip (Until — Time Trigger)',
+    operators: [
+      'takeUntil-VS-skipUntil'
+    ]
+  },
+
+  {
+    title: 'Take vs Skip (While — Condition)',
+    operators: [
+      'takeWhile-VS-skipWhile'
+    ]
+  },
+
+  {
+    title: 'First vs Last vs Single',
+    operators: [
+      'first-VS-last-VS-single'
+    ]
+  },
+
+  {
+    title: 'Time Control (Debounce vs Throttle vs Sample vs Audit)',
+    operators: [
+      'debounceTime-VS-throttleTime-VS-sampleTime-VS-auditTime'
+    ]
+  },
+
+  {
+    title: 'Distinct Variants',
+    operators: [
+      'distinct-VS-distinctUntilChanged'
+    ]
+  },
+
+  {
+    title: 'Buffer vs Window (Event-based)',
+    operators: [
+      'buffer-VS-window'
+    ]
+  },
+
+  {
+    title: 'Buffer vs Window (Time-based)',
+    operators: [
+      'bufferTime-VS-windowTime'
+    ]
+  },
+
+  {
+    title: 'Buffer vs Window (Count-based)',
+    operators: [
+      'bufferCount-VS-windowCount'
+    ]
+  },
+
+  {
+    title: 'Find vs FindIndex',
+    operators: [
+      'find-VS-findIndex'
+    ]
+  },
+
+  {
+    title: 'Error Handling',
+    operators: [
+      'catchError-VS-retry'
+    ]
+  },
+
+  {
+    title: 'Delay vs DelayWhen',
+    operators: [
+      'delay-VS-delayWhen'
+    ]
+  },
+
+  {
+    title: 'Timeout Handling',
+    operators: [
+      'timeout-VS-timeoutWith'
+    ]
+  },
+
+  {
+    title: 'Multicasting',
+    operators: [
+      'share-VS-shareReplay'
+    ]
+  },
+
+  {
+    title: 'Connect vs Connectable',
+    operators: [
+      'connect-VS-connectable'
+    ]
+  },
+
+  {
+    title: 'Aggregation',
+    operators: [
+      'count-VS-toArray-VS-reduce'
+    ]
+  },
+
+  {
+    title: 'Reduce vs Scan',
+    operators: [
+      'reduce-VS-scan'
+    ]
+  },
+
+  {
+    title: 'Min vs Max',
+    operators: [
+      'min-VS-max'
+    ]
+  },
+
+  {
+    title: 'Empty Handling',
+    operators: [
+      'isEmpty-VS-defaultIfEmpty-VS-throwIfEmpty'
+    ]
+  },
+
+  {
+    title: 'Time Metadata',
+    operators: [
+      'timeInterval-VS-timestamp'
+    ]
+  }
+];
 
 @Component({
   selector: 'app-rxjs-operators',
@@ -113,167 +277,5 @@ export class RxjsOperatorsComponent {
     }))
     .filter(g => g.operators.length > 0);
 
-  comparisonGuides: OperatorGroup[] = [
-
-    {
-      title: 'Combination Basics',
-      operators: [
-        'combineLatest-VS-zip-VS-forkJoin-VS-withLatestFrom'
-      ]
-    },
-
-    {
-      title: 'Flattening (Inner Observables)',
-      operators: [
-        'mergeMap-VS-concatMap-VS-switchMap-VS-exhaustMap'
-      ]
-    },
-
-    {
-      title: 'Flatten Helpers',
-      operators: [
-        'mergeAll-VS-concatAll-VS-switchAll-VS-exhaustAll'
-      ]
-    },
-
-    {
-      title: 'Take & Skip (Count-based)',
-      operators: [
-        'take-VS-takeLast-VS-skip-VS-skipLast'
-      ]
-    },
-
-    {
-      title: 'Take vs Skip (Until — Time Trigger)',
-      operators: [
-        'takeUntil-VS-skipUntil'
-      ]
-    },
-
-    {
-      title: 'Take vs Skip (While — Condition)',
-      operators: [
-        'takeWhile-VS-skipWhile'
-      ]
-    },
-
-    {
-      title: 'First vs Last vs Single',
-      operators: [
-        'first-VS-last-VS-single'
-      ]
-    },
-
-    {
-      title: 'Time Control (Debounce vs Throttle vs Sample vs Audit)',
-      operators: [
-        'debounceTime-VS-throttleTime-VS-sampleTime-VS-auditTime'
-      ]
-    },
-
-    {
-      title: 'Distinct Variants',
-      operators: [
-        'distinct-VS-distinctUntilChanged'
-      ]
-    },
-
-    {
-      title: 'Buffer vs Window (Event-based)',
-      operators: [
-        'buffer-VS-window'
-      ]
-    },
-
-    {
-      title: 'Buffer vs Window (Time-based)',
-      operators: [
-        'bufferTime-VS-windowTime'
-      ]
-    },
-
-    {
-      title: 'Buffer vs Window (Count-based)',
-      operators: [
-        'bufferCount-VS-windowCount'
-      ]
-    },
-
-    {
-      title: 'Find vs FindIndex',
-      operators: [
-        'find-VS-findIndex'
-      ]
-    },
-
-    {
-      title: 'Error Handling',
-      operators: [
-        'catchError-VS-retry'
-      ]
-    },
-
-    {
-      title: 'Delay vs DelayWhen',
-      operators: [
-        'delay-VS-delayWhen'
-      ]
-    },
-
-    {
-      title: 'Timeout Handling',
-      operators: [
-        'timeout-VS-timeoutWith'
-      ]
-    },
-
-    {
-      title: 'Multicasting',
-      operators: [
-        'share-VS-shareReplay'
-      ]
-    },
-
-    {
-      title: 'Connect vs Connectable',
-      operators: [
-        'connect-VS-connectable'
-      ]
-    },
-
-    {
-      title: 'Aggregation',
-      operators: [
-        'count-VS-toArray-VS-reduce'
-      ]
-    },
-
-    {
-      title: 'Reduce vs Scan',
-      operators: [
-        'reduce-VS-scan'
-      ]
-    },
-
-    {
-      title: 'Min vs Max',
-      operators: [
-        'min-VS-max'
-      ]
-    },
-
-    {
-      title: 'Empty Handling',
-      operators: [
-        'isEmpty-VS-defaultIfEmpty-VS-throwIfEmpty'
-      ]
-    },
-
-    {
-      title: 'Time Metadata',
-      operators: [
-        'timeInterval-VS-timestamp'
-      ]
-    }
-  ];
+  comparisonGuides: OperatorGroup[] = COMPARISON_GUIDES;
 }

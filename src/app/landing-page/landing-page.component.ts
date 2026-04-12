@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { OPERATOR_REGISTRY } from '../data/operator-registry';
+import { COMPARISON_GUIDES } from '../rxjs-operators/rxjs-operators.component';
 
 @Component({
   selector: 'app-landing-page',
@@ -10,11 +12,15 @@ import { RouterLink } from '@angular/router';
   styleUrl: './landing-page.component.scss'
 })
 export class LandingPageComponent {
+  private readonly registry = Object.values(OPERATOR_REGISTRY);
+
   stats = [
-    { value: '50+', label: 'Operators' },
-    { value: 'Live', label: 'Timelines' },
-    { value: '100%', label: 'Free' }
+    { value: `${this.registry.length}+`, label: 'Operators' },
+    { value: `${COMPARISON_GUIDES.length}`, label: 'Comparisons' },
+    { value: `${new Set(this.registry.map(op => op.category)).size}`, label: 'Categories' }
   ];
+
+  private readonly deprecatedCount = this.registry.filter(op => op.deprecated).length;
 
   features = [
     {
@@ -30,7 +36,7 @@ export class LandingPageComponent {
     {
       icon: '🔍',
       title: 'Side-by-Side Comparisons',
-      description: 'Compare similar operators like switchMap vs mergeMap to see exactly how they differ.'
+      description: `${COMPARISON_GUIDES.length} comparison guides let you run similar operators against the same input and see exactly how they differ.`
     }
   ];
 
@@ -50,6 +56,10 @@ export class LandingPageComponent {
     {
       title: 'Compare & contrast operators',
       description: 'Run composite comparisons to see multiple operators process the same input side by side.'
+    },
+    {
+      title: 'Deprecated operator coverage',
+      description: `Explore ${this.deprecatedCount}+ deprecated operators with working playgrounds and clear guidance on modern replacements.`
     }
   ];
 
