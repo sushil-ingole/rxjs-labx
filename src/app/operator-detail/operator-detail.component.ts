@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef, HostListener } from '@angular/core';
 import {
   OPERATOR_REGISTRY,
   OperatorDemo,
@@ -39,6 +39,42 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
   isComposite = false;
   operatorNames: string[] = [];
   groupedOutput: Map<string, OutputRow[]> = new Map();
+
+  /* --- Composite view filter --- */
+  showFilterDropdown = false;
+  panelSections = [
+    { key: 'description', label: 'Description', visible: true },
+    { key: 'syntax', label: 'Syntax', visible: true },
+    { key: 'output', label: 'Output', visible: true }
+  ];
+
+  /* --- Non-composite view filter --- */
+  showNonCompositeFilter = false;
+  nonCompositePanelSections = [
+    { key: 'description', label: 'Description', visible: true },
+    { key: 'syntax', label: 'Syntax', visible: true },
+    { key: 'playground', label: 'Playground', visible: true }
+  ];
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.view-filter') && !target.closest('.header-view-filter')) {
+      if (this.showFilterDropdown || this.showNonCompositeFilter) {
+        this.showFilterDropdown = false;
+        this.showNonCompositeFilter = false;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  isSectionVisible(key: string): boolean {
+    return this.panelSections.find(s => s.key === key)?.visible ?? true;
+  }
+
+  isNonCompositeSectionVisible(key: string): boolean {
+    return this.nonCompositePanelSections.find(s => s.key === key)?.visible ?? true;
+  }
 
   /* --- Resizable panels --- */
   @ViewChild('desktopLayout', { static: false }) desktopLayoutRef!: ElementRef<HTMLElement>;
@@ -308,7 +344,7 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
     return 'Comma separated values';
   }
 
-  /* ---------------- RESIZABLE PANELS ---------------- */
+  /* ---------------- RESIZABLE PANELS (HORIZONTAL - NON COMPOSITE) ---------------- */
 
   onDragStart(event: MouseEvent, handleIndex: number): void {
     event.preventDefault();
@@ -360,6 +396,68 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
     this.dragIndex = -1;
     document.removeEventListener('mousemove', this.boundDragMove);
     document.removeEventListener('mouseup', this.boundDragEnd);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  /* ---------------- RESIZABLE SECTIONS (VERTICAL - COMPOSITE) ---------------- */
+
+  // Heights for each section within composite panels: [description, syntax, output]
+  compositeSectionHeights = ['120px', '140px', '220px'];
+  private vDragIndex = -1;
+  private vDragStartY = 0;
+  private vDragStartHeights: number[] = [];
+  private vDragContainer: HTMLElement | null = null;
+  private boundVDragMove = this.onVDragMove.bind(this);
+  private boundVDragEnd = this.onVDragEnd.bind(this);
+
+  onVDragStart(event: MouseEvent, handleIndex: number, panelEl: HTMLElement): void {
+    event.preventDefault();
+    this.vDragIndex = handleIndex;
+    this.vDragStartY = event.clientY;
+    this.vDragContainer = panelEl;
+
+    const sections = panelEl.querySelectorAll<HTMLElement>('.resizable-section');
+    this.vDragStartHeights = Array.from(sections).map(s => s.getBoundingClientRect().height);
+
+    document.addEventListener('mousemove', this.boundVDragMove);
+    document.addEventListener('mouseup', this.boundVDragEnd);
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+  }
+
+  private onVDragMove(event: MouseEvent): void {
+    if (this.vDragIndex < 0) return;
+
+    const delta = event.clientY - this.vDragStartY;
+    const topIdx = this.vDragIndex;
+    const bottomIdx = this.vDragIndex + 1;
+
+    const minHeight = 60;
+    let newTop = this.vDragStartHeights[topIdx] + delta;
+    let newBottom = this.vDragStartHeights[bottomIdx] - delta;
+
+    if (newTop < minHeight) {
+      newTop = minHeight;
+      newBottom = this.vDragStartHeights[topIdx] + this.vDragStartHeights[bottomIdx] - minHeight;
+    }
+    if (newBottom < minHeight) {
+      newBottom = minHeight;
+      newTop = this.vDragStartHeights[topIdx] + this.vDragStartHeights[bottomIdx] - minHeight;
+    }
+
+    const heights = [...this.compositeSectionHeights];
+    heights[topIdx] = newTop + 'px';
+    heights[bottomIdx] = newBottom + 'px';
+    this.compositeSectionHeights = heights;
+    this.cdr.markForCheck();
+  }
+
+  private onVDragEnd(): void {
+    this.vDragIndex = -1;
+    this.vDragContainer = null;
+    document.removeEventListener('mousemove', this.boundVDragMove);
+    document.removeEventListener('mouseup', this.boundVDragEnd);
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
   }

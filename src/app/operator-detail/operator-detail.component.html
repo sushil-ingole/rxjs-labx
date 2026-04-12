@@ -6,7 +6,21 @@
         <header class="page-header">
             <div class="container">
                 <span class="badge" [routerLink]="['/operators']">&larr; All Operators</span>
-                <h1><span class="gradient-text">{{ operator.name }}</span></h1>
+                <div class="header-title-row">
+                    <h1><span class="gradient-text">{{ operator.name }}</span></h1>
+                    <div class="view-filter header-view-filter" *ngIf="!isComposite">
+                        <button class="filter-toggle" [class.active]="showNonCompositeFilter" (click)="showNonCompositeFilter = !showNonCompositeFilter">
+                            &#x2699; View
+                            <span class="filter-arrow" [class.open]="showNonCompositeFilter">&#x25BC;</span>
+                        </button>
+                        <div class="filter-dropdown" *ngIf="showNonCompositeFilter">
+                            <label class="filter-option" *ngFor="let section of nonCompositePanelSections">
+                                <input type="checkbox" [(ngModel)]="section.visible" />
+                                <span>{{ section.label }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -16,7 +30,7 @@
             <div class="desktop-layout" #desktopLayout>
 
                 <!-- DESCRIPTION -->
-                <div class="panel description-box" [style.flex-basis]="panelWidths[0]">
+                <div class="panel description-box" [style.flex-basis]="panelWidths[0]" *ngIf="isNonCompositeSectionVisible('description')">
                     <div class="box">
                         <div class="box-header">
                             <span class="box-icon">&#x2630;</span>
@@ -27,12 +41,10 @@
                 </div>
 
                 <!-- DRAG HANDLE 1 -->
-                <div class="drag-handle" (mousedown)="onDragStart($event, 0)">
-                    <div class="drag-line"></div>
-                </div>
+                <div class="drag-handle" (mousedown)="onDragStart($event, 0)" *ngIf="isNonCompositeSectionVisible('description') && isNonCompositeSectionVisible('syntax')"></div>
 
                 <!-- SYNTAX -->
-                <div class="panel syntax-box" [style.flex-basis]="panelWidths[1]">
+                <div class="panel syntax-box" [style.flex-basis]="panelWidths[1]" *ngIf="isNonCompositeSectionVisible('syntax')">
                     <div class="box">
                         <div class="box-header">
                             <span class="box-icon">&#x2699;</span>
@@ -43,12 +55,10 @@
                 </div>
 
                 <!-- DRAG HANDLE 2 -->
-                <div class="drag-handle" (mousedown)="onDragStart($event, 1)">
-                    <div class="drag-line"></div>
-                </div>
+                <div class="drag-handle" (mousedown)="onDragStart($event, 1)" *ngIf="isNonCompositeSectionVisible('syntax') && isNonCompositeSectionVisible('playground')"></div>
 
                 <!-- RUN PANEL -->
-                <div class="panel run-box" [style.flex-basis]="panelWidths[2]">
+                <div class="panel run-box" [style.flex-basis]="panelWidths[2]" *ngIf="isNonCompositeSectionVisible('playground')">
                     <div class="box">
 
                         <div class="box-header">
@@ -132,17 +142,29 @@
                 <div class="composite-controls">
                     <div class="controls-bar">
 
-                        <div class="inputs-inline">
-                            <div class="input-row"
-                                *ngFor="let input of visibleInputsCache; let i = index"
-                                [class.time-input]="input.label.toLowerCase().includes('interval') ||
-                                     input.label.toLowerCase().includes('time')">
+                        <div class="input-row"
+                            *ngFor="let input of visibleInputsCache; let i = index"
+                            [class.time-input]="input.label.toLowerCase().includes('interval') ||
+                                 input.label.toLowerCase().includes('time')">
 
-                                <label>{{ input.label }}</label>
+                            <label>{{ input.label }}</label>
 
-                                <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
-                                    [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
+                            <input [type]="getInputType(input)" [(ngModel)]="inputValues[i]"
+                                [placeholder]="getPlaceholder(input)" pattern="[0-9,]*" />
 
+                        </div>
+
+                        <!-- VISIBILITY FILTER (shown after run) -->
+                        <div class="view-filter" *ngIf="hasCompositeOutput()">
+                            <button class="filter-toggle" [class.active]="showFilterDropdown" (click)="showFilterDropdown = !showFilterDropdown">
+                                &#x2699; View
+                                <span class="filter-arrow" [class.open]="showFilterDropdown">&#x25BC;</span>
+                            </button>
+                            <div class="filter-dropdown" *ngIf="showFilterDropdown">
+                                <label class="filter-option" *ngFor="let section of panelSections">
+                                    <input type="checkbox" [(ngModel)]="section.visible" />
+                                    <span>{{ section.label }}</span>
+                                </label>
                             </div>
                         </div>
 
@@ -164,20 +186,35 @@
 
                     <div class="comparison-panels">
 
-                        <div class="comparison-panel" *ngFor="let opName of operatorNames">
+                        <div class="comparison-panel" *ngFor="let opName of operatorNames" #compPanel>
 
                             <div class="panel-header" [routerLink]="['/operator/' + opName]">
                                 {{ opName }}
                                 <span class="panel-link-arrow">&rarr;</span>
                             </div>
 
-                            <div class="panel-description">
+                            <div class="panel-description resizable-section" *ngIf="isSectionVisible('description')"
+                                [style.height]="compositeSectionHeights[0]">
                                 {{ getOperatorDescription(opName) }}
                             </div>
 
-                            <pre class="panel-syntax">{{ dynamicSyntaxMap[opName] }}</pre>
+                            <!-- VERTICAL DRAG HANDLE 1 -->
+                            <div class="v-drag-handle" *ngIf="isSectionVisible('description') && isSectionVisible('syntax')"
+                                (mousedown)="onVDragStart($event, 0, compPanel)">
+                                <div class="v-drag-line"></div>
+                            </div>
 
-                            <ul class="panel-output">
+                            <pre class="panel-syntax resizable-section" *ngIf="isSectionVisible('syntax')"
+                                [style.height]="compositeSectionHeights[1]">{{ dynamicSyntaxMap[opName] }}</pre>
+
+                            <!-- VERTICAL DRAG HANDLE 2 -->
+                            <div class="v-drag-handle" *ngIf="isSectionVisible('syntax') && isSectionVisible('output')"
+                                (mousedown)="onVDragStart($event, 1, compPanel)">
+                                <div class="v-drag-line"></div>
+                            </div>
+
+                            <ul class="panel-output resizable-section" *ngIf="isSectionVisible('output')"
+                                [style.height]="compositeSectionHeights[2]">
 
                                 <li *ngFor="let item of groupedOutput.get(opName) || []"
                                     [ngClass]="{'output-header': item.value.includes('&#x2501;')}">

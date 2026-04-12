@@ -54,6 +54,18 @@
     margin: 0;
 }
 
+.header-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.header-view-filter {
+    flex-shrink: 0;
+    align-self: center;
+}
+
 .gradient-text {
     background: linear-gradient(135deg, $primary, darken($primary, 12%));
     -webkit-background-clip: text;
@@ -221,6 +233,8 @@
     overflow-x: auto;
     color: $text-primary;
     margin: 0;
+    white-space: pre-wrap;
+    font-family: monospace;
 }
 
 /* =========================
@@ -286,23 +300,16 @@ select {
 .controls-bar {
     display: flex;
     align-items: flex-end;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.inputs-inline {
-    display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    flex: 1;
+    gap: 12px;
     flex-wrap: wrap;
 
     .input-row {
         display: flex;
         flex-direction: column;
         gap: 3px;
-        min-width: 140px;
-        flex: 0 1 auto;
+        min-width: 120px;
+        flex: 1 1 140px;
+        max-width: 220px;
     }
 
     label {
@@ -312,14 +319,150 @@ select {
     input {
         padding: 7px 10px;
         font-size: $font-base;
-        min-width: 100px;
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .run-btn {
+        margin-top: 0;
+        white-space: nowrap;
     }
 }
 
-.controls-bar .run-btn {
-    margin-top: 0;
-    white-space: nowrap;
+/* =========================
+   VIEW FILTER DROPDOWN
+========================= */
+
+.view-filter {
+    position: relative;
     flex-shrink: 0;
+    align-self: flex-end;
+}
+
+.filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: $font-md;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-radius: 10px;
+    border: 1px solid $border;
+    background: $card-bg;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: $transition;
+    white-space: nowrap;
+
+    &:hover,
+    &.active {
+        border-color: $primary;
+        background: $primary-soft;
+        color: $primary;
+        box-shadow: 0 2px 8px rgba($primary, 0.12);
+    }
+}
+
+.filter-arrow {
+    font-size: 9px;
+    transition: transform 0.25s ease;
+    opacity: 0.6;
+
+    &.open {
+        transform: rotate(180deg);
+        opacity: 1;
+    }
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    background: $card-bg;
+    border: 1px solid $border;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 5px;
+    width: auto;
+    animation: dropIn 0.15s ease;
+    overflow: hidden;
+}
+
+@keyframes dropIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    font-size: $font-md;
+    font-weight: 500;
+    color: $text-primary;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-radius: 6px;
+    white-space: nowrap;
+    margin: 0;
+    box-sizing: border-box;
+
+    &:hover {
+        background: $bg;
+    }
+
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        min-width: 14px;
+        border: 1.5px solid $scrollbar-thumb;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        position: relative;
+        flex-shrink: 0;
+        background: $card-bg;
+        margin: 0;
+        padding: 0;
+
+        &:checked {
+            background: $primary;
+            border-color: $primary;
+
+            &::after {
+                content: '';
+                position: absolute;
+                top: 1px;
+                left: 4px;
+                width: 4px;
+                height: 7px;
+                border: solid $text-on-primary;
+                border-width: 0 1.5px 1.5px 0;
+                transform: rotate(45deg);
+            }
+        }
+
+        &:hover {
+            border-color: $primary;
+        }
+    }
+
+    span {
+        flex: 1;
+        line-height: 1;
+    }
 }
 
 /* =========================
@@ -421,7 +564,7 @@ select {
     font-family: monospace;
     align-items: center;
     padding: 4px 8px;
-    font-size: $font-sm;
+    font-size: $font-base;
     border-radius: 6px;
     transition: background 0.15s ease;
 
@@ -461,7 +604,7 @@ select {
 
 .comparison-panels {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -474,13 +617,38 @@ select {
     background: $card-bg;
     border: 1px solid $border;
     box-shadow: $shadow-sm;
-    transition: $transition;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
 
     &:hover {
-        transform: translateY(-2px);
         box-shadow: $shadow-md;
         border-color: rgba($primary, 0.2);
     }
+}
+
+/* --- Vertical Drag Handle --- */
+
+.v-drag-handle {
+    height: 8px;
+    cursor: row-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $bg;
+    border-top: 1px solid $border;
+    border-bottom: 1px solid $border;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: $primary-soft;
+    }
+}
+
+.v-drag-line {
+    width: 32px;
+    height: 2px;
+    background: $scrollbar-thumb;
+    border-radius: 1px;
 }
 
 /* =========================
@@ -519,35 +687,38 @@ select {
 
 .panel-description {
     padding: 12px 14px;
-    font-size: $font-sm;
+    font-size: $font-base;
     color: $text-secondary;
     background: $card-bg;
-    max-height: 100px;
     overflow-y: auto;
     border-bottom: 1px solid $border;
     line-height: 1.5;
+    white-space: pre-wrap;
+    font-family: monospace;
+    box-sizing: border-box;
 }
 
 .panel-syntax {
     background: $bg;
     padding: 10px 14px;
-    font-size: $font-xs;
+    font-size: $font-sm;
     color: $text-primary;
-    max-height: 140px;
     overflow-y: auto;
     border-bottom: 1px solid $border;
     margin: 0;
     line-height: 1.5;
+    white-space: pre-wrap;
+    font-family: monospace;
+    box-sizing: border-box;
 }
 
 .panel-output {
     background: $card-bg;
     padding: 8px 10px;
-    max-height: 220px;
     overflow-y: auto;
     list-style: none;
     margin: 0;
-    flex: 1;
+    box-sizing: border-box;
 }
 
 .panel-output li {
@@ -556,7 +727,7 @@ select {
     font-family: monospace;
     align-items: center;
     padding: 3px 6px;
-    font-size: $font-sm;
+    font-size: $font-base;
     border-radius: 4px;
     transition: background 0.15s ease;
 
