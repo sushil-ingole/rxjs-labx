@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import {
   OPERATOR_REGISTRY,
   OperatorDemo,
@@ -39,6 +39,15 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
   isComposite = false;
   operatorNames: string[] = [];
   groupedOutput: Map<string, OutputRow[]> = new Map();
+
+  /* --- Resizable panels --- */
+  @ViewChild('desktopLayout', { static: false }) desktopLayoutRef!: ElementRef<HTMLElement>;
+  panelWidths = ['33.33%', '33.33%', '33.33%'];
+  private dragIndex = -1;
+  private dragStartX = 0;
+  private dragStartWidths: number[] = [];
+  private boundDragMove = this.onDragMove.bind(this);
+  private boundDragEnd = this.onDragEnd.bind(this);
 
   constructor(
     private route: ActivatedRoute,
@@ -297,5 +306,61 @@ export class OperatorDetailComponent implements OnInit, OnDestroy {
     }
 
     return 'Comma separated values';
+  }
+
+  /* ---------------- RESIZABLE PANELS ---------------- */
+
+  onDragStart(event: MouseEvent, handleIndex: number): void {
+    event.preventDefault();
+    this.dragIndex = handleIndex;
+    this.dragStartX = event.clientX;
+
+    const layout = this.desktopLayoutRef?.nativeElement;
+    if (!layout) return;
+
+    const panels = layout.querySelectorAll<HTMLElement>('.panel');
+    this.dragStartWidths = Array.from(panels).map(p => p.getBoundingClientRect().width);
+
+    document.addEventListener('mousemove', this.boundDragMove);
+    document.addEventListener('mouseup', this.boundDragEnd);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }
+
+  private onDragMove(event: MouseEvent): void {
+    if (this.dragIndex < 0) return;
+
+    const delta = event.clientX - this.dragStartX;
+    const leftIdx = this.dragIndex;
+    const rightIdx = this.dragIndex + 1;
+
+    const minWidth = 150;
+    let newLeft = this.dragStartWidths[leftIdx] + delta;
+    let newRight = this.dragStartWidths[rightIdx] - delta;
+
+    if (newLeft < minWidth) {
+      newLeft = minWidth;
+      newRight = this.dragStartWidths[leftIdx] + this.dragStartWidths[rightIdx] - minWidth;
+    }
+    if (newRight < minWidth) {
+      newRight = minWidth;
+      newLeft = this.dragStartWidths[leftIdx] + this.dragStartWidths[rightIdx] - minWidth;
+    }
+
+    const totalWidth = this.dragStartWidths.reduce((a, b) => a + b, 0);
+    const widths = [...this.dragStartWidths];
+    widths[leftIdx] = newLeft;
+    widths[rightIdx] = newRight;
+
+    this.panelWidths = widths.map(w => ((w / totalWidth) * 100).toFixed(2) + '%');
+    this.cdr.markForCheck();
+  }
+
+  private onDragEnd(): void {
+    this.dragIndex = -1;
+    document.removeEventListener('mousemove', this.boundDragMove);
+    document.removeEventListener('mouseup', this.boundDragEnd);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
   }
 }

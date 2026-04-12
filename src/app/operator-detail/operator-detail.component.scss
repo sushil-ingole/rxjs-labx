@@ -1,81 +1,218 @@
 @use '../../styles.scss' as *;
 
-.operator-container {
-    padding: 14px 28px;
+/* =========================
+   BASE
+========================= */
+
+.page {
     background: $bg;
     min-height: 100vh;
-    font-family: Inter, system-ui, sans-serif;
+    color: $text-primary;
+    overflow-x: hidden;
 }
 
-/* ========================= */
-
-h1 {
-    font-size: $font-3xl;
-    font-weight: 700;
-    margin-bottom: 18px;
-    color: $text-primary;
-    margin-top: 0;
-}
-
-h3 {
-    font-size: $font-md;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: $text-primary;
-    margin-top: 0px;
+.container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 24px;
 }
 
 /* =========================
-   LAYOUT
+   PAGE HEADER
+========================= */
+
+.page-header {
+    padding: 20px 0 16px;
+    background: linear-gradient(180deg, $bg 0%, $card-bg 100%);
+    border-bottom: 1px solid $border;
+}
+
+.badge {
+    display: inline-block;
+    background: $primary-soft;
+    color: $primary;
+    font-size: $font-sm;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: $transition;
+    text-decoration: none;
+
+    &:hover {
+        background: $primary;
+        color: $text-on-primary;
+    }
+}
+
+.page-header h1 {
+    font-size: clamp(24px, 3.5vw, 36px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin: 0;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, $primary, darken($primary, 12%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* =========================
+   SECTION LABEL
+========================= */
+
+.section-label {
+    display: inline-block;
+    font-size: $font-sm;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: $primary;
+}
+
+/* =========================
+   THREE-COLUMN LAYOUT
+========================= */
+
+/* =========================
+   THREE-COLUMN LAYOUT
 ========================= */
 
 .desktop-layout {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr 1fr;
-    gap: 20px;
-    margin-top: 16px;
+    display: flex;
+    padding: 24px 0;
+    gap: 0;
+    min-height: 0;
+}
+
+.panel {
+    flex: 1 1 33.33%;
+    min-width: 180px;
+    overflow: hidden;
+
+    .box {
+        height: 100%;
+    }
+}
+
+/* --- Drag Handle --- */
+
+.drag-handle {
+    flex: 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: col-resize;
+    position: relative;
+    z-index: 5;
+    user-select: none;
+    transition: background 0.15s ease;
+
+    &:hover,
+    &.active {
+        .drag-line {
+            background: $primary;
+            opacity: 1;
+        }
+    }
+}
+
+.drag-line {
+    width: 3px;
+    height: 40px;
+    border-radius: 3px;
+    background: $scrollbar-thumb;
+    opacity: 0.5;
+    transition: all 0.15s ease;
 }
 
 @media (max-width: 1024px) {
     .desktop-layout {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .panel {
+        flex-basis: auto !important;
+    }
+
+    .drag-handle {
+        display: none;
     }
 }
 
 /* =========================
-   CARD
+   CARD / BOX
 ========================= */
 
 .box {
     background: $card-bg;
     border-radius: $radius;
     border: 1px solid $border;
-    padding: 18px;
+    padding: 20px;
     box-shadow: $shadow-sm;
     transition: $transition;
 
     &:hover {
         box-shadow: $shadow-md;
+        border-color: rgba($primary, 0.15);
     }
 }
 
-/* ========================= */
+.box-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    h3 {
+        font-size: $font-md;
+        font-weight: 700;
+        margin: 0;
+        color: $text-primary;
+    }
+}
+
+.box-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: $primary-soft;
+    font-size: $font-md;
+    flex-shrink: 0;
+}
+
+/* =========================
+   DESCRIPTION
+========================= */
 
 .description {
-    margin: 8px 0 16px;
+    margin: 0;
     color: $text-secondary;
-    line-height: 1.6;
+    line-height: 1.65;
     font-size: $font-base;
     white-space: pre-wrap;
     font-family: monospace;
 }
 
+.composite-desc {
+    padding: 20px 0 8px;
+    max-width: 800px;
+}
+
 /* =========================
-   CODE BLOCK
+   SYNTAX / CODE
 ========================= */
 
 .syntax {
-    background: $card-bg;
+    background: $bg;
     border: 1px solid $border;
     border-radius: 10px;
     padding: 14px;
@@ -83,6 +220,7 @@ h3 {
     line-height: 1.6;
     overflow-x: auto;
     color: $text-primary;
+    margin: 0;
 }
 
 /* =========================
@@ -97,7 +235,7 @@ h3 {
 
 .input-row {
     display: flex;
-    flex-direction: column; // 👈 important
+    flex-direction: column;
     gap: 4px;
 }
 
@@ -112,39 +250,102 @@ label {
 input,
 select {
     flex: 1;
-    padding: 8px 10px;
+    padding: 8px 12px;
     font-size: $font-base;
     border-radius: 8px;
     border: 1px solid $border;
+    background: $bg;
+    color: $text-primary;
     transition: $transition;
+
+    &::placeholder {
+        color: $text-muted;
+    }
 
     &:focus {
         outline: none;
         border-color: $primary;
-        box-shadow: 0 0 0 3px rgba($primary, 0.15);
+        box-shadow: 0 0 0 3px rgba($primary, 0.12);
     }
 }
 
 /* =========================
-   BUTTON
+   COMPOSITE CONTROLS
+========================= */
+
+.composite-controls {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: $bg;
+    padding: 12px 0;
+    border-bottom: 1px solid $border;
+    margin-bottom: 16px;
+}
+
+.controls-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.inputs-inline {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex: 1;
+    flex-wrap: wrap;
+
+    .input-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 140px;
+        flex: 0 1 auto;
+    }
+
+    label {
+        font-size: $font-sm;
+    }
+
+    input {
+        padding: 7px 10px;
+        font-size: $font-base;
+        min-width: 100px;
+    }
+}
+
+.controls-bar .run-btn {
+    margin-top: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* =========================
+   RUN BUTTON
 ========================= */
 
 .run-btn {
-    margin-top: 14px;
-    padding: 9px 16px;
-    font-size: $font-base;
-    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 20px;
+    font-size: $font-md;
+    border-radius: 10px;
     border: none;
     background: $primary;
-    color: $card-bg;
+    color: $text-on-primary;
     font-weight: 600;
     cursor: pointer;
     transition: $transition;
+    box-shadow: 0 4px 14px rgba($primary, 0.3);
 
     &:hover {
         background: darken($primary, 6%);
-        transform: translateY(-1px);
-        box-shadow: $shadow-sm;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($primary, 0.4);
     }
 
     &:active {
@@ -156,9 +357,90 @@ select {
     background: $disabled;
     cursor: not-allowed;
     transform: scale(0.97);
+    box-shadow: none;
 }
 
-/* OUTPUT FLASH EFFECT */
+.btn-arrow {
+    transition: transform 0.2s ease;
+}
+
+.run-btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+/* =========================
+   PRIMARY BUTTON (NOT FOUND)
+========================= */
+
+.btn.primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: $font-md;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: $primary;
+    color: $text-on-primary;
+    transition: $transition;
+    text-decoration: none;
+
+    &:hover {
+        background: darken($primary, 6%);
+        transform: translateY(-2px);
+        box-shadow: $shadow-sm;
+    }
+}
+
+/* =========================
+   OUTPUT
+========================= */
+
+.output {
+    margin-top: 16px;
+}
+
+.output-label {
+    margin-bottom: 10px;
+}
+
+.output ul {
+    background: $bg;
+    border: 1px solid $border;
+    padding: 10px;
+    border-radius: 10px;
+    list-style: none;
+    margin: 0;
+}
+
+.output li {
+    display: flex;
+    gap: 10px;
+    font-family: monospace;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: $font-sm;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: $card-bg;
+    }
+}
+
+.output li.output-header {
+    background: $primary-soft;
+    color: $primary;
+    padding: 6px 10px;
+    border-left: 3px solid $primary;
+    font-weight: 600;
+    border-radius: 0 6px 6px 0;
+}
+
+/* --- Flash Effect --- */
+
 .output.flash {
     animation: flashBg 0.4s ease;
 }
@@ -174,56 +456,19 @@ select {
 }
 
 /* =========================
-   OUTPUT
-========================= */
-
-.output {
-    margin-top: 8px;
-}
-
-.output ul {
-    background: $card-bg;
-    border: 1px solid $border;
-    padding: 12px;
-    border-radius: 10px;
-    list-style: none;
-}
-
-.output li {
-    display: flex;
-    gap: 10px;
-    font-family: monospace;
-    align-items: center;
-    padding: 4px 6px;
-    font-size: $font-sm;
-}
-
-.output li.output-header {
-    background: $primary-soft;
-    color: $primary;
-    padding: 6px 8px;
-    border-left: 3px solid $primary;
-    font-weight: 600;
-}
-
-/* =========================
    COMPARISON PANELS
 ========================= */
 
 .comparison-panels {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    align-items: stretch;
+    margin-bottom: 24px;
 }
 
 .comparison-panel {
     display: flex;
     flex-direction: column;
-    flex: 1 1 300px;
-    min-width: 280px;
-
     border-radius: $radius;
     overflow: hidden;
     background: $card-bg;
@@ -234,49 +479,98 @@ select {
     &:hover {
         transform: translateY(-2px);
         box-shadow: $shadow-md;
+        border-color: rgba($primary, 0.2);
     }
 }
 
-/* ========================= */
+/* =========================
+   PANEL SECTIONS
+========================= */
 
 .panel-header {
     background: $primary;
     color: $text-on-primary;
-    padding: 12px;
-    font-weight: 600;
+    padding: 12px 16px;
+    font-weight: 700;
     text-align: center;
+    font-size: $font-md;
+    cursor: pointer;
+    transition: $transition;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .panel-link-arrow {
+        opacity: 0;
+        transform: translateX(-4px);
+        transition: all 0.2s ease;
+    }
+
+    &:hover {
+        background: darken($primary, 6%);
+
+        .panel-link-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
 }
 
 .panel-description {
-    padding: 12px;
+    padding: 12px 14px;
     font-size: $font-sm;
     color: $text-secondary;
     background: $card-bg;
-
-    max-height: 120px;
+    max-height: 100px;
     overflow-y: auto;
-
     border-bottom: 1px solid $border;
+    line-height: 1.5;
 }
 
 .panel-syntax {
-    background: $card-bg;
-    padding: 10px;
+    background: $bg;
+    padding: 10px 14px;
     font-size: $font-xs;
     color: $text-primary;
-
-    max-height: 160px;
+    max-height: 140px;
     overflow-y: auto;
-
     border-bottom: 1px solid $border;
+    margin: 0;
+    line-height: 1.5;
 }
 
 .panel-output {
     background: $card-bg;
-    padding: 10px;
-
+    padding: 8px 10px;
     max-height: 220px;
     overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    flex: 1;
+}
+
+.panel-output li {
+    display: flex;
+    gap: 10px;
+    font-family: monospace;
+    align-items: center;
+    padding: 3px 6px;
+    font-size: $font-sm;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: $bg;
+    }
+}
+
+.panel-output li.output-header {
+    background: $primary-soft;
+    color: $primary;
+    padding: 5px 8px;
+    border-left: 3px solid $primary;
+    font-weight: 600;
 }
 
 /* =========================
@@ -305,28 +599,19 @@ select {
 }
 
 /* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 768px) {
-    .comparison-panel {
-        flex: 1 1 100%;
-        max-width: 100%;
-    }
-}
-
-/* =========================
    TEXT DETAILS
 ========================= */
 
 .time {
     color: $text-muted;
-    width: 70px;
+    width: 65px;
+    flex-shrink: 0;
 }
 
 .index {
     color: $text-muted;
-    width: 32px;
+    width: 30px;
+    flex-shrink: 0;
 }
 
 .arrow {
@@ -335,4 +620,45 @@ select {
 
 .value {
     color: $text-primary;
+}
+
+/* =========================
+   NOT FOUND
+========================= */
+
+.not-found {
+    text-align: center;
+    padding: 100px 24px;
+
+    h2 {
+        font-size: clamp(24px, 3vw, 32px);
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    p {
+        color: $text-secondary;
+        font-size: $font-lg;
+        margin-bottom: 24px;
+    }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1024px) {
+    .desktop-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 16px 0 12px;
+    }
+
+    .comparison-panels {
+        grid-template-columns: 1fr;
+    }
 }
