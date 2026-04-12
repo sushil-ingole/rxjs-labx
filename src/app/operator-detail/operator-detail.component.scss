@@ -74,6 +74,37 @@
 }
 
 /* =========================
+   DEPRECATION BANNER
+========================= */
+
+.deprecation-banner {
+    background: rgba(255, 170, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 170, 0, 0.3);
+    padding: 10px 0;
+
+    .container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: $font-sm;
+    }
+
+    .dep-icon {
+        font-size: 18px;
+    }
+
+    strong {
+        color: #ffaa00;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .dep-message {
+        color: $text-secondary;
+    }
+}
+
+/* =========================
    SECTION LABEL
 ========================= */
 

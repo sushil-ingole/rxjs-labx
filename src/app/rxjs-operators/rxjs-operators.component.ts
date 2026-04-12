@@ -56,10 +56,11 @@ export class RxjsOperatorsComponent {
     'Time-based'
   ];
 
-  // Auto-generated from OPERATOR_REGISTRY categories
+  // Auto-generated from OPERATOR_REGISTRY categories (excludes deprecated)
   operatorGroups: OperatorGroup[] = (() => {
     const groups = new Map<string, string[]>();
     for (const [name, op] of Object.entries(OPERATOR_REGISTRY)) {
+      if (op.deprecated) continue;
       const cat = op.category;
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(name);
@@ -72,42 +73,45 @@ export class RxjsOperatorsComponent {
       .map(cat => ({ title: cat, operators: groups.get(cat)! }));
   })();
 
-  deprecatedOperators: OperatorGroup[] = [
+  // Deprecated operator groupings
+  private static readonly DEPRECATED_GROUPS: { title: string; operators: string[] }[] = [
     {
       title: 'Deprecated Mapping Shortcuts',
-      operators: [
-        'mapTo',
-        'pluck',
-        'exhaust',
-        'repeatWhen',
-        'retryWhen'
-      ]
+      operators: ['mapTo', 'pluck', 'flatMap']
     },
     {
       title: 'Deprecated *To Operators',
-      operators: [
-        'concatMapTo',
-        'mergeMapTo',
-        'switchMapTo'
-      ]
+      operators: ['concatMapTo', 'mergeMapTo', 'switchMapTo']
+    },
+    {
+      title: 'Deprecated Flattening',
+      operators: ['exhaust', 'combineAll']
+    },
+    {
+      title: 'Deprecated Repeat & Retry',
+      operators: ['repeatWhen', 'retryWhen']
     },
     {
       title: 'Deprecated Multicasting APIs',
-      operators: [
-        'publish',
-        'publishBehavior',
-        'publishReplay',
-        'publishLast',
-        'refCount'
-      ]
+      operators: ['publish', 'publishBehavior', 'publishReplay', 'publishLast', 'multicast', 'refCount']
+    },
+    {
+      title: 'Deprecated Creation Operators',
+      operators: ['race', 'partition']
     },
     {
       title: 'Deprecated / Discouraged APIs',
-      operators: [
-        'onErrorResumeNext'
-      ]
+      operators: ['onErrorResumeNext', 'timeoutWith']
     }
   ];
+
+  // Auto-filtered: only show operators that exist in registry
+  deprecatedOperators: OperatorGroup[] = RxjsOperatorsComponent.DEPRECATED_GROUPS
+    .map(g => ({
+      ...g,
+      operators: g.operators.filter(op => OPERATOR_REGISTRY[op])
+    }))
+    .filter(g => g.operators.length > 0);
 
   comparisonGuides: OperatorGroup[] = [
 

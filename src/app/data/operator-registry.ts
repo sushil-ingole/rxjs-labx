@@ -93,6 +93,32 @@ import {
   sequenceEqual,
   timeInterval,
   timestamp,
+  combineLatestWith,
+  concatWith,
+  mergeWith,
+  zipWith,
+  switchScan,
+  materialize,
+  dematerialize,
+  observeOn,
+  subscribeOn,
+  asyncScheduler,
+  mapTo,
+  pluck,
+  partition,
+  multicast,
+  publish,
+  publishBehavior,
+  publishLast,
+  publishReplay,
+  refCount,
+  Subject,
+  ReplaySubject,
+  BehaviorSubject,
+  onErrorResumeNext,
+  Notification,
+  EMPTY,
+  timer,
 } from 'rxjs';
 
 export interface OperatorDemo {
@@ -113,6 +139,9 @@ export interface OperatorDemo {
 
   // Related operators for comparison
   comparisons?: string[];
+
+  // If deprecated, the replacement recommendation
+  deprecated?: string;
 }
 
 export type PlaygroundEvent =
@@ -1168,6 +1197,7 @@ of(...values)
   },
   race: {
     category: 'Creation & Combination',
+    deprecated: 'Use raceWith() instead. race(a$, b$) → a$.pipe(raceWith(b$))',
     description: createOperatorDescription({
       definition:
         'Subscribes to all observables and mirrors only the FIRST one to emit, unsubscribing from all others.',
@@ -4881,6 +4911,7 @@ interval(sourceInterval)
   },
   timeoutWith: {
     category: 'Utility & Side Effects',
+    deprecated: 'Use timeout({ each: ms, with: () => fallback$ }) instead.',
 
     description: createOperatorDescription({
       definition:
@@ -6106,6 +6137,1807 @@ interval(intervalTime)
         timestamp(),
         map((obj) => `🕒 ${obj.value} at ${obj.timestamp}`),
       );
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────
+  // MISSING ACTIVE OPERATORS
+  // ────────────────────────────────────────────────────────────
+
+  endWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Appends specified values to the end of the source observable when it completes.',
+      mentalModel:
+        'Like a "PS" at the end of a letter — after the main message, append a final note.',
+      stepByStep: [
+        'Mirror all source emissions as they arrive',
+        'When source completes, emit each "endWith" value in order',
+        'Complete after all appended values are emitted',
+      ],
+      timeline: `Source: --1--2--3--|
+endWith(99)
+Output: --1--2--3--99--|`,
+      keyDifferences: [
+        'vs startWith → startWith prepends before source; endWith appends after completion',
+        'vs concat → concat chains an observable; endWith appends raw values',
+        'vs finalize → finalize runs a side effect; endWith emits values',
+      ],
+      useCases: [
+        'Adding a sentinel/terminator value',
+        'Appending a default or summary value after a stream ends',
+        'Testing — ensuring a known final value',
+      ],
+      gotchas: [
+        'Only emits after the source completes — if source never completes, endWith values never appear',
+        'Values are emitted synchronously after completion',
+        'Counterpart to startWith — they can be combined',
+      ],
+      categoryNote: 'Combination operator → appends values at completion.',
+    }),
+
+    comparisons: ['startWith', 'concat'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const endValue = $INPUT_1_VALUE;
+
+of(...values)
+  .pipe(
+    endWith(endValue)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'End Value', defaultValue: [99] },
+    ],
+
+    run: (inputs) => {
+      const [values, endArr] = inputs;
+
+      return of(...values).pipe(
+        endWith(endArr[0]),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  combineLatestWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Pipeable version of combineLatest. Combines the source with other observables, emitting an array of latest values whenever any input emits.',
+      mentalModel:
+        'Like a team dashboard — whenever any team member updates their status, you see the latest status of everyone.',
+      stepByStep: [
+        'Subscribe to source and all provided observables',
+        'Wait until every observable has emitted at least once',
+        'On each new emission from any observable, emit an array of the latest value from each',
+        'Complete when all observables complete',
+      ],
+      timeline: `Source: --1-----3-----|
+Other:  ----A-----B--|
+Output: --[1,A]-[3,A]-[3,B]--|`,
+      keyDifferences: [
+        'vs combineLatest (deprecated creation) → combineLatestWith is pipeable, combineLatest is standalone',
+        'vs zipWith → zip waits for paired emissions; combineLatestWith uses latest values',
+        'vs withLatestFrom → withLatestFrom only emits when source emits; combineLatestWith emits when any emits',
+      ],
+      useCases: [
+        'Combining multiple form fields reactively',
+        'Merging independent state streams',
+        'Dashboard data from multiple sources',
+      ],
+      gotchas: [
+        'Replaces deprecated combineLatest operator (the operator form, not the creation function)',
+        'No emissions until every observable has emitted at least once',
+        'Can produce many emissions if sources emit frequently',
+      ],
+      categoryNote: 'Combination operator → modern pipeable replacement for combineLatest operator.',
+    }),
+
+    comparisons: ['combineLatest', 'withLatestFrom', 'zipWith'],
+
+    syntax: `
+const aValues = $INPUT_0_ARRAY;
+const aInterval = $INPUT_1_VALUE;
+const bValues = $INPUT_2_ARRAY;
+const bInterval = $INPUT_3_VALUE;
+
+const source$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
+const other$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
+
+source$.pipe(
+  combineLatestWith(other$)
+).subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+      { label: 'Other Values', defaultValue: [10, 20, 30] },
+      { label: 'Other Interval (ms)', defaultValue: [700] },
+    ],
+
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
+
+      const source$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
+      const other$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
+
+      return source$.pipe(
+        combineLatestWith(other$),
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
+    },
+  },
+
+  concatWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Pipeable version of concat. Subscribes to observables sequentially — waits for the source to complete, then subscribes to the next.',
+      mentalModel:
+        'Like a playlist — each song plays in order, the next starts only when the previous finishes.',
+      stepByStep: [
+        'Subscribe to the source observable',
+        'Mirror all source emissions',
+        'When source completes, subscribe to the first provided observable',
+        'Continue until all observables complete in sequence',
+      ],
+      timeline: `Source: --1--2--|
+Other:  --A--B--|
+Output: --1--2--A--B--|`,
+      keyDifferences: [
+        'vs concat (deprecated operator) → concatWith is the modern pipeable replacement',
+        'vs mergeWith → mergeWith subscribes to all simultaneously; concatWith waits for each to complete',
+        'vs startWith/endWith → those prepend/append values; concatWith chains full observables',
+      ],
+      useCases: [
+        'Sequential HTTP requests',
+        'Playing animations in order',
+        'Chaining dependent data streams',
+      ],
+      gotchas: [
+        'If the source never completes, subsequent observables never start',
+        'Cold observables are subscribed lazily (only when the previous completes)',
+        'Order matters — first argument follows source, then second, etc.',
+      ],
+      categoryNote: 'Combination operator → modern pipeable replacement for concat operator.',
+    }),
+
+    comparisons: ['concat', 'mergeWith', 'startWith'],
+
+    syntax: `
+const aValues = $INPUT_0_ARRAY;
+const bValues = $INPUT_1_ARRAY;
+
+of(...aValues).pipe(
+  concatWith(of(...bValues))
+).subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Other Values', defaultValue: [10, 20, 30] },
+    ],
+
+    run: (inputs) => {
+      const [aValues, bValues] = inputs;
+
+      return of(...aValues).pipe(
+        concatWith(of(...bValues)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  mergeWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Pipeable version of merge. Subscribes to the source and all provided observables simultaneously, interleaving their emissions.',
+      mentalModel:
+        'Like merging highway lanes — all traffic flows together in arrival order.',
+      stepByStep: [
+        'Subscribe to source and all provided observables at the same time',
+        'Emit values from any observable as they arrive (interleaved)',
+        'Complete only when ALL observables have completed',
+      ],
+      timeline: `Source: --1-----3--|
+Other:  ----A-----B--|
+Output: --1--A--3--B--|`,
+      keyDifferences: [
+        'vs merge (deprecated operator) → mergeWith is the modern pipeable replacement',
+        'vs concatWith → concatWith is sequential; mergeWith is concurrent',
+        'vs combineLatestWith → combineLatestWith emits arrays of combined values; mergeWith emits individual values',
+      ],
+      useCases: [
+        'Merging multiple event streams (clicks, keyboard, touch)',
+        'Combining independent data sources',
+        'Running parallel operations',
+      ],
+      gotchas: [
+        'Output order depends on emission timing, not argument order',
+        'Does not combine values — emits each value individually',
+        'Completes only when all sources complete',
+      ],
+      categoryNote: 'Combination operator → modern pipeable replacement for merge operator.',
+    }),
+
+    comparisons: ['merge', 'concatWith', 'combineLatestWith'],
+
+    syntax: `
+const aValues = $INPUT_0_ARRAY;
+const aInterval = $INPUT_1_VALUE;
+const bValues = $INPUT_2_ARRAY;
+const bInterval = $INPUT_3_VALUE;
+
+const source$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
+const other$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
+
+source$.pipe(
+  mergeWith(other$)
+).subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+      { label: 'Other Values', defaultValue: [10, 20, 30] },
+      { label: 'Other Interval (ms)', defaultValue: [300] },
+    ],
+
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
+
+      const source$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
+      const other$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
+
+      return source$.pipe(
+        mergeWith(other$),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  zipWith: {
+    category: 'Creation & Combination',
+    description: createOperatorDescription({
+      definition:
+        'Pipeable version of zip. Pairs corresponding emissions from the source and other observables into arrays.',
+      mentalModel:
+        'Like a zipper — teeth from each side must meet in exact pairs before moving forward.',
+      stepByStep: [
+        'Subscribe to source and all provided observables',
+        'Buffer values from each until all have emitted the Nth value',
+        'Emit an array combining the Nth value from each observable',
+        'Complete when any observable completes (after emitting its pair)',
+      ],
+      timeline: `Source: --1-----3--|
+Other:  ----A--B----|
+Output: ----[1,A]--[3,B]--|`,
+      keyDifferences: [
+        'vs zip (deprecated operator) → zipWith is the modern pipeable replacement',
+        'vs combineLatestWith → combineLatestWith uses latest values; zipWith uses positional pairing',
+        'vs withLatestFrom → withLatestFrom takes latest; zipWith waits for corresponding pair',
+      ],
+      useCases: [
+        'Pairing request/response data',
+        'Combining ordered parallel results',
+        'Synchronizing step-by-step data',
+      ],
+      gotchas: [
+        'Buffers values if one observable is faster than others — potential memory concern',
+        'Completes when any source completes (unpaired values are lost)',
+        'Slower observable dictates output rate',
+      ],
+      categoryNote: 'Combination operator → modern pipeable replacement for zip operator.',
+    }),
+
+    comparisons: ['zip', 'combineLatestWith', 'withLatestFrom'],
+
+    syntax: `
+const aValues = $INPUT_0_ARRAY;
+const aInterval = $INPUT_1_VALUE;
+const bValues = $INPUT_2_ARRAY;
+const bInterval = $INPUT_3_VALUE;
+
+const source$ = interval(aInterval).pipe(take(aValues.length), map(i => aValues[i]));
+const other$ = interval(bInterval).pipe(take(bValues.length), map(i => bValues[i]));
+
+source$.pipe(
+  zipWith(other$)
+).subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [300] },
+      { label: 'Other Values', defaultValue: [10, 20, 30] },
+      { label: 'Other Interval (ms)', defaultValue: [500] },
+    ],
+
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
+
+      const source$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
+      const other$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
+
+      return source$.pipe(
+        zipWith(other$),
+        map(([a, b]) => `[${a}, ${b}]`),
+      );
+    },
+  },
+
+  switchScan: {
+    category: 'Transformation',
+    description: createOperatorDescription({
+      definition:
+        'Like mergeScan but uses switchMap semantics — each new source emission cancels the previous inner observable before starting a new one with the accumulated value.',
+      mentalModel:
+        'Like an autocomplete that accumulates context — each keystroke cancels the previous search but carries forward the accumulated state.',
+      stepByStep: [
+        'Source emits a value',
+        'Pass current accumulator and new value to the accumulator function',
+        'Subscribe to the returned inner observable',
+        'If source emits again before inner completes, unsubscribe from the previous inner',
+        'Use the last accumulated value for the next iteration',
+      ],
+      timeline: `Source: --1--2--3--|
+switchScan((acc, v) => of(acc + v).pipe(delay(200)), 0)
+Output: --1--?--6--|  (2nd may be cancelled if 3 arrives quickly)`,
+      keyDifferences: [
+        'vs mergeScan → mergeScan keeps all inner observables alive; switchScan cancels previous',
+        'vs switchMap → switchMap has no accumulator; switchScan accumulates state',
+        'vs scan → scan is synchronous; switchScan works with inner observables',
+      ],
+      useCases: [
+        'Paginated API calls with running totals',
+        'Autocomplete with accumulated context',
+        'Stateful switchMap patterns',
+      ],
+      gotchas: [
+        'Previous inner observable is cancelled on new emission — may lose intermediate results',
+        'Accumulator may not update if inner observable gets cancelled before emitting',
+        'Seed value is required (like reduce/scan)',
+      ],
+      categoryNote: 'Transformation operator → stateful switching of inner observables.',
+    }),
+
+    comparisons: ['mergeScan', 'switchMap', 'scan'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const sourceInterval = $INPUT_1_VALUE;
+
+interval(sourceInterval)
+  .pipe(
+    take(values.length),
+    map(i => values[i]),
+    switchScan((acc, v) => of(acc + v), 0)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Source Interval (ms)', defaultValue: [500] },
+    ],
+
+    run: (inputs) => {
+      const [values, intervalMs] = inputs;
+
+      return interval(intervalMs[0]).pipe(
+        take(values.length),
+        map((i) => values[i]),
+        switchScan((acc, v) => of(acc + v), 0),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  materialize: {
+    category: 'Utility & Side Effects',
+    description: createOperatorDescription({
+      definition:
+        'Wraps each source emission, error, and completion into Notification objects, converting events into data.',
+      mentalModel:
+        'Like a flight recorder — instead of experiencing the events, you get a log of every event as metadata.',
+      stepByStep: [
+        'Source emits a value → emit Notification of kind "N" with the value',
+        'Source errors → emit Notification of kind "E" with the error, then complete',
+        'Source completes → emit Notification of kind "C", then complete',
+      ],
+      timeline: `Source: --1--2--|
+materialize()
+Output: --N(1)--N(2)--C()|`,
+      keyDifferences: [
+        'vs tap → tap observes side-effects; materialize converts events to Notification objects',
+        'vs dematerialize → dematerialize reverses materialization, unwrapping Notifications back to events',
+        'vs catchError → catchError handles errors; materialize wraps them as data',
+      ],
+      useCases: [
+        'Logging all events (values, errors, completions) uniformly',
+        'Transporting observable events through channels that only support values',
+        'Testing — asserting exact event sequences',
+      ],
+      gotchas: [
+        'Materialized stream always completes (even if source errored) because errors become values',
+        'Must dematerialize to restore original event semantics',
+        'Notification kind is "N" for next, "E" for error, "C" for complete',
+      ],
+      categoryNote: 'Utility operator → event-to-data conversion.',
+    }),
+
+    comparisons: ['dematerialize', 'tap'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(...values)
+  .pipe(
+    materialize()
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        materialize(),
+        map((n) => `${n.kind === 'N' ? '📦' : n.kind === 'C' ? '✅' : '❌'} kind=${n.kind}${n.kind === 'N' ? ' value=' + n.value : ''}`),
+      );
+    },
+  },
+
+  dematerialize: {
+    category: 'Utility & Side Effects',
+    description: createOperatorDescription({
+      definition:
+        'Converts a stream of Notification objects back into normal observable events (next, error, complete).',
+      mentalModel:
+        'Like replaying a flight recorder log — converting metadata records back into real events.',
+      stepByStep: [
+        'Source emits a Notification of kind "N" → re-emit the value as a normal next()',
+        'Source emits a Notification of kind "E" → throw the error',
+        'Source emits a Notification of kind "C" → complete the stream',
+      ],
+      timeline: `Source: --N(1)--N(2)--C()|
+dematerialize()
+Output: --1--2--|`,
+      keyDifferences: [
+        'vs materialize → materialize wraps events as data; dematerialize unwraps them back',
+        'vs map → map transforms values; dematerialize reconstructs the full event stream',
+      ],
+      useCases: [
+        'Restoring events after transporting through a value-only channel',
+        'Replaying recorded event sequences',
+        'Working with serialized observable event logs',
+      ],
+      gotchas: [
+        'Source must emit Notification objects — runtime error otherwise',
+        'A Notification of kind "E" will cause the output to error',
+        'Always pair with materialize for round-trip usage',
+      ],
+      categoryNote: 'Utility operator → data-to-event conversion (reverse of materialize).',
+    }),
+
+    comparisons: ['materialize'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(...values)
+  .pipe(
+    materialize(),
+    dematerialize()
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        materialize(),
+        dematerialize(),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  observeOn: {
+    category: 'Utility & Side Effects',
+    description: createOperatorDescription({
+      definition:
+        'Re-emits all source notifications on a specified scheduler, controlling the execution context of downstream operators.',
+      mentalModel:
+        'Like routing mail through a specific post office — the letters are the same, but they pass through a different delivery system.',
+      stepByStep: [
+        'Source emits a value',
+        'Schedule the emission on the specified scheduler (e.g., asyncScheduler)',
+        'Downstream operators receive the value in the new execution context',
+        'Applies to next, error, and complete notifications',
+      ],
+      timeline: `Source (sync): 1-2-3-|
+observeOn(asyncScheduler)
+Output (async): --1--2--3--|  (each emission is delayed to next microtask)`,
+      keyDifferences: [
+        'vs subscribeOn → subscribeOn affects when subscription happens; observeOn affects when emissions arrive downstream',
+        'vs delay → delay adds fixed time; observeOn changes execution context/scheduler',
+        'vs tap → tap adds side effects; observeOn changes scheduling',
+      ],
+      useCases: [
+        'Moving heavy computation off the main thread',
+        'Ensuring UI updates happen in the correct zone (Angular)',
+        'Converting synchronous streams to asynchronous',
+      ],
+      gotchas: [
+        'Makes synchronous sources async — changes timing behavior',
+        'Affects ALL downstream operators, not just the next one',
+        'Can cause subtle ordering issues if used carelessly',
+        'In browser environments, asyncScheduler uses setTimeout(0)',
+      ],
+      categoryNote: 'Utility operator → scheduler-based emission routing.',
+    }),
+
+    comparisons: ['subscribeOn', 'delay'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(...values)
+  .pipe(
+    observeOn(asyncScheduler)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        observeOn(asyncScheduler),
+        map((v) => `⏱️ ${v} (async)`),
+      );
+    },
+  },
+
+  subscribeOn: {
+    category: 'Utility & Side Effects',
+    description: createOperatorDescription({
+      definition:
+        'Schedules the subscription (and unsubscription) to the source observable on a specified scheduler.',
+      mentalModel:
+        'Like choosing which day to open your mail — it controls WHEN you start listening, not how the mail arrives.',
+      stepByStep: [
+        'When subscribe() is called, defer the actual subscription to the specified scheduler',
+        'The scheduler determines when the source is actually subscribed to',
+        'All emissions then follow normally from the source',
+        'Unsubscription is also scheduled on the same scheduler',
+      ],
+      timeline: `subscribe() called at T=0
+subscribeOn(asyncScheduler)
+Actual subscription happens at T=1 (next microtask)
+Source: --1--2--3--|  (starts slightly later)`,
+      keyDifferences: [
+        'vs observeOn → observeOn affects emission delivery; subscribeOn affects when subscription starts',
+        'vs delay → delay postpones each value; subscribeOn postpones the subscription itself',
+        'Position in pipe does not matter — subscribeOn always affects the source subscription',
+      ],
+      useCases: [
+        'Deferring expensive subscriptions',
+        'Ensuring subscriptions happen outside Angular zone',
+        'Controlling subscription timing in schedulers',
+      ],
+      gotchas: [
+        'Position in the pipe chain does NOT matter — always affects the root subscription',
+        'Only affects the subscription side, not emission delivery (use observeOn for that)',
+        'Rarely needed in typical application code',
+      ],
+      categoryNote: 'Utility operator → scheduler-based subscription timing.',
+    }),
+
+    comparisons: ['observeOn', 'delay'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(...values)
+  .pipe(
+    subscribeOn(asyncScheduler)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        subscribeOn(asyncScheduler),
+        map((v) => `⏱️ ${v} (deferred sub)`),
+      );
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────
+  // DEPRECATED OPERATORS (full playgrounds for learning)
+  // ────────────────────────────────────────────────────────────
+
+  mapTo: {
+    category: 'Transformation',
+    deprecated: 'Use map(() => value) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Maps every source emission to the same constant value, ignoring the actual emitted value.',
+      mentalModel:
+        'Like a stamp machine — no matter what goes in, the same stamp comes out.',
+      stepByStep: [
+        'Source emits any value',
+        'Ignore the emitted value',
+        'Emit the constant value instead',
+      ],
+      timeline: `Source: --1--2--3--|
+mapTo('X')
+Output: --X--X--X--|`,
+      keyDifferences: [
+        'vs map → map transforms each value; mapTo always emits the same constant',
+        'Deprecated because map(() => value) is just as clear',
+      ],
+      useCases: [
+        'Converting click events to a constant action',
+        'Replacing values with a flag (true/false)',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use map(() => value) instead',
+        'The constant is captured when mapTo is called, not when source emits',
+      ],
+      categoryNote: 'Deprecated → use map(() => value).',
+    }),
+
+    comparisons: ['map'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const constant = $INPUT_1_VALUE;
+
+of(...values)
+  .pipe(
+    mapTo(constant)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Constant Value', defaultValue: [42] },
+    ],
+
+    run: (inputs) => {
+      const [values, constantArr] = inputs;
+
+      return of(...values).pipe(
+        mapTo(constantArr[0]),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  pluck: {
+    category: 'Transformation',
+    deprecated: 'Use map(x => x.prop) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Extracts a nested property from each emitted object by property name.',
+      mentalModel:
+        'Like a label reader on a conveyor belt — it reads one specific field from each passing object.',
+      stepByStep: [
+        'Source emits an object',
+        'Navigate to the specified property path',
+        'Emit just that property value',
+      ],
+      timeline: `Source: --{name:'A'}--{name:'B'}--|
+pluck('name')
+Output: --A--B--|`,
+      keyDifferences: [
+        'vs map → map is more flexible; pluck only reads properties',
+        'Deprecated because map(x => x.prop) is type-safe and equally readable',
+      ],
+      useCases: [
+        'Extracting a single property from API responses',
+        'Getting event target values',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use map(x => x.prop) instead',
+        'Returns undefined for missing properties (no runtime error)',
+        'No type inference — not type-safe',
+      ],
+      categoryNote: 'Deprecated → use map(x => x.prop).',
+    }),
+
+    comparisons: ['map'],
+
+    syntax: `
+const items = [$INPUT_0_ARRAY];
+
+of(...items)
+  .pipe(
+    pluck('name')
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      {
+        label: 'Source Objects',
+        defaultValue: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Charlie' }],
+        type: 'object' as const,
+      },
+    ],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        pluck('name'),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  exhaust: {
+    category: 'Creation & Combination',
+    deprecated: 'Use exhaustAll() instead.',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by dropping inner observables that arrive while a current inner is still active. Renamed to exhaustAll.',
+      mentalModel:
+        'Same as exhaustAll — like a busy phone line. If a call is in progress, new incoming calls are ignored.',
+      stepByStep: [
+        'Outer emits an inner observable',
+        'If no inner is active → subscribe to it',
+        'If an inner IS active → ignore/drop the new inner',
+        'When active inner completes → ready for the next',
+      ],
+      timeline: `Outer: --A$------B$------C$--|
+A$:    --1--2--|
+B$:         (dropped, A$ still active)
+C$:               --7--8--|
+Output: --1--2--------7--8--|`,
+      keyDifferences: [
+        'Identical to exhaustAll — just the old name',
+        'vs mergeAll → mergeAll subscribes to all; exhaust ignores while busy',
+      ],
+      useCases: [
+        'Preventing duplicate form submissions',
+        'Ignoring rapid-fire trigger events while processing',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use exhaustAll() instead — identical behavior',
+        'Dropped inner observables are silently ignored (no error)',
+      ],
+      categoryNote: 'Deprecated → renamed to exhaustAll().',
+    }),
+
+    comparisons: ['exhaustAll', 'mergeAll', 'concatAll'],
+
+    syntax: `
+const inner1$ = interval(300).pipe(take(3), map(i => [1,2,3][i]));
+const inner2$ = interval(100).pipe(take(3), map(i => [10,20,30][i]));
+
+of(inner1$, inner2$)
+  .pipe(
+    exhaust()
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Inner Observable A', defaultValue: [1, 2, 3] },
+      { label: 'Inner Observable A Interval (ms)', defaultValue: [300] },
+      { label: 'Inner Observable B', defaultValue: [10, 20, 30] },
+      { label: 'Inner Observable B Interval (ms)', defaultValue: [100] },
+    ],
+
+    run: (inputs) => {
+      const [aValues, aInterval, bValues, bInterval] = inputs;
+
+      const inner1$ = interval(aInterval[0]).pipe(
+        take(aValues.length),
+        map((i) => aValues[i]),
+      );
+      const inner2$ = interval(bInterval[0]).pipe(
+        take(bValues.length),
+        map((i) => bValues[i]),
+      );
+
+      return of(inner1$, inner2$).pipe(
+        exhaustAll(),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  concatMapTo: {
+    category: 'Transformation',
+    deprecated: 'Use concatMap(() => inner$) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Maps every source emission to the same inner observable, subscribing sequentially (waits for each inner to complete).',
+      mentalModel:
+        'Like a jukebox that plays the same song after each coin — each coin triggers the same song, played one at a time.',
+      stepByStep: [
+        'Source emits a value (value is ignored)',
+        'Subscribe to the fixed inner observable',
+        'Wait for inner to complete before processing next source emission',
+      ],
+      timeline: `Source: --1--2--|
+concatMapTo(of('A','B'))
+Output: --A--B--A--B--|`,
+      keyDifferences: [
+        'vs concatMap → concatMap uses the source value to create inner; concatMapTo always uses the same inner',
+        'Deprecated because concatMap(() => inner$) is equally clear',
+      ],
+      useCases: [
+        'Triggering the same sequence on repeated events',
+        'Polling — each tick triggers the same HTTP call sequentially',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use concatMap(() => inner$) instead',
+        'The inner observable is the same instance — if it is a cold observable, it restarts each time',
+      ],
+      categoryNote: 'Deprecated → use concatMap(() => inner$).',
+    }),
+
+    comparisons: ['concatMap', 'mergeMapTo', 'switchMapTo'],
+
+    syntax: `
+const sourceValues = $INPUT_0_ARRAY;
+const innerValues = $INPUT_1_ARRAY;
+
+of(...sourceValues)
+  .pipe(
+    concatMap(() => of(...innerValues))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2] },
+      { label: 'Inner Values', defaultValue: ['A', 'B'] },
+    ],
+
+    run: (inputs) => {
+      const [sourceValues, innerValues] = inputs;
+
+      return of(...sourceValues).pipe(
+        concatMap(() => of(...innerValues)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  mergeMapTo: {
+    category: 'Transformation',
+    deprecated: 'Use mergeMap(() => inner$) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Maps every source emission to the same inner observable, subscribing concurrently to all.',
+      mentalModel:
+        'Like a factory with parallel assembly lines — each trigger starts the same process, all running simultaneously.',
+      stepByStep: [
+        'Source emits a value (value is ignored)',
+        'Subscribe to the fixed inner observable immediately',
+        'All inner subscriptions run concurrently',
+        'Emissions interleave based on timing',
+      ],
+      timeline: `Source: --1--2--|
+mergeMapTo(of('A','B'))
+Output: --A--B--A--B--|  (concurrent, interleaved)`,
+      keyDifferences: [
+        'vs mergeMap → mergeMap uses source value; mergeMapTo ignores it',
+        'vs concatMapTo → concatMapTo is sequential; mergeMapTo is concurrent',
+        'Deprecated because mergeMap(() => inner$) is equally clear',
+      ],
+      useCases: [
+        'Firing parallel requests on each event',
+        'Starting identical background tasks concurrently',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use mergeMap(() => inner$) instead',
+        'All inner observables run simultaneously — may cause backpressure',
+      ],
+      categoryNote: 'Deprecated → use mergeMap(() => inner$).',
+    }),
+
+    comparisons: ['mergeMap', 'concatMapTo', 'switchMapTo'],
+
+    syntax: `
+const sourceValues = $INPUT_0_ARRAY;
+const innerValues = $INPUT_1_ARRAY;
+
+of(...sourceValues)
+  .pipe(
+    mergeMap(() => of(...innerValues))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2] },
+      { label: 'Inner Values', defaultValue: ['A', 'B'] },
+    ],
+
+    run: (inputs) => {
+      const [sourceValues, innerValues] = inputs;
+
+      return of(...sourceValues).pipe(
+        mergeMap(() => of(...innerValues)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  switchMapTo: {
+    category: 'Transformation',
+    deprecated: 'Use switchMap(() => inner$) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Maps every source emission to the same inner observable, cancelling the previous inner subscription on each new emission.',
+      mentalModel:
+        'Like changing TV channels with a fixed channel list — each button press switches to the same channel, cancelling what was playing.',
+      stepByStep: [
+        'Source emits a value (value is ignored)',
+        'Cancel any active inner subscription',
+        'Subscribe to the fixed inner observable',
+        'Mirror its emissions until source emits again',
+      ],
+      timeline: `Source: --1-----2--|
+switchMapTo(interval(200).pipe(take(3)))
+Output: --0--1--0--1--2--|  (first inner cancelled by second)`,
+      keyDifferences: [
+        'vs switchMap → switchMap uses source value; switchMapTo ignores it',
+        'vs mergeMapTo → mergeMapTo keeps all inner alive; switchMapTo cancels previous',
+        'Deprecated because switchMap(() => inner$) is equally clear',
+      ],
+      useCases: [
+        'Restarting a fixed timer/animation on each trigger',
+        'Refreshing the same data on each user action',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use switchMap(() => inner$) instead',
+        'Previous inner observable is always cancelled — may lose data',
+      ],
+      categoryNote: 'Deprecated → use switchMap(() => inner$).',
+    }),
+
+    comparisons: ['switchMap', 'mergeMapTo', 'concatMapTo'],
+
+    syntax: `
+const sourceValues = $INPUT_0_ARRAY;
+const innerValues = $INPUT_1_ARRAY;
+
+of(...sourceValues)
+  .pipe(
+    switchMap(() => of(...innerValues))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2] },
+      { label: 'Inner Values', defaultValue: ['A', 'B', 'C'] },
+    ],
+
+    run: (inputs) => {
+      const [sourceValues, innerValues] = inputs;
+
+      return of(...sourceValues).pipe(
+        switchMap(() => of(...innerValues)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  repeatWhen: {
+    category: 'Error Handling',
+    deprecated: 'Use repeat() with config { delay: () => notifier$ } instead.',
+    description: createOperatorDescription({
+      definition:
+        'Re-subscribes to the source when a notifier observable emits, allowing custom repeat logic.',
+      mentalModel:
+        'Like a coach deciding when to replay a play — after each completion, the notifier decides if and when to repeat.',
+      stepByStep: [
+        'Source completes',
+        'Notifier function receives an observable of completions',
+        'When notifier emits → re-subscribe to source',
+        'When notifier completes → output completes',
+        'When notifier errors → output errors',
+      ],
+      timeline: `Source: --1--2--|  (completes)
+notifier: ----emit--|
+Output: --1--2------1--2--|`,
+      keyDifferences: [
+        'vs repeat → repeat uses a count; repeatWhen uses a notifier for full control',
+        'vs retryWhen → retryWhen triggers on errors; repeatWhen triggers on completions',
+      ],
+      useCases: [
+        'Custom polling with dynamic intervals',
+        'Repeating based on user interaction',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use repeat({ delay: () => notifier$ }) instead',
+        'Notifier receives an observable of completions, not values',
+        'If notifier completes synchronously, no repeat happens',
+      ],
+      categoryNote: 'Deprecated → use repeat() with config.',
+    }),
+
+    comparisons: ['repeat', 'retryWhen'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const repeatCount = $INPUT_1_VALUE;
+
+of(...values)
+  .pipe(
+    repeat(repeatCount)
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Repeat Count', defaultValue: [2] },
+    ],
+
+    run: (inputs) => {
+      const [values, countArr] = inputs;
+      const count = Number(countArr[0]);
+
+      return of(...values).pipe(
+        repeat(count),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  retryWhen: {
+    category: 'Error Handling',
+    deprecated: 'Use retry() with config { delay: (error, count) => notifier$ } instead.',
+    description: createOperatorDescription({
+      definition:
+        'Re-subscribes to the source when a notifier observable emits after an error, allowing custom retry logic.',
+      mentalModel:
+        'Like a doctor deciding when to retry treatment — after each failure, a specialist decides if and when to try again.',
+      stepByStep: [
+        'Source errors',
+        'Notifier function receives an observable of errors',
+        'When notifier emits → re-subscribe to source',
+        'When notifier completes → output completes',
+        'When notifier errors → output errors with that error',
+      ],
+      timeline: `Source: --1--✗  (errors)
+notifier: --emit--|
+Output: --1------1--✗--|  (retried once, then error or complete)`,
+      keyDifferences: [
+        'vs retry → retry uses a count; retryWhen uses a notifier for full control',
+        'vs repeatWhen → repeatWhen triggers on completions; retryWhen triggers on errors',
+        'vs catchError → catchError handles the error once; retryWhen can retry multiple times',
+      ],
+      useCases: [
+        'Exponential backoff retry strategies',
+        'Retry with user confirmation',
+        'Retry with progressive delay',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use retry({ delay: (error, retryCount) => timer(1000) }) instead',
+        'Notifier receives an observable of errors, not values',
+        'If notifier completes, output completes (even if source errored)',
+      ],
+      categoryNote: 'Deprecated → use retry() with config.',
+    }),
+
+    comparisons: ['retry', 'repeatWhen', 'catchError'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const retryCount = $INPUT_1_VALUE;
+
+of(...values)
+  .pipe(
+    map(v => {
+      if (v === 'error') throw new Error('Error');
+      return v;
+    }),
+    retry(retryCount),
+    catchError(() => of('❌ Final Error after retries'))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values (use "error" to simulate)', defaultValue: [1, 2, 'error'] },
+      { label: 'Retry Count', defaultValue: [2] },
+    ],
+
+    run: (inputs) => {
+      const [values, retryArr] = inputs;
+      const retryCount = Number(retryArr[0]);
+
+      return of(...values).pipe(
+        map((v) => {
+          if (v === 'error') throw new Error('Error');
+          return String(v);
+        }),
+        retry(retryCount),
+        catchError(() => of('❌ Final Error after retries')),
+      );
+    },
+  },
+
+  publish: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use share(), connectable(), or connect() instead.',
+    description: createOperatorDescription({
+      definition:
+        'Makes a source observable "hot" by multicasting through a Subject. Returns a ConnectableObservable that starts emitting when connect() is called.',
+      mentalModel:
+        'Like a radio station — it broadcasts to all listeners, but only starts when the station goes live (connect).',
+      stepByStep: [
+        'publish() wraps the source with a Subject',
+        'Returns a ConnectableObservable',
+        'Subscribers register but receive nothing yet',
+        'Calling connect() starts the source and multicasts to all subscribers',
+        'All subscribers share the same execution',
+      ],
+      timeline: `Source: --1--2--3--|
+Subscriber A subscribes, Subscriber B subscribes
+connect()
+A: --1--2--3--|
+B: --1--2--3--|  (same values, same timing)`,
+      keyDifferences: [
+        'vs share → share auto-connects on first subscriber; publish requires manual connect()',
+        'vs connectable → connectable is the modern replacement',
+        'vs multicast → publish is multicast with a plain Subject',
+      ],
+      useCases: [
+        'Manual control over when multicasting starts',
+        'Coordinating multiple subscribers before starting a stream',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use connectable() or share() instead',
+        'Forgetting to call connect() means no emissions ever',
+        'Must manage the connection subscription to avoid leaks',
+      ],
+      categoryNote: 'Deprecated → use connectable() or share().',
+    }),
+
+    comparisons: ['share', 'connectable', 'multicast'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+const source$ = of(...values);
+const published$ = source$.pipe(share());
+
+published$.subscribe(v => console.log('A:', v));
+published$.subscribe(v => console.log('B:', v));
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return new Observable((subscriber) => {
+        const source$ = of(...values).pipe(share());
+
+        source$.subscribe((v) => subscriber.next(`A: ${v}`));
+        source$.subscribe({
+          next: (v) => subscriber.next(`B: ${v}`),
+          complete: () => subscriber.complete(),
+        });
+      });
+    },
+  },
+
+  publishBehavior: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use connectable() with a BehaviorSubject or shareReplay(1) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Like publish but uses a BehaviorSubject, which replays the last value (or initial value) to new subscribers.',
+      mentalModel:
+        'Like a TV channel with a "last frame" buffer — tune in late and you still see the most recent frame.',
+      stepByStep: [
+        'Wraps source with a BehaviorSubject (with initial value)',
+        'New subscribers immediately receive the latest value',
+        'All subscribers share the same execution after connect()',
+      ],
+      timeline: `Initial: 0
+Source: --1--2--3--|
+Late subscriber after 2:
+Output: 0--1--2... (late) → 2--3--|`,
+      keyDifferences: [
+        'vs publish → publish has no replay; publishBehavior replays last value',
+        'vs publishReplay → publishReplay replays N values; publishBehavior replays exactly 1',
+        'vs shareReplay(1) → shareReplay(1) is the modern equivalent',
+      ],
+      useCases: [
+        'State management where new subscribers need current state',
+        'Caching the latest value for late subscribers',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use connectable() with BehaviorSubject or shareReplay(1)',
+        'Requires an initial/seed value',
+        'Must call connect() manually',
+      ],
+      categoryNote: 'Deprecated → use shareReplay(1) or connectable with BehaviorSubject.',
+    }),
+
+    comparisons: ['shareReplay', 'publish', 'publishReplay'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+const source$ = of(...values).pipe(shareReplay(1));
+
+source$.subscribe(v => console.log('A:', v));
+source$.subscribe(v => console.log('B:', v));
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return new Observable((subscriber) => {
+        const source$ = of(...values).pipe(shareReplay(1));
+
+        source$.subscribe((v) => subscriber.next(`A: ${v}`));
+        source$.subscribe({
+          next: (v) => subscriber.next(`B: ${v}`),
+          complete: () => subscriber.complete(),
+        });
+      });
+    },
+  },
+
+  publishReplay: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use shareReplay(bufferSize) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Like publish but uses a ReplaySubject. Replays the last N values to new subscribers.',
+      mentalModel:
+        'Like a DVR — new viewers can rewind and watch the last N recorded segments.',
+      stepByStep: [
+        'Wraps source with a ReplaySubject(bufferSize)',
+        'New subscribers receive up to N most recent values immediately',
+        'All subscribers share the same execution after connect()',
+      ],
+      timeline: `bufferSize: 2
+Source: --1--2--3--|
+Late subscriber after 3:
+Late output: 2, 3 (replayed), then continues`,
+      keyDifferences: [
+        'vs publish → publish has no replay; publishReplay replays N values',
+        'vs publishBehavior → publishBehavior replays 1 with initial; publishReplay replays N without initial',
+        'vs shareReplay → shareReplay is the modern replacement',
+      ],
+      useCases: [
+        'Caching API responses for late subscribers',
+        'Replaying recent events to new listeners',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use shareReplay(bufferSize) instead',
+        'Large buffer sizes consume memory',
+        'Must call connect() manually',
+      ],
+      categoryNote: 'Deprecated → use shareReplay(bufferSize).',
+    }),
+
+    comparisons: ['shareReplay', 'publish', 'publishBehavior'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const bufferSize = $INPUT_1_VALUE;
+
+const source$ = of(...values).pipe(shareReplay(bufferSize));
+
+source$.subscribe(v => console.log('A:', v));
+source$.subscribe(v => console.log('B:', v));
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3] },
+      { label: 'Replay Buffer Size', defaultValue: [2] },
+    ],
+
+    run: (inputs) => {
+      const [values, bufferArr] = inputs;
+
+      return new Observable((subscriber) => {
+        const source$ = of(...values).pipe(shareReplay(bufferArr[0]));
+
+        source$.subscribe((v) => subscriber.next(`A: ${v}`));
+        source$.subscribe({
+          next: (v) => subscriber.next(`B: ${v}`),
+          complete: () => subscriber.complete(),
+        });
+      });
+    },
+  },
+
+  publishLast: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use share() with connector: () => new AsyncSubject() or shareReplay(1) instead.',
+    description: createOperatorDescription({
+      definition:
+        'Like publish but uses an AsyncSubject. Only emits the LAST value from the source, and only after the source completes.',
+      mentalModel:
+        'Like waiting for the final exam score — you only get the result after all grading is done.',
+      stepByStep: [
+        'Wraps source with an AsyncSubject',
+        'No emissions until source completes',
+        'When source completes, emits only the last value to all subscribers',
+        'Late subscribers also receive the last value',
+      ],
+      timeline: `Source: --1--2--3--|
+publishLast + connect
+All subscribers: 3 (after completion)`,
+      keyDifferences: [
+        'vs publish → publish emits all values; publishLast only emits the last',
+        'vs last() → last() is a filtering operator; publishLast is multicasting',
+        'vs shareReplay(1) → shareReplay(1) replays last value but emits all values first',
+      ],
+      useCases: [
+        'Sharing a result that is only meaningful once complete',
+        'API calls where only the final response matters',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use share with AsyncSubject connector or shareReplay(1)',
+        'Nothing emits until source completes',
+        'If source errors, error is forwarded and no value emits',
+      ],
+      categoryNote: 'Deprecated → use share or shareReplay.',
+    }),
+
+    comparisons: ['publish', 'shareReplay', 'last'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+const source$ = of(...values).pipe(
+  last(),
+  shareReplay(1)
+);
+
+source$.subscribe(v => console.log('Result:', v));
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        last(),
+        shareReplay(1),
+        map((v) => `🏁 Last: ${v}`),
+        catchError(() => of('❌ No values')),
+      );
+    },
+  },
+
+  refCount: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use share() instead, which handles reference counting automatically.',
+    description: createOperatorDescription({
+      definition:
+        'Automatically connects a ConnectableObservable when the first subscriber arrives and disconnects when all subscribers leave.',
+      mentalModel:
+        'Like an automatic light — turns on when someone enters the room, turns off when everyone leaves.',
+      stepByStep: [
+        'First subscriber arrives → automatically call connect()',
+        'Subsequent subscribers share the same execution',
+        'Last subscriber unsubscribes → disconnect',
+        'Next subscriber → reconnect',
+      ],
+      timeline: `Sub A arrives → connect, emissions start
+Sub B arrives → shares same stream
+Sub A leaves → still connected (B is here)
+Sub B leaves → disconnect`,
+      keyDifferences: [
+        'vs manual connect() → refCount auto-manages the lifecycle',
+        'vs share → share() = multicast + refCount in one operator',
+      ],
+      useCases: [
+        'Used with publish/multicast for automatic lifecycle management',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use share() which includes refCount behavior',
+        'Only works on ConnectableObservables',
+        'Reconnects from scratch when all leave and a new subscriber arrives',
+      ],
+      categoryNote: 'Deprecated → use share() directly.',
+    }),
+
+    comparisons: ['share', 'publish'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+const source$ = of(...values).pipe(share());
+
+source$.subscribe(v => console.log('A:', v));
+source$.subscribe(v => console.log('B:', v));
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return new Observable((subscriber) => {
+        const source$ = of(...values).pipe(share());
+
+        source$.subscribe((v) => subscriber.next(`A: ${v}`));
+        source$.subscribe({
+          next: (v) => subscriber.next(`B: ${v}`),
+          complete: () => subscriber.complete(),
+        });
+      });
+    },
+  },
+
+  multicast: {
+    category: 'Multicasting & Sharing',
+    deprecated: 'Use connectable() or share() instead.',
+    description: createOperatorDescription({
+      definition:
+        'Returns a ConnectableObservable that multicasts through the provided Subject. The foundation behind publish, publishReplay, etc.',
+      mentalModel:
+        'Like a TV splitter box — one signal source is split to many TVs through a central hub (Subject).',
+      stepByStep: [
+        'Takes a Subject (or Subject factory)',
+        'Returns a ConnectableObservable',
+        'All subscribers receive values through the shared Subject',
+        'Must call connect() to start',
+      ],
+      timeline: `Source: --1--2--3--|
+multicast(new Subject()) + connect
+A: --1--2--3--|
+B: --1--2--3--|  (shared)`,
+      keyDifferences: [
+        'vs publish → publish is multicast(new Subject())',
+        'vs publishReplay → publishReplay is multicast(new ReplaySubject(n))',
+        'vs share → share = multicast(() => new Subject()) + refCount',
+        'vs connectable → connectable is the modern replacement',
+      ],
+      useCases: [
+        'Custom multicasting with specific Subject types',
+        'Advanced sharing patterns (mostly internal/library use)',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use connectable() or share() instead',
+        'Must manage connect() manually unless paired with refCount',
+        'Using a single Subject instance (not factory) only works once — use factory for reconnectable streams',
+      ],
+      categoryNote: 'Deprecated → use connectable() or share().',
+    }),
+
+    comparisons: ['publish', 'share', 'connectable'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+const source$ = of(...values).pipe(share());
+
+source$.subscribe(v => console.log('A:', v));
+source$.subscribe(v => console.log('B:', v));
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return new Observable((subscriber) => {
+        const source$ = of(...values).pipe(share());
+
+        source$.subscribe((v) => subscriber.next(`A: ${v}`));
+        source$.subscribe({
+          next: (v) => subscriber.next(`B: ${v}`),
+          complete: () => subscriber.complete(),
+        });
+      });
+    },
+  },
+
+  onErrorResumeNext: {
+    category: 'Error Handling',
+    deprecated: 'Handle errors explicitly with catchError() and concat/concatWith instead.',
+    description: createOperatorDescription({
+      definition:
+        'When the source errors or completes, subscribes to the next observable in the list, ignoring errors silently.',
+      mentalModel:
+        'Like a resilient playlist — if a song fails to play, skip it and move to the next one without interrupting the experience.',
+      stepByStep: [
+        'Subscribe to the source',
+        'If source errors or completes → subscribe to next provided observable',
+        'Continue through each observable in order',
+        'Complete after the last observable finishes (errors are swallowed)',
+      ],
+      timeline: `Source1: --1--✗ (error)
+Source2: --A--B--| (complete)
+Source3: --X--|
+Output: --1--A--B--X--|  (errors silently skipped)`,
+      keyDifferences: [
+        'vs catchError → catchError lets you handle the error; onErrorResumeNext swallows it',
+        'vs concat → concat stops on error; onErrorResumeNext continues regardless',
+      ],
+      useCases: [
+        'Fallback chains where errors should be ignored',
+        'Resilient data loading from multiple sources',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use catchError + concatWith for explicit error handling',
+        'Errors are silently swallowed — makes debugging very hard',
+        'Also moves to next on normal completion (not just errors)',
+      ],
+      categoryNote: 'Deprecated → use catchError with explicit fallback logic.',
+    }),
+
+    comparisons: ['catchError', 'concat'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const fallbackValues = $INPUT_1_ARRAY;
+
+of(...values)
+  .pipe(
+    map(v => { if (v === 'error') throw new Error(); return v; }),
+    catchError(() => of(...fallbackValues))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values (use "error")', defaultValue: [1, 'error', 3] },
+      { label: 'Fallback Values', defaultValue: ['A', 'B'] },
+    ],
+
+    run: (inputs) => {
+      const [values, fallback] = inputs;
+
+      return of(...values).pipe(
+        map((v) => {
+          if (v === 'error') throw new Error('failed');
+          return v;
+        }),
+        catchError(() => of(...fallback)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  combineAll: {
+    category: 'Creation & Combination',
+    deprecated: 'Use combineLatestAll() instead — identical behavior, just renamed.',
+    description: createOperatorDescription({
+      definition:
+        'Flattens a higher-order observable by applying combineLatest when the outer completes. Renamed to combineLatestAll.',
+      mentalModel:
+        'Same as combineLatestAll — waits for all inner observables, then combines their latest values.',
+      stepByStep: [
+        'Outer observable emits inner observables and completes',
+        'Apply combineLatest to all collected inner observables',
+        'Emit combined arrays of latest values from each inner',
+      ],
+      timeline: `Outer: --A$--B$--|
+A$: --1-----3--|
+B$: ----2-----4--|
+Output: [1,2], [3,2], [3,4]`,
+      keyDifferences: [
+        'Identical to combineLatestAll — just the old name',
+        'vs zipAll → zipAll pairs by position; combineAll uses latest values',
+      ],
+      useCases: [
+        'Combining dynamic inner observables',
+        'Dashboard-style merging of multiple data streams',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use combineLatestAll() instead — identical behavior',
+        'Outer must complete before combination starts',
+      ],
+      categoryNote: 'Deprecated → renamed to combineLatestAll().',
+    }),
+
+    comparisons: ['combineLatestAll', 'zipAll'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(
+  of(...values),
+  of(...values.map(v => v * 10))
+)
+  .pipe(combineLatestAll())
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(
+        of(...values),
+        of(...values.map((v: number) => v * 10)),
+      ).pipe(
+        combineLatestAll(),
+        map((arr: any[]) => `[${arr.join(', ')}]`),
+      );
+    },
+  },
+
+  flatMap: {
+    category: 'Transformation',
+    deprecated: 'Use mergeMap() instead — identical behavior, just renamed.',
+    description: createOperatorDescription({
+      definition:
+        'Alias for mergeMap. Maps each value to an inner observable and flattens all concurrently.',
+      mentalModel:
+        'Identical to mergeMap — like a warehouse where each package triggers a parallel delivery route.',
+      stepByStep: [
+        'Source emits a value',
+        'Map it to an inner observable',
+        'Subscribe to the inner immediately (concurrent)',
+        'Merge all inner emissions into the output',
+      ],
+      timeline: `Source: --1--2--|
+flatMap(v => of(v * 10))
+Output: --10--20--|`,
+      keyDifferences: [
+        'Identical to mergeMap — flatMap is just an alias',
+        'Name comes from "flatten + map" pattern in functional programming',
+      ],
+      useCases: [
+        'Same as mergeMap — parallel inner subscriptions',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED: Use mergeMap() instead — identical behavior',
+        'The name flatMap may cause confusion with Array.prototype.flatMap',
+      ],
+      categoryNote: 'Deprecated → renamed to mergeMap().',
+    }),
+
+    comparisons: ['mergeMap', 'concatMap', 'switchMap'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+
+of(...values)
+  .pipe(
+    mergeMap(v => of(v * 10))
+  )
+  .subscribe(console.log);
+`.trim(),
+
+    inputs: [{ label: 'Source Values', defaultValue: [1, 2, 3] }],
+
+    run: (inputs) => {
+      const [values] = inputs;
+
+      return of(...values).pipe(
+        mergeMap((v: number) => of(v * 10)),
+        map((v) => String(v)),
+      );
+    },
+  },
+
+  partition: {
+    category: 'Transformation',
+    deprecated: 'Use filter() for each branch instead.',
+    description: createOperatorDescription({
+      definition:
+        'Splits a source observable into two: one with values that pass the predicate, one with values that don\'t. Returns a tuple of [matches$, nonMatches$].',
+      mentalModel:
+        'Like a coin sorter — each coin goes into one of two bins based on its value.',
+      stepByStep: [
+        'Takes a source and a predicate function',
+        'Returns [trueStream$, falseStream$]',
+        'Values passing the predicate go to trueStream$',
+        'Values failing the predicate go to falseStream$',
+      ],
+      timeline: `Source: --1--2--3--4--5--|
+partition(v => v % 2 === 0)
+Even$: ----2-----4-----|
+Odd$:  --1-----3-----5--|`,
+      keyDifferences: [
+        'vs filter → filter only gives matching values; partition gives both matching and non-matching',
+        'Returns two observables, not one',
+      ],
+      useCases: [
+        'Splitting events into success/failure streams',
+        'Routing values to different handlers',
+      ],
+      gotchas: [
+        '⚠️ DEPRECATED as operator: Use filter() with and without negation instead',
+        'Was changed from operator to creation function, then deprecated entirely',
+        'Both output streams share the same source subscription',
+      ],
+      categoryNote: 'Deprecated → use two filter() calls.',
+    }),
+
+    comparisons: ['filter'],
+
+    syntax: `
+const values = $INPUT_0_ARRAY;
+const threshold = $INPUT_1_VALUE;
+
+const even$ = of(...values).pipe(filter(v => v % 2 === 0));
+const odd$ = of(...values).pipe(filter(v => v % 2 !== 0));
+
+even$.subscribe(v => console.log('Even:', v));
+odd$.subscribe(v => console.log('Odd:', v));
+`.trim(),
+
+    inputs: [
+      { label: 'Source Values', defaultValue: [1, 2, 3, 4, 5, 6] },
+      { label: 'Divider (even/odd)', defaultValue: [2] },
+    ],
+
+    run: (inputs) => {
+      const [values, divArr] = inputs;
+      const div = divArr[0];
+
+      return new Observable((subscriber) => {
+        of(...values)
+          .pipe(filter((v: number) => v % div === 0))
+          .subscribe((v) => subscriber.next(`✅ Pass: ${v}`));
+
+        of(...values)
+          .pipe(filter((v: number) => v % div !== 0))
+          .subscribe({
+            next: (v) => subscriber.next(`❌ Fail: ${v}`),
+            complete: () => subscriber.complete(),
+          });
+      });
     },
   },
 };

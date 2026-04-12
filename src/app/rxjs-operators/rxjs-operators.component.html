@@ -98,9 +98,11 @@
                     </div>
 
                     <ul class="cell-body">
-                        <li *ngFor="let operator of group.operators" class="deprecated-item">
+                        <li *ngFor="let operator of group.operators" class="deprecated-item clickable"
+                            [routerLink]="['/operator', operator]">
                             <span class="dep-icon">&#x26A0;</span>
                             <span class="op-name">{{ operator }}</span>
+                            <span class="op-arrow">&rarr;</span>
                         </li>
                     </ul>
                 </div>

@@ -24,6 +24,15 @@
             </div>
         </header>
 
+        <!-- DEPRECATION BANNER -->
+        <div class="deprecation-banner" *ngIf="operator.deprecated">
+            <div class="container">
+                <span class="dep-icon">&#x26A0;</span>
+                <strong>Deprecated</strong>
+                <span class="dep-message">{{ operator.deprecated }}</span>
+            </div>
+        </div>
+
         <!-- DESKTOP THREE COLUMN LAYOUT (NON COMPOSITE) -->
         <div class="container" *ngIf="!isComposite">
 
