@@ -64,6 +64,12 @@ Open `http://localhost:4200` in your browser.
 
 ---
 
+## Live Demo
+
+**[rxjs-labx.vercel.app](https://rxjs-labx.vercel.app/)**
+
+---
+
 ## Contributing
 
 Ideas, improvements, or feedback are always welcome. Feel free to open an issue or submit a PR.
