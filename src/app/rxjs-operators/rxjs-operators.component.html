@@ -107,6 +107,10 @@
                     </ul>
                 </div>
             </div>
+
+            <p class="no-results" *ngIf="filteredDeprecatedOperators.length === 0 && searchTerm">
+                No operators matching "{{ searchTerm }}"
+            </p>
         </div>
     </section>
 

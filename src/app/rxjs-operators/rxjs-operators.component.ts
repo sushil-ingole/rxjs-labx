@@ -185,7 +185,8 @@ export class RxjsOperatorsComponent {
   searchTerm = '';
 
   get totalOperators(): number {
-    return this.operatorGroups.reduce((sum, g) => sum + g.operators.length, 0);
+    return this.operatorGroups.reduce((sum, g) => sum + g.operators.length, 0)
+      + this.deprecatedOperators.reduce((sum, g) => sum + g.operators.length, 0);
   }
 
   get filteredOperatorGroups(): OperatorGroup[] {

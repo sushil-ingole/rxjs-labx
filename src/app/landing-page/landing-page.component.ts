@@ -17,20 +17,14 @@ export class LandingPageComponent implements AfterViewInit {
   @ViewChild('heroStats') heroStatsRef!: ElementRef;
 
   stats = [
-    { target: this.registry.length, suffix: '+', display: '0+', label: 'Operators' },
+    { target: this.registry.length, suffix: '', display: '0', label: 'Operators' },
     { target: COMPARISON_GUIDES.length, suffix: '', display: '0', label: 'Comparisons' },
     { target: new Set(this.registry.map(op => op.category)).size, suffix: '', display: '0', label: 'Categories' }
   ];
 
   ngAfterViewInit(): void {
-    // Stats count-up observer
-    const statsObserver = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        this.animateStats();
-        statsObserver.disconnect();
-      }
-    }, { threshold: 0.2 });
-    statsObserver.observe(this.heroStatsRef.nativeElement);
+    // Stats count-up — wait for hero animation to finish (delay 1.15s + duration 0.9s)
+    setTimeout(() => this.animateStats(), 1100);
 
     // Scroll-reveal observer for .anim elements
     const revealObserver = new IntersectionObserver((entries) => {
