@@ -3,21 +3,21 @@
     <!-- HERO -->
     <section class="hero">
         <div class="container">
-            <span class="badge">Open-Source Learning Tool</span>
-            <h1>Master RxJS by <span class="gradient-text">seeing it run.</span></h1>
-            <p class="subtitle">
+            <span class="badge anim-hero hero-delay-1">Open-Source Learning Tool</span>
+            <h1 class="anim-hero hero-delay-2">Master RxJS by <span class="gradient-text">seeing it run.</span></h1>
+            <p class="subtitle anim-hero hero-delay-3">
                 Stop guessing what operators do. Watch values flow through pipelines in real time,
                 tweak inputs on the fly, and build genuine intuition — not memorized syntax.
             </p>
-            <div class="actions">
+            <div class="actions anim-hero hero-delay-4">
                 <button class="btn primary large" [routerLink]="['/operators']">
                     Open Playground
                     <span class="btn-arrow">&rarr;</span>
                 </button>
             </div>
-            <div class="hero-stats">
+            <div class="hero-stats anim-hero hero-delay-5" #heroStats>
                 <div class="stat" *ngFor="let stat of stats">
-                    <span class="stat-value">{{ stat.value }}</span>
+                    <span class="stat-value">{{ stat.display }}</span>
                     <span class="stat-label">{{ stat.label }}</span>
                 </div>
             </div>
@@ -27,9 +27,9 @@
     <!-- PROBLEM -->
     <section class="section problem">
         <div class="container narrow">
-            <span class="section-label">The Problem</span>
-            <h2>Why RxJS feels impossibly hard</h2>
-            <p>
+            <span class="section-label anim anim-fade-up">The Problem</span>
+            <h2 class="anim anim-fade-up">Why RxJS feels impossibly hard</h2>
+            <p class="anim anim-fade-up">
                 Docs describe behavior in words. Marble diagrams are static.
                 Stack Overflow answers assume you already understand timing.
                 None of them let you <strong>experiment</strong>.
@@ -40,11 +40,11 @@
     <!-- DIFFERENTIATORS -->
     <section class="section">
         <div class="container">
-            <span class="section-label">The Difference</span>
-            <h2>Built for how developers actually learn</h2>
+            <span class="section-label anim anim-fade-up">The Difference</span>
+            <h2 class="anim anim-fade-up">Built for how developers actually learn</h2>
 
             <div class="grid three">
-                <div class="feature-card" *ngFor="let item of features">
+                <div class="feature-card anim anim-scale-in" [ngClass]="'stagger-' + (i + 1)" *ngFor="let item of features; let i = index">
                     <span class="feature-icon">{{ item.icon }}</span>
                     <h3>{{ item.title }}</h3>
                     <p>{{ item.description }}</p>
@@ -56,11 +56,11 @@
     <!-- CAPABILITIES -->
     <section class="section alt-bg">
         <div class="container">
-            <span class="section-label">Capabilities</span>
-            <h2>Everything you need to explore RxJS</h2>
+            <span class="section-label anim anim-fade-up">Capabilities</span>
+            <h2 class="anim anim-fade-up">Everything you need to explore RxJS</h2>
 
             <div class="grid two">
-                <div class="capability-card" *ngFor="let item of capabilities; let i = index">
+                <div class="capability-card anim" [ngClass]="i % 2 === 0 ? 'anim-slide-left' : 'anim-slide-right'" *ngFor="let item of capabilities; let i = index">
                     <span class="cap-number">{{ (i + 1).toString().padStart(2, '0') }}</span>
                     <div class="cap-content">
                         <h3>{{ item.title }}</h3>
@@ -74,19 +74,19 @@
     <!-- PHILOSOPHY -->
     <section class="section philosophy">
         <div class="container narrow center">
-            <blockquote>
+            <blockquote class="anim anim-fade-in">
                 "If you can see it, you can understand it."
             </blockquote>
-            <p class="muted">The core principle behind every feature in RxJS Labx.</p>
+            <p class="muted anim anim-fade-up">The core principle behind every feature in RxJS Labx.</p>
         </div>
     </section>
 
     <!-- CTA -->
     <section class="cta">
         <div class="container narrow center">
-            <h2>Ready to finally understand RxJS?</h2>
-            <p>Jump into the playground. Pick an operator. See what happens.</p>
-            <button class="btn primary large" [routerLink]="['/operators']">
+            <h2 class="anim anim-fade-up">Ready to finally understand RxJS?</h2>
+            <p class="anim anim-fade-up">Jump into the playground. Pick an operator. See what happens.</p>
+            <button class="btn primary large anim anim-scale-in" [routerLink]="['/operators']">
                 Start Exploring
                 <span class="btn-arrow">&rarr;</span>
             </button>

@@ -409,6 +409,106 @@ blockquote {
 }
 
 /* =========================
+   SCROLL ANIMATIONS
+========================= */
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+// Hidden state before animation triggers
+.anim {
+    opacity: 0;
+}
+
+.anim.visible {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+// Hero elements — play on load (no scroll needed)
+.anim-hero {
+    opacity: 0;
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-name: fadeUp;
+}
+
+.hero-delay-1 { animation-duration: 0.9s; animation-delay: 0.15s; }
+.hero-delay-2 { animation-duration: 0.9s; animation-delay: 0.4s; }
+.hero-delay-3 { animation-duration: 0.9s; animation-delay: 0.65s; }
+.hero-delay-4 { animation-duration: 0.9s; animation-delay: 0.9s; }
+.hero-delay-5 { animation-duration: 0.9s; animation-delay: 1.15s; }
+
+// Scroll-triggered variants
+.anim-fade-up.visible    { animation-name: fadeUp;       animation-duration: 0.8s; }
+.anim-fade-in.visible    { animation-name: fadeIn;       animation-duration: 0.8s; }
+.anim-slide-left.visible { animation-name: slideInLeft;  animation-duration: 0.8s; }
+.anim-slide-right.visible{ animation-name: slideInRight; animation-duration: 0.8s; }
+.anim-scale-in.visible   { animation-name: scaleIn;      animation-duration: 0.7s; }
+
+// Stagger delays for cards
+.stagger-1 { animation-delay: 0.15s; }
+.stagger-2 { animation-delay: 0.3s; }
+.stagger-3 { animation-delay: 0.45s; }
+.stagger-4 { animation-delay: 0.6s; }
+.stagger-5 { animation-delay: 0.75s; }
+
+// Respect reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+    .anim, .anim-hero {
+        opacity: 1 !important;
+        animation: none !important;
+        transform: none !important;
+    }
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 
@@ -418,7 +518,12 @@ blockquote {
     }
 
     .hero-stats {
-        gap: 32px;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .stat-label {
+        letter-spacing: 0.3px;
     }
 
     .section {
