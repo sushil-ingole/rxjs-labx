@@ -2329,7 +2329,7 @@ const mapValues = $INPUT_2_ARRAY;
 
 of(...sourceValues)
   .pipe(
-    map((_, index) => mapValues[index])
+    map((val, index) => val + mapValues[index])
   )
   .subscribe(console.log);
 `.trim(),
@@ -2345,7 +2345,7 @@ of(...sourceValues)
       const [sourceValues, sourceInterval, mapValues] = inputs;
 
       return of(...sourceValues).pipe(
-        map((_, index) => mapValues[index % mapValues.length]),
+        map((val, index) => val + mapValues[index % mapValues.length]),
         map((value) => String(value)),
       );
     },
